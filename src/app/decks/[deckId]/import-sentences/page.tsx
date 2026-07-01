@@ -1,0 +1,89 @@
+"use client";
+
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { FormEvent, useMemo, useState } from "react";
+import { AppShell } from "@/components/app-shell";
+import { AuthGuard } from "@/components/auth-guard";
+import { fetchWithAuth } from "@/lib/fetch-auth";
+import { parseSentenceText } from "@/lib/parse-sentences";
+
+const sample = `我去过中国。
+这个菜很好吃。
+他正在学习中文。`;
+
+export default function ImportSentencesPage() {
+  const params = useParams<{ deckId: string }>();
+  const [text, setText] = useState(sample);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const items = useMemo(() => parseSentenceText(text), [text]);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    const response = await fetchWithAuth("/api/import-sentences", {
+      method: "POST",
+      body: JSON.stringify({
+        deckId: params.deckId,
+        items,
+      }),
+    });
+    const data = await response.json();
+    setLoading(false);
+
+    if (!response.ok) {
+      setMessage(data.error || "Import câu thất bại");
+      return;
+    }
+
+    setMessage(`Đã tạo ${data.created} câu luyện tập.`);
+  }
+
+  return (
+    <AuthGuard>
+      <AppShell>
+        <form className="max-w-3xl" onSubmit={submit}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-semibold">Import câu</h1>
+              <p className="mt-1 text-sm text-zinc-600">
+                Dán mỗi dòng một câu tiếng Trung. AI sẽ tạo nghĩa tiếng Việt,
+                pinyin và tách từ vựng trong câu.
+              </p>
+            </div>
+            <Link
+              className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+              href={`/decks/${params.deckId}`}
+            >
+              Quay lại bộ thẻ
+            </Link>
+          </div>
+
+          <textarea
+            className="mt-6 h-72 w-full rounded-lg border border-zinc-300 bg-white p-4 font-mono text-sm outline-none focus:border-teal-700"
+            onChange={(event) => setText(event.target.value)}
+            value={text}
+          />
+
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-zinc-600">
+              {items.length} câu sẵn sàng gửi AI
+            </p>
+            <button
+              className="min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+              disabled={loading || items.length === 0}
+              type="submit"
+            >
+              {loading ? "Đang tạo câu bằng AI..." : "Tạo bài luyện câu"}
+            </button>
+          </div>
+
+          {message ? <p className="mt-4 text-sm text-zinc-700">{message}</p> : null}
+        </form>
+      </AppShell>
+    </AuthGuard>
+  );
+}
