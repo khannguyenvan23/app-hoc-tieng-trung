@@ -2,6 +2,7 @@ export type Deck = {
   id: string;
   user_id: string;
   name: string;
+  source_template_slug?: string | null;
   created_at: string;
 };
 
@@ -12,6 +13,8 @@ export type TemplateDeck = {
   description: string | null;
   level: string | null;
   card_count: number;
+  already_added?: boolean;
+  user_deck_id?: string | null;
   created_at: string;
 };
 

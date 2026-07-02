@@ -362,6 +362,11 @@ export default function DashboardPage() {
     setCopyingTemplateId("");
 
     if (!response.ok) {
+      if (data.alreadyAdded) {
+        setTemplateMessage(data.error || "Bo the nay da duoc them roi.");
+        return;
+      }
+
       setTemplateMessage(data.error || "Không thể thêm bộ thẻ mẫu.");
       return;
     }
@@ -604,7 +609,10 @@ export default function DashboardPage() {
 
           {templates.length > 0 ? (
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {templates.map((template) => (
+              {templates.map((template) => {
+                const alreadyAdded = Boolean(template.already_added);
+
+                return (
                 <div
                   className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm"
                   key={template.id}
@@ -628,17 +636,32 @@ export default function DashboardPage() {
                     </p>
                   ) : null}
                   <button
-                    className="mt-4 min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
-                    disabled={Boolean(copyingTemplateId)}
+                    className={`mt-4 min-h-10 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-70 ${
+                      alreadyAdded
+                        ? "border border-zinc-300 bg-zinc-100 text-zinc-600"
+                        : "bg-teal-700 text-white hover:bg-teal-800"
+                    }`}
+                    disabled={Boolean(copyingTemplateId) || alreadyAdded}
                     onClick={() => copyTemplate(template.id)}
                     type="button"
                   >
-                    {copyingTemplateId === template.id
+                    {alreadyAdded
+                      ? "Đã thêm"
+                      : copyingTemplateId === template.id
                       ? "Đang thêm..."
                       : "Thêm bộ này"}
                   </button>
+                  {alreadyAdded && template.user_deck_id ? (
+                    <Link
+                      className="mt-2 inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                      href={`/decks/${template.user_deck_id}`}
+                    >
+                      Mở bộ
+                    </Link>
+                  ) : null}
                 </div>
-              ))}
+                );
+              })}
             </div>
           ) : loading ? (
             <p className="mt-3 text-sm text-zinc-600">Đang tải bộ mẫu...</p>

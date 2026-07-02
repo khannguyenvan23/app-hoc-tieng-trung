@@ -19,6 +19,23 @@ type TemplateSentenceCardRow = {
   vocab_json: unknown;
 };
 
+type TemplateDeckRow = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  level: string | null;
+  created_at: string;
+  template_cards?: { id: string }[] | null;
+  template_sentence_cards?: { id: string }[] | null;
+};
+
+type UserDeckRow = {
+  id: string;
+  name: string;
+  source_template_slug?: string | null;
+};
+
 const copySchema = z.object({
   templateDeckId: z.string().uuid(),
 });
@@ -33,6 +50,42 @@ function getErrorMessage(error: unknown) {
   }
 
   return "Unknown error";
+}
+
+function getErrorCode(error: unknown) {
+  if (typeof error === "object" && error && "code" in error) {
+    return String(error.code);
+  }
+
+  return "";
+}
+
+function isMissingSourceTemplateColumn(error: unknown) {
+  return getErrorMessage(error).includes("source_template_slug");
+}
+
+function isUniqueTemplateError(error: unknown) {
+  return (
+    getErrorCode(error) === "23505" ||
+    getErrorMessage(error).includes("decks_user_template_unique_idx")
+  );
+}
+
+function normalizeName(value: string | null | undefined) {
+  return (value || "").trim().toLowerCase();
+}
+
+function findExistingTemplateDeck(
+  template: Pick<TemplateDeckRow, "slug" | "name">,
+  decks: UserDeckRow[],
+) {
+  const templateName = normalizeName(template.name);
+
+  return decks.find(
+    (deck) =>
+      deck.source_template_slug === template.slug ||
+      normalizeName(deck.name) === templateName,
+  );
 }
 
 function mapTemplateCards(
@@ -74,21 +127,43 @@ export async function GET(request: Request) {
     );
   }
 
+  const { data: userDecks, error: userDecksError } = await supabase
+    .from("decks")
+    .select("*")
+    .eq("user_id", user.id);
+
+  if (userDecksError) {
+    console.error(userDecksError);
+    return NextResponse.json(
+      { error: "KhÃ´ng thá»ƒ kiá»ƒm tra bá»™ tháº» Ä‘Ã£ thÃªm" },
+      { status: 500 },
+    );
+  }
+
   return NextResponse.json({
-    templates: (templates || []).map((template) => ({
+    templates: ((templates || []) as TemplateDeckRow[]).map((template) => {
+      const existingDeck = findExistingTemplateDeck(
+        template,
+        (userDecks || []) as UserDeckRow[],
+      );
+
+      return {
       id: template.id,
       slug: template.slug,
       name: template.name,
       description: template.description,
       level: template.level,
       created_at: template.created_at,
+        already_added: Boolean(existingDeck),
+        user_deck_id: existingDeck?.id || null,
       card_count: Array.isArray(template.template_cards)
         ? template.template_cards.length +
           (Array.isArray(template.template_sentence_cards)
             ? template.template_sentence_cards.length
             : 0)
         : 0,
-    })),
+      };
+    }),
   });
 }
 
@@ -116,6 +191,35 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Không tìm thấy bộ thẻ mẫu" },
       { status: 404 },
+    );
+  }
+
+  const { data: userDecks, error: userDecksError } = await supabase
+    .from("decks")
+    .select("*")
+    .eq("user_id", user.id);
+
+  if (userDecksError) {
+    console.error(userDecksError);
+    return NextResponse.json(
+      { error: "KhÃ´ng thá»ƒ kiá»ƒm tra bá»™ tháº» Ä‘Ã£ thÃªm" },
+      { status: 500 },
+    );
+  }
+
+  const existingDeck = findExistingTemplateDeck(
+    template as TemplateDeckRow,
+    (userDecks || []) as UserDeckRow[],
+  );
+
+  if (existingDeck) {
+    return NextResponse.json(
+      {
+        error: "Bá»™ tháº» nÃ y Ä‘Ã£ Ä‘Æ°á»£c thÃªm rá»“i.",
+        deckId: existingDeck.id,
+        alreadyAdded: true,
+      },
+      { status: 409 },
     );
   }
 
@@ -149,14 +253,46 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: deck, error: deckError } = await supabase
+  const deckPayload = {
+    user_id: user.id,
+    name: template.name,
+    source_template_slug: template.slug,
+  };
+  let { data: deck, error: deckError } = await supabase
     .from("decks")
-    .insert({
-      user_id: user.id,
-      name: template.name,
-    })
+    .insert(deckPayload)
     .select("id")
     .single();
+
+  if (deckError && isMissingSourceTemplateColumn(deckError)) {
+    const retryResult = await supabase
+      .from("decks")
+      .insert({
+        user_id: user.id,
+        name: template.name,
+      })
+      .select("id")
+      .single();
+
+    deck = retryResult.data;
+    deckError = retryResult.error;
+  }
+
+  if (deckError && isUniqueTemplateError(deckError)) {
+    const duplicateDeck = findExistingTemplateDeck(
+      template as TemplateDeckRow,
+      (userDecks || []) as UserDeckRow[],
+    );
+
+    return NextResponse.json(
+      {
+        error: "Bá»™ tháº» nÃ y Ä‘Ã£ Ä‘Æ°á»£c thÃªm rá»“i.",
+        deckId: duplicateDeck?.id || null,
+        alreadyAdded: true,
+      },
+      { status: 409 },
+    );
+  }
 
   if (deckError || !deck) {
     console.error(deckError);
