@@ -80,7 +80,9 @@ export default function StudyPage() {
   const configured = hasPublicEnv();
   const wordAudioRef = useRef<HTMLAudioElement | null>(null);
   const sentenceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const transientAudioRef = useRef<HTMLAudioElement | null>(null);
   const repairingReviewsRef = useRef(false);
+  const pendingReviewSavesRef = useRef<Promise<void>[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [weakOnly] = useState(() => isWeakStudyRequest());
   const [selectedDeckId, setSelectedDeckId] = useState(() => {
@@ -97,7 +99,6 @@ export default function StudyPage() {
   const [showAnswer, setShowAnswer] = useState(false);
   const [showPinyinHint, setShowPinyinHint] = useState(false);
   const [loading, setLoading] = useState(configured);
-  const [saving, setSaving] = useState(false);
   const [audioSpeed, setAudioSpeed] = useState<AudioSpeed>(() => {
     if (typeof window === "undefined") {
       return "normal";
@@ -442,11 +443,27 @@ export default function StudyPage() {
       return;
     }
 
+    stopCardAudio();
     const audio = new Audio(audioUrl);
+    transientAudioRef.current = audio;
     audio.playbackRate = audioSpeeds[audioSpeed];
     audio.play().catch(() => {
       // Some browsers may still block autoplay if the click gesture is lost.
     });
+  }
+
+  function stopCardAudio() {
+    [wordAudioRef.current, sentenceAudioRef.current, transientAudioRef.current].forEach(
+      (audio) => {
+        if (!audio) {
+          return;
+        }
+
+        audio.pause();
+        audio.currentTime = 0;
+      },
+    );
+    transientAudioRef.current = null;
   }
 
   function showAnswerAndPlayAudio() {
@@ -472,23 +489,39 @@ export default function StudyPage() {
     setWritingResult("wrong");
   }
 
-  async function rate(rating: ReviewRating) {
+  function queueReviewSave(promise: Promise<Response>, errorMessage: string) {
+    const trackedPromise = promise
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(errorMessage);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        alert(errorMessage);
+      });
+
+    pendingReviewSavesRef.current.push(trackedPromise);
+    trackedPromise.finally(() => {
+      pendingReviewSavesRef.current = pendingReviewSavesRef.current.filter(
+        (item) => item !== trackedPromise,
+      );
+    });
+
+    return trackedPromise;
+  }
+
+  function rate(rating: ReviewRating) {
     const current = reviews[index];
     if (!current?.cards) {
       return;
     }
 
-    setSaving(true);
-    const response = await fetchWithAuth("/api/review", {
+    stopCardAudio();
+    const savePromise = queueReviewSave(fetchWithAuth("/api/review", {
       method: "POST",
       body: JSON.stringify({ cardId: current.cards.id, rating }),
-    });
-    setSaving(false);
-
-    if (!response.ok) {
-      alert("Không thể lưu kết quả ôn tập.");
-      return;
-    }
+    }), "Khong the luu ket qua on tap.");
 
     const nextIndex = index + 1;
     setShowAnswer(false);
@@ -497,7 +530,15 @@ export default function StudyPage() {
     setWritingResult("");
 
     if (nextIndex >= reviews.length) {
-      await loadReviews();
+      setReviews([]);
+      setIndex(0);
+      setLoading(true);
+      void Promise.allSettled([
+        ...pendingReviewSavesRef.current,
+        savePromise,
+      ]).finally(() => {
+        void loadReviews();
+      });
     } else {
       setIndex(nextIndex);
     }
@@ -730,7 +771,6 @@ export default function StudyPage() {
                       (rating) => (
                         <button
                           className="min-h-14 rounded-md border border-zinc-300 px-3 py-2 text-sm hover:bg-zinc-100 disabled:opacity-60"
-                          disabled={saving}
                           key={rating}
                           onClick={() => rate(rating)}
                           type="button"

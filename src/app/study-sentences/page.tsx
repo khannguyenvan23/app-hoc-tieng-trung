@@ -87,7 +87,9 @@ function applyNewSentenceLimit(
 export default function StudySentencesPage() {
   const configured = hasPublicEnv();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const transientAudioRef = useRef<HTMLAudioElement | null>(null);
   const repairingReviewsRef = useRef(false);
+  const pendingReviewSavesRef = useRef<Promise<void>[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [weakOnly] = useState(() => isWeakStudyRequest());
   const [selectedDeckId, setSelectedDeckId] = useState(() => {
@@ -107,7 +109,6 @@ export default function StudySentencesPage() {
   const [showAnswer, setShowAnswer] = useState(false);
   const [showPinyinHint, setShowPinyinHint] = useState(false);
   const [loading, setLoading] = useState(configured);
-  const [saving, setSaving] = useState(false);
   const [audioSpeed, setAudioSpeed] = useState<AudioSpeed>(() => {
     if (typeof window === "undefined") {
       return "normal";
@@ -410,11 +411,25 @@ export default function StudySentencesPage() {
       return;
     }
 
+    stopSentenceAudio();
     const audio = new Audio(card.sentence_audio_url);
+    transientAudioRef.current = audio;
     audio.playbackRate = audioSpeeds[audioSpeed];
     audio.play().catch(() => {
       // Browsers can block autoplay if the click gesture is lost.
     });
+  }
+
+  function stopSentenceAudio() {
+    [audioRef.current, transientAudioRef.current].forEach((audio) => {
+      if (!audio) {
+        return;
+      }
+
+      audio.pause();
+      audio.currentTime = 0;
+    });
+    transientAudioRef.current = null;
   }
 
   function showAnswerAndPlayAudio() {
@@ -440,26 +455,45 @@ export default function StudySentencesPage() {
     setWritingResult("wrong");
   }
 
-  async function rate(rating: ReviewRating) {
+  function queueReviewSave(promise: Promise<Response>, errorMessage: string) {
+    const trackedPromise = promise
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(errorMessage);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        alert(errorMessage);
+      });
+
+    pendingReviewSavesRef.current.push(trackedPromise);
+    trackedPromise.finally(() => {
+      pendingReviewSavesRef.current = pendingReviewSavesRef.current.filter(
+        (item) => item !== trackedPromise,
+      );
+    });
+
+    return trackedPromise;
+  }
+
+  function rate(rating: ReviewRating) {
     const current = reviews[index];
     if (!current?.sentence_cards) {
       return;
     }
 
-    setSaving(true);
-    const response = await fetchWithAuth("/api/review-sentence", {
-      method: "POST",
-      body: JSON.stringify({
-        sentenceCardId: current.sentence_cards.id,
-        rating,
+    stopSentenceAudio();
+    const savePromise = queueReviewSave(
+      fetchWithAuth("/api/review-sentence", {
+        method: "POST",
+        body: JSON.stringify({
+          sentenceCardId: current.sentence_cards.id,
+          rating,
+        }),
       }),
-    });
-    setSaving(false);
-
-    if (!response.ok) {
-      alert("Không thể lưu kết quả luyện câu.");
-      return;
-    }
+      "Khong the luu ket qua luyen cau.",
+    );
 
     const nextIndex = index + 1;
     setShowAnswer(false);
@@ -468,7 +502,15 @@ export default function StudySentencesPage() {
     setWritingResult("");
 
     if (nextIndex >= reviews.length) {
-      await loadReviews();
+      setReviews([]);
+      setIndex(0);
+      setLoading(true);
+      void Promise.allSettled([
+        ...pendingReviewSavesRef.current,
+        savePromise,
+      ]).finally(() => {
+        void loadReviews();
+      });
     } else {
       setIndex(nextIndex);
     }
@@ -701,7 +743,6 @@ export default function StudySentencesPage() {
                       (rating) => (
                         <button
                           className="min-h-14 rounded-md border border-zinc-300 px-3 py-2 text-sm hover:bg-zinc-100 disabled:opacity-60"
-                          disabled={saving}
                           key={rating}
                           onClick={() => rate(rating)}
                           type="button"
