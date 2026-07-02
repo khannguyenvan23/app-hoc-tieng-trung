@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { fetchWithAuth } from "@/lib/fetch-auth";
 import type { SentenceVocabItem } from "@/lib/types";
 
 type ManualSentenceForm = {
@@ -59,47 +59,22 @@ export default function NewManualSentencePage() {
     setLoading(true);
     setError("");
 
-    const supabase = createSupabaseBrowserClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    const { data: sentenceCard, error: cardError } = await supabase
-      .from("sentence_cards")
-      .insert({
-        user_id: user.id,
-        deck_id: params.deckId,
-        sentence_cn: form.sentence_cn.trim(),
-        sentence_pinyin: form.sentence_pinyin.trim() || null,
-        sentence_vi: form.sentence_vi.trim(),
+    const response = await fetchWithAuth("/api/manual-sentence", {
+      method: "POST",
+      body: JSON.stringify({
+        deckId: params.deckId,
+        sentence_cn: form.sentence_cn,
+        sentence_pinyin: form.sentence_pinyin,
+        sentence_vi: form.sentence_vi,
         vocab_json: textToVocab(form.vocab_text),
-        sentence_audio_url: form.sentence_audio_url.trim() || null,
-      })
-      .select("id")
-      .single();
-
-    if (cardError || !sentenceCard) {
-      setLoading(false);
-      setError(cardError?.message || "Không thể tạo câu luyện tập.");
-      return;
-    }
-
-    const { error: reviewError } = await supabase
-      .from("sentence_reviews")
-      .insert({
-        user_id: user.id,
-        sentence_card_id: sentenceCard.id,
-      });
-
+        sentence_audio_url: form.sentence_audio_url,
+      }),
+    });
+    const data = await response.json();
     setLoading(false);
 
-    if (reviewError) {
-      setError(reviewError.message);
+    if (!response.ok) {
+      setError(data.error || "Không thể tạo câu luyện tập.");
       return;
     }
 
@@ -114,8 +89,8 @@ export default function NewManualSentencePage() {
             <div>
               <h1 className="text-2xl font-semibold">Thêm câu thủ công</h1>
               <p className="mt-1 text-sm text-zinc-600">
-                Tự nhập câu luyện tập. Sau khi lưu, bạn có thể vào Sửa để tạo
-                lại audio.
+                Tự nhập câu luyện tập. Khi lưu, app sẽ tự tạo audio nếu bạn để
+                trống ô audio.
               </p>
             </div>
             <Link
@@ -172,7 +147,9 @@ export default function NewManualSentencePage() {
                 onChange={(event) =>
                   updateField("vocab_text", event.target.value)
                 }
-                placeholder={"我 | wǒ | tôi\n去过 | qù guò | đã từng đi\n中国 | Zhōngguó | Trung Quốc"}
+                placeholder={
+                  "我 | wǒ | tôi\n去过 | qù guò | đã từng đi\n中国 | Zhōngguó | Trung Quốc"
+                }
                 value={form.vocab_text}
               />
             </label>
@@ -184,7 +161,7 @@ export default function NewManualSentencePage() {
                 onChange={(event) =>
                   updateField("sentence_audio_url", event.target.value)
                 }
-                placeholder="Có thể để trống"
+                placeholder="Có thể để trống để app tự tạo"
                 value={form.sentence_audio_url}
               />
             </label>
@@ -197,7 +174,7 @@ export default function NewManualSentencePage() {
             disabled={loading}
             type="submit"
           >
-            {loading ? "Đang lưu..." : "Lưu câu"}
+            {loading ? "Đang lưu và tạo audio..." : "Lưu câu"}
           </button>
         </form>
       </AppShell>
