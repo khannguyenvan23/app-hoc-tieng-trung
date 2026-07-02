@@ -353,8 +353,58 @@ export default function StudyPage() {
     window.localStorage.setItem("hanzi-writing-mode", String(nextValue));
   }
 
-  function playCardAudio() {
-    const audioUrl = card?.word_audio_url || card?.sentence_audio_url;
+  async function ensureCardAudio() {
+    if (!card) {
+      return null;
+    }
+
+    if (card.word_audio_url || card.sentence_audio_url) {
+      return {
+        wordAudioUrl: card.word_audio_url,
+        sentenceAudioUrl: card.sentence_audio_url,
+      };
+    }
+
+    const response = await fetchWithAuth("/api/ensure-card-audio", {
+      method: "POST",
+      body: JSON.stringify({ cardId: card.id }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+
+    setReviews((currentReviews) =>
+      currentReviews.map((review) =>
+        review.cards?.id === card.id
+          ? {
+              ...review,
+              cards: {
+                ...review.cards,
+                word_audio_url: data.wordAudioUrl || null,
+                sentence_audio_url: data.sentenceAudioUrl || null,
+              },
+            }
+          : review,
+      ),
+    );
+
+    return data as {
+      wordAudioUrl: string | null;
+      sentenceAudioUrl: string | null;
+    };
+  }
+
+  async function playCardAudio() {
+    const audioData = await ensureCardAudio();
+    const audioUrl =
+      audioData?.wordAudioUrl ||
+      audioData?.sentenceAudioUrl ||
+      card?.word_audio_url ||
+      card?.sentence_audio_url;
+
     if (!audioUrl) {
       return;
     }
