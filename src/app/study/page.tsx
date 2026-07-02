@@ -629,7 +629,7 @@ export default function StudyPage() {
                 onClick={() => setShowPinyinHint((current) => !current)}
                 type="button"
               >
-                {showPinyinHint ? "Ẩn pinyin" : "Gợi ý pinyin"}
+                {showPinyinHint ? "Tắt pinyin" : "Bật pinyin"}
               </button>
             </div>
           </div>
