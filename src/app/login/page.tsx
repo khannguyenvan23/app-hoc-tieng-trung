@@ -11,11 +11,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [canResendConfirmation, setCanResendConfirmation] = useState(false);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setLoading(true);
     setMessage("");
+    setCanResendConfirmation(false);
 
     const supabase = createSupabaseBrowserClient();
     const result =
@@ -40,10 +42,35 @@ export default function LoginPage() {
       setMessage(
         "Hãy kiểm tra email để xác nhận tài khoản, rồi quay lại đăng nhập.",
       );
+      setCanResendConfirmation(true);
       return;
     }
 
     router.push("/dashboard");
+  }
+
+  async function resendConfirmation() {
+    setLoading(true);
+    setMessage("");
+
+    const supabase = createSupabaseBrowserClient();
+    const result = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/login`,
+      },
+    });
+
+    setLoading(false);
+
+    if (result.error) {
+      setMessage(result.error.message);
+      return;
+    }
+
+    setMessage("Đã gửi lại email xác nhận. Hãy kiểm tra Inbox, Spam và Promotions.");
+    setCanResendConfirmation(true);
   }
 
   return (
@@ -104,6 +131,17 @@ export default function LoginPage() {
         />
 
         {message ? <p className="mt-4 text-sm text-red-700">{message}</p> : null}
+
+        {canResendConfirmation ? (
+          <button
+            className="mt-3 min-h-10 w-full rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
+            disabled={loading || !email}
+            onClick={resendConfirmation}
+            type="button"
+          >
+            Gửi lại email xác nhận
+          </button>
+        ) : null}
 
         <button
           className="mt-6 min-h-11 w-full rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
