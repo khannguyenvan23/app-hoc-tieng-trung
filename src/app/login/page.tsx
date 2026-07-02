@@ -2,7 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import {
+  createSupabaseBrowserClient,
+  createSupabasePasswordResetClient,
+} from "@/lib/supabase/browser";
 
 type AuthMode = "login" | "signup" | "forgot";
 
@@ -39,9 +42,8 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    const supabase = createSupabaseBrowserClient();
-
     if (mode === "forgot") {
+      const supabase = createSupabasePasswordResetClient();
       const result = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
@@ -60,6 +62,7 @@ export default function LoginPage() {
       return;
     }
 
+    const supabase = createSupabaseBrowserClient();
     const result =
       mode === "login"
         ? await supabase.auth.signInWithPassword({ email, password })

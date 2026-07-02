@@ -1,8 +1,29 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+
+function cleanResetUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("code");
+  url.searchParams.delete("token_hash");
+  url.searchParams.delete("type");
+  window.history.replaceState(window.history.state, "", url.pathname + url.search);
+}
+
+function getResetParams() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+  return {
+    accessToken: hashParams.get("access_token"),
+    code: searchParams.get("code"),
+    refreshToken: hashParams.get("refresh_token"),
+    tokenHash: searchParams.get("token_hash"),
+    type: searchParams.get("type") || hashParams.get("type"),
+  };
+}
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -10,12 +31,128 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [canUpdatePassword, setCanUpdatePassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const supabase = createSupabaseBrowserClient();
+
+    async function prepareRecoverySession() {
+      setCheckingSession(true);
+      setMessage("Đang kiểm tra link đặt lại mật khẩu...");
+      setIsError(false);
+
+      const { accessToken, code, refreshToken, tokenHash, type } = getResetParams();
+
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (!active) {
+          return;
+        }
+
+        if (!error) {
+          cleanResetUrl();
+          setCanUpdatePassword(true);
+          setMessage("");
+          setCheckingSession(false);
+          return;
+        }
+      }
+
+      if (tokenHash && type === "recovery") {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: "recovery",
+        });
+
+        if (!active) {
+          return;
+        }
+
+        if (!error) {
+          cleanResetUrl();
+          setCanUpdatePassword(true);
+          setMessage("");
+          setCheckingSession(false);
+          return;
+        }
+      }
+
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+        if (!active) {
+          return;
+        }
+
+        if (!error) {
+          cleanResetUrl();
+          setCanUpdatePassword(true);
+          setMessage("");
+          setCheckingSession(false);
+          return;
+        }
+      }
+
+      const { data } = await supabase.auth.getSession();
+
+      if (!active) {
+        return;
+      }
+
+      if (data.session) {
+        setCanUpdatePassword(true);
+        setMessage("");
+      } else {
+        setCanUpdatePassword(false);
+        setIsError(true);
+        setMessage(
+          "Link đặt lại mật khẩu đã hết hạn hoặc không tạo được phiên đăng nhập. Hãy quay lại trang đăng nhập và gửi lại email đặt mật khẩu.",
+        );
+      }
+
+      setCheckingSession(false);
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) {
+        return;
+      }
+
+      if ((event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") && session) {
+        setCanUpdatePassword(true);
+        setMessage("");
+        setIsError(false);
+        setCheckingSession(false);
+      }
+    });
+
+    void prepareRecoverySession();
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setMessage("");
     setIsError(false);
+
+    if (!canUpdatePassword) {
+      setIsError(true);
+      setMessage("Link đặt lại mật khẩu chưa sẵn sàng. Hãy gửi lại email đặt mật khẩu.");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setIsError(true);
@@ -32,7 +169,11 @@ export default function ResetPasswordPage() {
 
     if (result.error) {
       setIsError(true);
-      setMessage(result.error.message);
+      setMessage(
+        result.error.message === "Auth session missing!"
+          ? "Link đặt lại mật khẩu đã hết hạn. Hãy gửi lại email đặt mật khẩu."
+          : result.error.message,
+      );
       return;
     }
 
@@ -56,6 +197,7 @@ export default function ResetPasswordPage() {
         </label>
         <input
           className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
+          disabled={checkingSession || !canUpdatePassword}
           id="password"
           minLength={6}
           onChange={(event) => setPassword(event.target.value)}
@@ -72,6 +214,7 @@ export default function ResetPasswordPage() {
         </label>
         <input
           className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
+          disabled={checkingSession || !canUpdatePassword}
           id="confirm-password"
           minLength={6}
           onChange={(event) => setConfirmPassword(event.target.value)}
@@ -92,11 +235,25 @@ export default function ResetPasswordPage() {
 
         <button
           className="mt-6 min-h-11 w-full rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
-          disabled={loading}
+          disabled={checkingSession || loading || !canUpdatePassword}
           type="submit"
         >
-          {loading ? "Đang lưu..." : "Đổi mật khẩu"}
+          {checkingSession
+            ? "Đang kiểm tra link..."
+            : loading
+              ? "Đang lưu..."
+              : "Đổi mật khẩu"}
         </button>
+
+        {!checkingSession && !canUpdatePassword ? (
+          <button
+            className="mt-4 w-full text-sm font-medium text-teal-800 hover:underline"
+            onClick={() => router.push("/login")}
+            type="button"
+          >
+            Quay lại đăng nhập
+          </button>
+        ) : null}
       </form>
     </main>
   );
