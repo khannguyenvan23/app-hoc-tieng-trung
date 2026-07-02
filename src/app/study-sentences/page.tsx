@@ -426,8 +426,14 @@ export default function StudySentencesPage() {
         return;
       }
 
-      audio.pause();
-      audio.currentTime = 0;
+      try {
+        audio.pause();
+        if (audio.readyState > 0) {
+          audio.currentTime = 0;
+        }
+      } catch (error) {
+        console.warn("Could not stop sentence audio", error);
+      }
     });
     transientAudioRef.current = null;
   }
