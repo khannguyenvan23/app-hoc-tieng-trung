@@ -103,7 +103,12 @@ export default function StudyPage() {
   const [reviews, setReviews] = useState<DueReview[]>([]);
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [showPinyinHint, setShowPinyinHint] = useState(false);
+  const [showPinyinHint, setShowPinyinHint] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    return window.localStorage.getItem("hanzi-show-pinyin") === "true";
+  });
   const [loading, setLoading] = useState(configured);
   const [audioSpeed, setAudioSpeed] = useState<AudioSpeed>(() => {
     if (typeof window === "undefined") {
@@ -180,7 +185,6 @@ export default function StudyPage() {
     );
     setIndex(0);
     setShowAnswer(false);
-    setShowPinyinHint(false);
     setWritingAnswer("");
     setWritingResult("");
     setLoading(false);
@@ -330,7 +334,6 @@ export default function StudyPage() {
             );
             setIndex(0);
             setShowAnswer(false);
-            setShowPinyinHint(false);
             setWritingAnswer("");
             setWritingResult("");
             setLoading(false);
@@ -345,7 +348,6 @@ export default function StudyPage() {
       );
       setIndex(0);
       setShowAnswer(false);
-      setShowPinyinHint(false);
       setWritingAnswer("");
       setWritingResult("");
       setLoading(false);
@@ -383,6 +385,12 @@ export default function StudyPage() {
     if (sentenceAudioRef.current) {
       sentenceAudioRef.current.playbackRate = audioSpeeds[nextSpeed];
     }
+  }
+
+  function togglePinyinHint() {
+    const nextValue = !showPinyinHint;
+    setShowPinyinHint(nextValue);
+    window.localStorage.setItem("hanzi-show-pinyin", String(nextValue));
   }
 
   function toggleWritingMode() {
@@ -480,7 +488,6 @@ export default function StudyPage() {
 
   function showAnswerAndPlayAudio() {
     setShowAnswer(true);
-    setShowPinyinHint(false);
     playCardAudio();
   }
 
@@ -537,7 +544,6 @@ export default function StudyPage() {
 
     const nextIndex = index + 1;
     setShowAnswer(false);
-    setShowPinyinHint(false);
     setWritingAnswer("");
     setWritingResult("");
 
@@ -632,7 +638,7 @@ export default function StudyPage() {
                     ? "border-teal-700 bg-teal-50 text-teal-800"
                     : "border-zinc-300 hover:bg-zinc-100"
                 }`}
-                onClick={() => setShowPinyinHint((current) => !current)}
+                onClick={togglePinyinHint}
                 type="button"
               >
                 {showPinyinHint ? "Tắt pinyin" : "Bật pinyin"}

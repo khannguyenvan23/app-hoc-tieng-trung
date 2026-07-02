@@ -116,7 +116,12 @@ export default function StudySentencesPage() {
   const [reviews, setReviews] = useState<DueSentenceReview[]>([]);
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [showPinyinHint, setShowPinyinHint] = useState(false);
+  const [showPinyinHint, setShowPinyinHint] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    return window.localStorage.getItem("hanzi-show-pinyin") === "true";
+  });
   const [loading, setLoading] = useState(configured);
   const [audioSpeed, setAudioSpeed] = useState<AudioSpeed>(() => {
     if (typeof window === "undefined") {
@@ -199,7 +204,6 @@ export default function StudySentencesPage() {
     );
     setIndex(0);
     setShowAnswer(false);
-    setShowPinyinHint(false);
     setSentenceAnswer("");
     setWritingResult("");
     setLoading(false);
@@ -355,7 +359,6 @@ export default function StudySentencesPage() {
             );
             setIndex(0);
             setShowAnswer(false);
-            setShowPinyinHint(false);
             setSentenceAnswer("");
             setWritingResult("");
             setLoading(false);
@@ -373,7 +376,6 @@ export default function StudySentencesPage() {
       );
       setIndex(0);
       setShowAnswer(false);
-      setShowPinyinHint(false);
       setSentenceAnswer("");
       setWritingResult("");
       setLoading(false);
@@ -406,11 +408,16 @@ export default function StudySentencesPage() {
     }
   }
 
+  function togglePinyinHint() {
+    const nextValue = !showPinyinHint;
+    setShowPinyinHint(nextValue);
+    window.localStorage.setItem("hanzi-show-pinyin", String(nextValue));
+  }
+
   function toggleWritingMode() {
     const nextValue = !writingMode;
     setWritingMode(nextValue);
     setSentenceAnswer("");
-    setShowPinyinHint(false);
     setWritingResult("");
     window.localStorage.setItem("hanzi-sentence-writing-mode", String(nextValue));
   }
@@ -449,7 +456,6 @@ export default function StudySentencesPage() {
 
   function showAnswerAndPlayAudio() {
     setShowAnswer(true);
-    setShowPinyinHint(false);
     playSentenceAudio();
   }
 
@@ -512,7 +518,6 @@ export default function StudySentencesPage() {
 
     const nextIndex = index + 1;
     setShowAnswer(false);
-    setShowPinyinHint(false);
     setSentenceAnswer("");
     setWritingResult("");
 
@@ -608,7 +613,7 @@ export default function StudySentencesPage() {
                     ? "border-teal-700 bg-teal-50 text-teal-800"
                     : "border-zinc-300 hover:bg-zinc-100"
                 }`}
-                onClick={() => setShowPinyinHint((current) => !current)}
+                onClick={togglePinyinHint}
                 type="button"
               >
                 {showPinyinHint ? "Tắt pinyin" : "Bật pinyin"}
