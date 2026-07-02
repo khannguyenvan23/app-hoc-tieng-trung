@@ -89,6 +89,7 @@ export default function StudySentencesPage() {
   const [reviews, setReviews] = useState<DueSentenceReview[]>([]);
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [showPinyinHint, setShowPinyinHint] = useState(false);
   const [loading, setLoading] = useState(configured);
   const [saving, setSaving] = useState(false);
   const [audioSpeed, setAudioSpeed] = useState<AudioSpeed>(() => {
@@ -163,6 +164,7 @@ export default function StudySentencesPage() {
     );
     setIndex(0);
     setShowAnswer(false);
+    setShowPinyinHint(false);
     setSentenceAnswer("");
     setWritingResult("");
     setLoading(false);
@@ -308,6 +310,7 @@ export default function StudySentencesPage() {
             );
             setIndex(0);
             setShowAnswer(false);
+            setShowPinyinHint(false);
             setSentenceAnswer("");
             setWritingResult("");
             setLoading(false);
@@ -325,6 +328,7 @@ export default function StudySentencesPage() {
       );
       setIndex(0);
       setShowAnswer(false);
+      setShowPinyinHint(false);
       setSentenceAnswer("");
       setWritingResult("");
       setLoading(false);
@@ -361,6 +365,7 @@ export default function StudySentencesPage() {
     const nextValue = !writingMode;
     setWritingMode(nextValue);
     setSentenceAnswer("");
+    setShowPinyinHint(false);
     setWritingResult("");
     window.localStorage.setItem("hanzi-sentence-writing-mode", String(nextValue));
   }
@@ -379,6 +384,7 @@ export default function StudySentencesPage() {
 
   function showAnswerAndPlayAudio() {
     setShowAnswer(true);
+    setShowPinyinHint(false);
     playSentenceAudio();
   }
 
@@ -422,6 +428,7 @@ export default function StudySentencesPage() {
 
     const nextIndex = index + 1;
     setShowAnswer(false);
+    setShowPinyinHint(false);
     setSentenceAnswer("");
     setWritingResult("");
 
@@ -597,9 +604,21 @@ export default function StudySentencesPage() {
                     <div className="text-3xl font-semibold leading-relaxed">
                       {card.sentence_cn}
                     </div>
-                    <div className="mt-3 text-base text-teal-800">
-                      {card.sentence_pinyin}
-                    </div>
+                    {card.sentence_pinyin ? (
+                      showPinyinHint ? (
+                        <div className="mt-3 text-base text-teal-800">
+                          {card.sentence_pinyin}
+                        </div>
+                      ) : (
+                        <button
+                          className="mt-4 rounded-md border border-teal-700 px-4 py-2 text-sm font-medium text-teal-800 hover:bg-teal-50"
+                          onClick={() => setShowPinyinHint(true)}
+                          type="button"
+                        >
+                          Gợi ý pinyin
+                        </button>
+                      )
+                    ) : null}
 
                     {card.sentence_audio_url ? (
                       <div className="mt-5 flex justify-center">
@@ -630,7 +649,9 @@ export default function StudySentencesPage() {
                             <div className="text-lg font-semibold">
                               {item.chinese}
                             </div>
-                            <div className="text-teal-800">{item.pinyin}</div>
+                            <div className="text-teal-800">
+                              {showPinyinHint ? item.pinyin : ""}
+                            </div>
                             <div className="text-zinc-700">
                               {item.meaning_vi}
                             </div>

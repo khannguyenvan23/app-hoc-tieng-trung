@@ -79,6 +79,7 @@ export default function StudyPage() {
   const [reviews, setReviews] = useState<DueReview[]>([]);
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [showPinyinHint, setShowPinyinHint] = useState(false);
   const [loading, setLoading] = useState(configured);
   const [saving, setSaving] = useState(false);
   const [audioSpeed, setAudioSpeed] = useState<AudioSpeed>(() => {
@@ -150,6 +151,7 @@ export default function StudyPage() {
     );
     setIndex(0);
     setShowAnswer(false);
+    setShowPinyinHint(false);
     setWritingAnswer("");
     setWritingResult("");
     setLoading(false);
@@ -292,6 +294,7 @@ export default function StudyPage() {
             );
             setIndex(0);
             setShowAnswer(false);
+            setShowPinyinHint(false);
             setWritingAnswer("");
             setWritingResult("");
             setLoading(false);
@@ -306,6 +309,7 @@ export default function StudyPage() {
       );
       setIndex(0);
       setShowAnswer(false);
+      setShowPinyinHint(false);
       setWritingAnswer("");
       setWritingResult("");
       setLoading(false);
@@ -418,6 +422,7 @@ export default function StudyPage() {
 
   function showAnswerAndPlayAudio() {
     setShowAnswer(true);
+    setShowPinyinHint(false);
     playCardAudio();
   }
 
@@ -458,6 +463,7 @@ export default function StudyPage() {
 
     const nextIndex = index + 1;
     setShowAnswer(false);
+    setShowPinyinHint(false);
     setWritingAnswer("");
     setWritingResult("");
 
@@ -563,9 +569,9 @@ export default function StudyPage() {
                 <div className="mt-3 text-3xl font-semibold">
                   {card.meaning_vi}
                 </div>
-                {writingMode && card.pinyin ? (
+                {false && writingMode && card?.pinyin ? (
                   <div className="mt-3 text-sm text-teal-800">
-                    Gợi ý pinyin: {card.pinyin}
+                    Gợi ý pinyin: {card?.pinyin}
                   </div>
                 ) : null}
               </div>
@@ -635,16 +641,28 @@ export default function StudyPage() {
                 <div className="mt-8">
                   <div className="rounded-lg bg-stone-50 p-5 text-center">
                     <div className="text-5xl font-semibold">{card.chinese}</div>
-                    <div className="mt-3 text-lg text-teal-800">
-                      {card.pinyin}
-                    </div>
+                    {card?.pinyin ? (
+                      showPinyinHint ? (
+                        <div className="mt-3 text-lg text-teal-800">
+                          {card?.pinyin}
+                        </div>
+                      ) : (
+                        <button
+                          className="mt-4 rounded-md border border-teal-700 px-4 py-2 text-sm font-medium text-teal-800 hover:bg-teal-50"
+                          onClick={() => setShowPinyinHint(true)}
+                          type="button"
+                        >
+                          Gợi ý pinyin
+                        </button>
+                      )
+                    ) : null}
                     <div className="mt-6 text-sm font-medium uppercase tracking-wide text-zinc-500">
                       Câu ví dụ
                     </div>
                     <div className="mt-2 text-xl text-zinc-900">
                       {card.example_cn}
                     </div>
-                    {card.example_pinyin ? (
+                    {showPinyinHint && card.example_pinyin ? (
                       <div className="mt-1 text-sm text-teal-800">
                         {card.example_pinyin}
                       </div>
