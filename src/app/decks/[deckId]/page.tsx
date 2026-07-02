@@ -1,21 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppShell, EmptyState, PrimaryLink } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
+import { fetchWithAuth } from "@/lib/fetch-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Card, Deck, SentenceCard } from "@/lib/types";
 
+type DeckAction =
+  | "reset-progress"
+  | "delete-vocabulary"
+  | "delete-sentences"
+  | "delete-deck";
+
 export default function DeckPage() {
   const params = useParams<{ deckId: string }>();
+  const router = useRouter();
   const configured = hasPublicEnv();
   const [deck, setDeck] = useState<Deck | null>(null);
   const [cards, setCards] = useState<Card[]>([]);
   const [sentenceCards, setSentenceCards] = useState<SentenceCard[]>([]);
   const [loading, setLoading] = useState(configured);
+  const [actionLoading, setActionLoading] = useState<DeckAction | "">("");
+  const [actionMessage, setActionMessage] = useState("");
 
   useEffect(() => {
     if (!configured) {
@@ -43,6 +53,61 @@ export default function DeckPage() {
       setLoading(false);
     });
   }, [configured, params.deckId]);
+
+  async function runDeckAction(action: DeckAction) {
+    if (!deck) {
+      return;
+    }
+
+    const confirmations: Record<DeckAction, string> = {
+      "reset-progress":
+        "Reset toàn bộ tiến độ ôn của bộ thẻ này? Nội dung thẻ vẫn được giữ lại.",
+      "delete-vocabulary":
+        "Xóa toàn bộ thẻ từ vựng trong bộ này? Câu luyện tập vẫn được giữ lại.",
+      "delete-sentences":
+        "Xóa toàn bộ câu luyện tập trong bộ này? Thẻ từ vựng vẫn được giữ lại.",
+      "delete-deck":
+        "Xóa toàn bộ bộ thẻ này, bao gồm tất cả thẻ, câu và lịch ôn?",
+    };
+
+    if (!window.confirm(confirmations[action])) {
+      return;
+    }
+
+    setActionLoading(action);
+    setActionMessage("");
+
+    const response = await fetchWithAuth("/api/deck-actions", {
+      method: "POST",
+      body: JSON.stringify({ deckId: deck.id, action }),
+    });
+    const data = await response.json();
+    setActionLoading("");
+
+    if (!response.ok) {
+      setActionMessage(data.error || "Không thể thực hiện thao tác.");
+      return;
+    }
+
+    if (action === "delete-deck") {
+      router.push("/dashboard");
+      return;
+    }
+
+    if (action === "delete-vocabulary") {
+      setCards([]);
+      setActionMessage("Đã xóa toàn bộ thẻ từ vựng trong bộ này.");
+      return;
+    }
+
+    if (action === "delete-sentences") {
+      setSentenceCards([]);
+      setActionMessage("Đã xóa toàn bộ câu luyện tập trong bộ này.");
+      return;
+    }
+
+    setActionMessage("Đã reset tiến độ học của bộ thẻ.");
+  }
 
   return (
     <AuthGuard>
@@ -226,6 +291,71 @@ export default function DeckPage() {
                   ) : null}
                 </div>
               )}
+            </section>
+
+            <section className="mt-8 rounded-lg border border-red-200 bg-red-50 p-5">
+              <h2 className="text-lg font-semibold text-red-900">
+                Quản lý bộ thẻ
+              </h2>
+              <p className="mt-1 text-sm text-red-800">
+                Các thao tác này ảnh hưởng trực tiếp đến nội dung hoặc tiến độ
+                học của bộ thẻ hiện tại.
+              </p>
+
+              {actionMessage ? (
+                <p
+                  className={`mt-3 text-sm ${
+                    actionMessage.startsWith("Đã")
+                      ? "text-teal-800"
+                      : "text-red-700"
+                  }`}
+                >
+                  {actionMessage}
+                </p>
+              ) : null}
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                <button
+                  className="min-h-10 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
+                  disabled={Boolean(actionLoading)}
+                  onClick={() => runDeckAction("reset-progress")}
+                  type="button"
+                >
+                  {actionLoading === "reset-progress"
+                    ? "Đang reset..."
+                    : "Reset tiến độ"}
+                </button>
+                <button
+                  className="min-h-10 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
+                  disabled={Boolean(actionLoading) || cards.length === 0}
+                  onClick={() => runDeckAction("delete-vocabulary")}
+                  type="button"
+                >
+                  {actionLoading === "delete-vocabulary"
+                    ? "Đang xóa..."
+                    : "Xóa thẻ từ"}
+                </button>
+                <button
+                  className="min-h-10 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
+                  disabled={Boolean(actionLoading) || sentenceCards.length === 0}
+                  onClick={() => runDeckAction("delete-sentences")}
+                  type="button"
+                >
+                  {actionLoading === "delete-sentences"
+                    ? "Đang xóa..."
+                    : "Xóa câu"}
+                </button>
+                <button
+                  className="min-h-10 rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-60"
+                  disabled={Boolean(actionLoading)}
+                  onClick={() => runDeckAction("delete-deck")}
+                  type="button"
+                >
+                  {actionLoading === "delete-deck"
+                    ? "Đang xóa..."
+                    : "Xóa toàn bộ deck"}
+                </button>
+              </div>
             </section>
           </>
         )}

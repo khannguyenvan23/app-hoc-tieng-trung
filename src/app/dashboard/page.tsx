@@ -8,7 +8,7 @@ import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import type { Deck, TemplateDeck } from "@/lib/types";
+import type { Deck, ReviewRating, TemplateDeck } from "@/lib/types";
 
 type DashboardStats = {
   totalCards: number;
@@ -22,6 +22,14 @@ type StudySettings = {
   daily_new_sentence_limit: number;
 };
 
+type ReviewStats = {
+  studiedToday: number;
+  ratingCounts: Record<ReviewRating, number>;
+  sevenDays: { key: string; label: string; count: number }[];
+  topDeckName: string;
+  topDeckCount: number;
+};
+
 const emptyStats: DashboardStats = {
   totalCards: 0,
   dueToday: 0,
@@ -32,6 +40,26 @@ const emptyStats: DashboardStats = {
 const defaultStudySettings: StudySettings = {
   daily_new_card_limit: 10,
   daily_new_sentence_limit: 5,
+};
+
+const emptyReviewStats: ReviewStats = {
+  studiedToday: 0,
+  ratingCounts: {
+    again: 0,
+    hard: 0,
+    good: 0,
+    easy: 0,
+  },
+  sevenDays: [],
+  topDeckName: "Chưa có dữ liệu",
+  topDeckCount: 0,
+};
+
+const ratingLabels: Record<ReviewRating, string> = {
+  again: "Quên",
+  hard: "Khó",
+  good: "Nhớ",
+  easy: "Dễ",
 };
 
 function startOfLocalDay(date: Date) {
@@ -58,6 +86,102 @@ function addLocalDays(date: Date, days: number) {
   const nextDate = new Date(date);
   nextDate.setDate(nextDate.getDate() + days);
   return nextDate;
+}
+
+function getLastSevenDays() {
+  const today = startOfLocalDay(new Date());
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = addLocalDays(today, index - 6);
+    return {
+      key: toLocalDateKey(date),
+      label: date.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+      }),
+      count: 0,
+    };
+  });
+}
+
+function getNestedDeckName(review: unknown, relationName: string) {
+  const relation = (review as Record<string, unknown>)[relationName];
+  const item = Array.isArray(relation) ? relation[0] : relation;
+
+  if (!item || typeof item !== "object") {
+    return "Không rõ deck";
+  }
+
+  const decks = (item as Record<string, unknown>).decks;
+  const deck = Array.isArray(decks) ? decks[0] : decks;
+
+  if (!deck || typeof deck !== "object") {
+    return "Không rõ deck";
+  }
+
+  return String((deck as Record<string, unknown>).name || "Không rõ deck");
+}
+
+function calculateReviewStats(
+  cardReviews: unknown[],
+  sentenceReviews: unknown[],
+) {
+  const todayKey = toLocalDateKey(new Date());
+  const sevenDays = getLastSevenDays();
+  const sevenDayMap = new Map(sevenDays.map((day) => [day.key, day]));
+  const ratingCounts: Record<ReviewRating, number> = {
+    again: 0,
+    hard: 0,
+    good: 0,
+    easy: 0,
+  };
+  const deckCounts = new Map<string, number>();
+  let studiedToday = 0;
+
+  const handleReview = (review: unknown, relationName: string) => {
+    const row = review as {
+      updated_at?: string;
+      last_rating?: ReviewRating | null;
+    };
+
+    if (!row.updated_at) {
+      return;
+    }
+
+    const dayKey = toLocalDateKey(row.updated_at);
+
+    if (dayKey === todayKey) {
+      studiedToday += 1;
+    }
+
+    const day = sevenDayMap.get(dayKey);
+
+    if (day) {
+      day.count += 1;
+    }
+
+    if (row.last_rating && row.last_rating in ratingCounts) {
+      ratingCounts[row.last_rating] += 1;
+    }
+
+    const deckName = getNestedDeckName(review, relationName);
+    deckCounts.set(deckName, (deckCounts.get(deckName) || 0) + 1);
+  };
+
+  cardReviews.forEach((review) => handleReview(review, "cards"));
+  sentenceReviews.forEach((review) => handleReview(review, "sentence_cards"));
+
+  const topDeck = Array.from(deckCounts.entries()).sort(
+    (left, right) => right[1] - left[1],
+  )[0];
+
+  return {
+    studiedToday,
+    ratingCounts,
+    sevenDays,
+    topDeckName: topDeck?.[0] || "Chưa có dữ liệu",
+    topDeckCount: topDeck?.[1] || 0,
+  };
 }
 
 function calculateStreak(reviewDates: string[]) {
@@ -91,6 +215,7 @@ export default function DashboardPage() {
   const [templateMessage, setTemplateMessage] = useState("");
   const [studySettings, setStudySettings] =
     useState<StudySettings>(defaultStudySettings);
+  const [reviewStats, setReviewStats] = useState<ReviewStats>(emptyReviewStats);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState("");
 
@@ -103,6 +228,7 @@ export default function DashboardPage() {
     const supabase = createSupabaseBrowserClient();
     const todayStart = startOfLocalDay(new Date()).toISOString();
     const todayEnd = endOfLocalDay(new Date()).toISOString();
+    const sevenDaysStart = addLocalDays(startOfLocalDay(new Date()), -6).toISOString();
 
     Promise.all([
       supabase.from("decks").select("*").order("created_at", {
@@ -142,6 +268,20 @@ export default function DashboardPage() {
         .limit(250),
       fetchWithAuth("/api/template-decks"),
       fetchWithAuth("/api/study-settings"),
+      supabase
+        .from("reviews")
+        .select("updated_at, last_rating, cards!inner(decks(name))")
+        .gt("review_count", 0)
+        .gte("updated_at", sevenDaysStart)
+        .order("updated_at", { ascending: false })
+        .limit(500),
+      supabase
+        .from("sentence_reviews")
+        .select("updated_at, last_rating, sentence_cards!inner(decks(name))")
+        .gt("review_count", 0)
+        .gte("updated_at", sevenDaysStart)
+        .order("updated_at", { ascending: false })
+        .limit(500),
     ]).then(
       async ([
         decksResult,
@@ -155,6 +295,8 @@ export default function DashboardPage() {
         reviewedSentenceCardsResult,
         templatesResponse,
         settingsResponse,
+        sevenDayReviewsResult,
+        sevenDaySentenceReviewsResult,
       ]) => {
         if (!active) {
           return;
@@ -193,6 +335,12 @@ export default function DashboardPage() {
             (newSentenceCardsResult.count || 0),
           streakDays: calculateStreak(reviewDates),
         });
+        setReviewStats(
+          calculateReviewStats(
+            sevenDayReviewsResult.data || [],
+            sevenDaySentenceReviewsResult.data || [],
+          ),
+        );
         setLoading(false);
       },
     );
@@ -354,6 +502,89 @@ export default function DashboardPage() {
               {settingsMessage}
             </p>
           ) : null}
+        </section>
+
+        <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">Thống kê học</h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                Dựa trên lượt ôn gần nhất của từng thẻ trong 7 ngày qua.
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-zinc-500">Đã học hôm nay</div>
+              <div className="text-3xl font-semibold text-teal-800">
+                {loading ? "..." : reviewStats.studiedToday}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1.4fr_1fr]">
+            <div>
+              <h3 className="text-sm font-semibold">Quên / Khó / Nhớ / Dễ</h3>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {(Object.keys(ratingLabels) as ReviewRating[]).map((rating) => (
+                  <div
+                    className="rounded-md border border-zinc-200 bg-zinc-50 p-3"
+                    key={rating}
+                  >
+                    <div className="text-xs text-zinc-500">
+                      {ratingLabels[rating]}
+                    </div>
+                    <div className="mt-1 text-2xl font-semibold">
+                      {loading ? "..." : reviewStats.ratingCounts[rating]}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold">7 ngày gần nhất</h3>
+              <div className="mt-3 flex h-40 items-end gap-2 rounded-md border border-zinc-200 bg-zinc-50 p-3">
+                {reviewStats.sevenDays.map((day) => {
+                  const maxCount = Math.max(
+                    1,
+                    ...reviewStats.sevenDays.map((item) => item.count),
+                  );
+                  const height = `${Math.max(8, (day.count / maxCount) * 100)}%`;
+
+                  return (
+                    <div
+                      className="flex h-full flex-1 flex-col justify-end gap-2 text-center"
+                      key={day.key}
+                    >
+                      <div className="text-xs font-medium text-zinc-600">
+                        {day.count}
+                      </div>
+                      <div
+                        className="mx-auto w-full rounded-t bg-teal-700"
+                        style={{ height }}
+                      />
+                      <div className="text-[11px] text-zinc-500">
+                        {day.label}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold">Deck học nhiều nhất</h3>
+              <div className="mt-3 rounded-md border border-zinc-200 bg-zinc-50 p-4">
+                <div className="text-lg font-semibold">
+                  {loading ? "..." : reviewStats.topDeckName}
+                </div>
+                <p className="mt-2 text-sm text-zinc-600">
+                  {loading
+                    ? "Đang tải..."
+                    : `${reviewStats.topDeckCount} lượt ôn trong 7 ngày qua`}
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="mt-8">
