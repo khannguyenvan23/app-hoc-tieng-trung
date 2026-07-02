@@ -31,8 +31,37 @@ const audioSpeeds = {
 
 type AudioSpeed = keyof typeof audioSpeeds;
 
+type StudySettings = {
+  daily_new_card_limit: number;
+  daily_new_sentence_limit: number;
+};
+
+const defaultStudySettings: StudySettings = {
+  daily_new_card_limit: 10,
+  daily_new_sentence_limit: 5,
+};
+
+function startOfLocalDay(date: Date) {
+  const nextDate = new Date(date);
+  nextDate.setHours(0, 0, 0, 0);
+  return nextDate;
+}
+
 function normalizeHanzi(value: string) {
   return value.replace(/\s+/g, "").trim();
+}
+
+function applyNewCardLimit(reviews: DueReview[], remainingNewCards: number) {
+  const reviewCards = reviews.filter((review) => Number(review.review_count) > 0);
+  const newCards = reviews
+    .filter((review) => Number(review.review_count) === 0)
+    .slice(0, remainingNewCards);
+
+  return [...reviewCards, ...newCards].sort(
+    (left, right) =>
+      new Date(left.next_review_at).getTime() -
+      new Date(right.next_review_at).getTime(),
+  );
 }
 
 export default function StudyPage() {
@@ -71,6 +100,25 @@ export default function StudyPage() {
     "",
   );
   const [repairingReviews, setRepairingReviews] = useState(false);
+  const [studySettings, setStudySettings] =
+    useState<StudySettings>(defaultStudySettings);
+  const [newCardsStudiedToday, setNewCardsStudiedToday] = useState(0);
+
+  async function getNewCardsStudiedToday(deckId = selectedDeckId) {
+    const supabase = createSupabaseBrowserClient();
+    let query = supabase
+      .from("reviews")
+      .select("id, cards!inner(id)", { count: "exact", head: true })
+      .gt("review_count", 0)
+      .gte("updated_at", startOfLocalDay(new Date()).toISOString());
+
+    if (deckId !== allDecksValue) {
+      query = query.eq("cards.deck_id", deckId);
+    }
+
+    const { count } = await query;
+    return count || 0;
+  }
 
   async function loadReviews(deckId = selectedDeckId) {
     if (!configured) {
@@ -78,12 +126,17 @@ export default function StudyPage() {
     }
 
     const supabase = createSupabaseBrowserClient();
+    const studiedToday = await getNewCardsStudiedToday(deckId);
+    const remainingNewCards = Math.max(
+      0,
+      studySettings.daily_new_card_limit - studiedToday,
+    );
     let query = supabase
       .from("reviews")
       .select("*, cards!inner(*)")
       .lte("next_review_at", new Date().toISOString())
       .order("next_review_at", { ascending: true })
-      .limit(50);
+      .limit(200);
 
     if (deckId !== allDecksValue) {
       query = query.eq("cards.deck_id", deckId);
@@ -91,7 +144,10 @@ export default function StudyPage() {
 
     const { data } = await query;
 
-    setReviews((data || []) as DueReview[]);
+    setNewCardsStudiedToday(studiedToday);
+    setReviews(
+      applyNewCardLimit((data || []) as DueReview[], remainingNewCards),
+    );
     setIndex(0);
     setShowAnswer(false);
     setWritingAnswer("");
@@ -130,22 +186,67 @@ export default function StudyPage() {
     }
 
     let active = true;
+
+    fetchWithAuth("/api/study-settings").then(async (response) => {
+      if (!active || !response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!active) {
+        return;
+      }
+
+      setStudySettings(
+        (data.settings || defaultStudySettings) as StudySettings,
+      );
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [configured]);
+
+  useEffect(() => {
+    if (!configured) {
+      return;
+    }
+
+    let active = true;
     const supabase = createSupabaseBrowserClient();
+    const todayStart = startOfLocalDay(new Date()).toISOString();
     let query = supabase
       .from("reviews")
       .select("*, cards!inner(*)")
       .lte("next_review_at", new Date().toISOString())
       .order("next_review_at", { ascending: true })
-      .limit(50);
+      .limit(200);
+
+    let studiedTodayQuery = supabase
+      .from("reviews")
+      .select("id, cards!inner(id)", { count: "exact", head: true })
+      .gt("review_count", 0)
+      .gte("updated_at", todayStart);
 
     if (selectedDeckId !== allDecksValue) {
       query = query.eq("cards.deck_id", selectedDeckId);
+      studiedTodayQuery = studiedTodayQuery.eq(
+        "cards.deck_id",
+        selectedDeckId,
+      );
     }
 
-    query.then(async ({ data }) => {
+    Promise.all([query, studiedTodayQuery]).then(async ([{ data }, countResult]) => {
       if (!active) {
         return;
       }
+
+      const studiedToday = countResult.count || 0;
+      const remainingNewCards = Math.max(
+        0,
+        studySettings.daily_new_card_limit - studiedToday,
+      );
 
       if (
         selectedDeckId !== allDecksValue &&
@@ -175,14 +276,20 @@ export default function StudyPage() {
               .lte("next_review_at", new Date().toISOString())
               .eq("cards.deck_id", selectedDeckId)
               .order("next_review_at", { ascending: true })
-              .limit(50);
+              .limit(200);
             const retryResult = await retryQuery;
 
             if (!active) {
               return;
             }
 
-            setReviews((retryResult.data || []) as DueReview[]);
+            setNewCardsStudiedToday(studiedToday);
+            setReviews(
+              applyNewCardLimit(
+                (retryResult.data || []) as DueReview[],
+                remainingNewCards,
+              ),
+            );
             setIndex(0);
             setShowAnswer(false);
             setWritingAnswer("");
@@ -193,7 +300,10 @@ export default function StudyPage() {
         }
       }
 
-      setReviews((data || []) as DueReview[]);
+      setNewCardsStudiedToday(studiedToday);
+      setReviews(
+        applyNewCardLimit((data || []) as DueReview[], remainingNewCards),
+      );
       setIndex(0);
       setShowAnswer(false);
       setWritingAnswer("");
@@ -204,7 +314,7 @@ export default function StudyPage() {
     return () => {
       active = false;
     };
-  }, [configured, selectedDeckId]);
+  }, [configured, selectedDeckId, studySettings.daily_new_card_limit]);
 
   useEffect(() => {
     if (wordAudioRef.current) {
@@ -324,6 +434,10 @@ export default function StudyPage() {
               <h1 className="text-2xl font-semibold">Ôn tập</h1>
               <p className="mt-1 text-sm text-zinc-600">
                 {reviews.length} thẻ cần ôn ngay trong {selectedDeckName}
+              </p>
+              <p className="mt-1 text-xs text-zinc-500">
+                Từ mới hôm nay: {newCardsStudiedToday} /{" "}
+                {studySettings.daily_new_card_limit}
               </p>
             </div>
             <div className="flex flex-wrap justify-end gap-2">

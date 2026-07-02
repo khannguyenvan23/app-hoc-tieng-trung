@@ -17,11 +17,21 @@ type DashboardStats = {
   streakDays: number;
 };
 
+type StudySettings = {
+  daily_new_card_limit: number;
+  daily_new_sentence_limit: number;
+};
+
 const emptyStats: DashboardStats = {
   totalCards: 0,
   dueToday: 0,
   newToday: 0,
   streakDays: 0,
+};
+
+const defaultStudySettings: StudySettings = {
+  daily_new_card_limit: 10,
+  daily_new_sentence_limit: 5,
 };
 
 function startOfLocalDay(date: Date) {
@@ -79,6 +89,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(configured);
   const [copyingTemplateId, setCopyingTemplateId] = useState("");
   const [templateMessage, setTemplateMessage] = useState("");
+  const [studySettings, setStudySettings] =
+    useState<StudySettings>(defaultStudySettings);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsMessage, setSettingsMessage] = useState("");
 
   useEffect(() => {
     if (!configured) {
@@ -127,6 +141,7 @@ export default function DashboardPage() {
         .order("updated_at", { ascending: false })
         .limit(250),
       fetchWithAuth("/api/template-decks"),
+      fetchWithAuth("/api/study-settings"),
     ]).then(
       async ([
         decksResult,
@@ -139,6 +154,7 @@ export default function DashboardPage() {
         reviewedCardsResult,
         reviewedSentenceCardsResult,
         templatesResponse,
+        settingsResponse,
       ]) => {
         if (!active) {
           return;
@@ -156,6 +172,13 @@ export default function DashboardPage() {
           setTemplates((templateData.templates || []) as TemplateDeck[]);
         } else {
           setTemplates([]);
+        }
+
+        if (settingsResponse.ok) {
+          const settingsData = await settingsResponse.json();
+          setStudySettings(
+            (settingsData.settings || defaultStudySettings) as StudySettings,
+          );
         }
 
         setDecks((decksResult.data || []) as Deck[]);
@@ -196,6 +219,32 @@ export default function DashboardPage() {
     }
 
     router.push(`/decks/${data.deckId}`);
+  }
+
+  function updateStudySetting(name: keyof StudySettings, value: string) {
+    const numericValue = Math.min(100, Math.max(0, Number(value) || 0));
+    setStudySettings((current) => ({ ...current, [name]: numericValue }));
+    setSettingsMessage("");
+  }
+
+  async function saveStudySettings() {
+    setSavingSettings(true);
+    setSettingsMessage("");
+
+    const response = await fetchWithAuth("/api/study-settings", {
+      method: "PUT",
+      body: JSON.stringify(studySettings),
+    });
+    const data = await response.json();
+    setSavingSettings(false);
+
+    if (!response.ok) {
+      setSettingsMessage(data.error || "Không thể lưu cài đặt học.");
+      return;
+    }
+
+    setStudySettings((data.settings || studySettings) as StudySettings);
+    setSettingsMessage("Đã lưu giới hạn học mỗi ngày.");
   }
 
   return (
@@ -240,6 +289,71 @@ export default function DashboardPage() {
             </div>
             <p className="mt-1 text-xs text-zinc-500">Ngày học liên tiếp</p>
           </div>
+        </section>
+
+        <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">Giới hạn học mỗi ngày</h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                Thẻ cũ đến hạn vẫn được ôn bình thường. Giới hạn này chỉ áp
+                dụng cho thẻ mới chưa học.
+              </p>
+            </div>
+            <button
+              className="min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+              disabled={savingSettings}
+              onClick={saveStudySettings}
+              type="button"
+            >
+              {savingSettings ? "Đang lưu..." : "Lưu cài đặt"}
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-medium">
+              Từ mới mỗi ngày
+              <input
+                className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
+                max={100}
+                min={0}
+                onChange={(event) =>
+                  updateStudySetting(
+                    "daily_new_card_limit",
+                    event.target.value,
+                  )
+                }
+                type="number"
+                value={studySettings.daily_new_card_limit}
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              Câu mới mỗi ngày
+              <input
+                className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
+                max={100}
+                min={0}
+                onChange={(event) =>
+                  updateStudySetting(
+                    "daily_new_sentence_limit",
+                    event.target.value,
+                  )
+                }
+                type="number"
+                value={studySettings.daily_new_sentence_limit}
+              />
+            </label>
+          </div>
+
+          {settingsMessage ? (
+            <p
+              className={`mt-3 text-sm ${
+                settingsMessage.startsWith("Đã") ? "text-teal-700" : "text-red-700"
+              }`}
+            >
+              {settingsMessage}
+            </p>
+          ) : null}
         </section>
 
         <section className="mt-8">

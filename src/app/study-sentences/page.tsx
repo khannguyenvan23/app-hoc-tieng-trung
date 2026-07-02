@@ -31,11 +31,45 @@ const audioSpeeds = {
 
 type AudioSpeed = keyof typeof audioSpeeds;
 
+type StudySettings = {
+  daily_new_card_limit: number;
+  daily_new_sentence_limit: number;
+};
+
+const defaultStudySettings: StudySettings = {
+  daily_new_card_limit: 10,
+  daily_new_sentence_limit: 5,
+};
+
+function startOfLocalDay(date: Date) {
+  const nextDate = new Date(date);
+  nextDate.setHours(0, 0, 0, 0);
+  return nextDate;
+}
+
 function normalizeSentenceHanzi(value: string) {
   return value
     .replace(/\s+/g, "")
     .replace(/[。．.！？!?，,、；;：:“”"']/g, "")
     .trim();
+}
+
+function applyNewSentenceLimit(
+  reviews: DueSentenceReview[],
+  remainingNewSentences: number,
+) {
+  const reviewSentences = reviews.filter(
+    (review) => Number(review.review_count) > 0,
+  );
+  const newSentences = reviews
+    .filter((review) => Number(review.review_count) === 0)
+    .slice(0, remainingNewSentences);
+
+  return [...reviewSentences, ...newSentences].sort(
+    (left, right) =>
+      new Date(left.next_review_at).getTime() -
+      new Date(right.next_review_at).getTime(),
+  );
 }
 
 export default function StudySentencesPage() {
@@ -76,6 +110,25 @@ export default function StudySentencesPage() {
     "",
   );
   const [repairingReviews, setRepairingReviews] = useState(false);
+  const [studySettings, setStudySettings] =
+    useState<StudySettings>(defaultStudySettings);
+  const [newSentencesStudiedToday, setNewSentencesStudiedToday] = useState(0);
+
+  async function getNewSentencesStudiedToday(deckId = selectedDeckId) {
+    const supabase = createSupabaseBrowserClient();
+    let query = supabase
+      .from("sentence_reviews")
+      .select("id, sentence_cards!inner(id)", { count: "exact", head: true })
+      .gt("review_count", 0)
+      .gte("updated_at", startOfLocalDay(new Date()).toISOString());
+
+    if (deckId !== allDecksValue) {
+      query = query.eq("sentence_cards.deck_id", deckId);
+    }
+
+    const { count } = await query;
+    return count || 0;
+  }
 
   async function loadReviews(deckId = selectedDeckId) {
     if (!configured) {
@@ -83,12 +136,17 @@ export default function StudySentencesPage() {
     }
 
     const supabase = createSupabaseBrowserClient();
+    const studiedToday = await getNewSentencesStudiedToday(deckId);
+    const remainingNewSentences = Math.max(
+      0,
+      studySettings.daily_new_sentence_limit - studiedToday,
+    );
     let query = supabase
       .from("sentence_reviews")
       .select("*, sentence_cards!inner(*)")
       .lte("next_review_at", new Date().toISOString())
       .order("next_review_at", { ascending: true })
-      .limit(50);
+      .limit(200);
 
     if (deckId !== allDecksValue) {
       query = query.eq("sentence_cards.deck_id", deckId);
@@ -96,7 +154,13 @@ export default function StudySentencesPage() {
 
     const { data } = await query;
 
-    setReviews((data || []) as DueSentenceReview[]);
+    setNewSentencesStudiedToday(studiedToday);
+    setReviews(
+      applyNewSentenceLimit(
+        (data || []) as DueSentenceReview[],
+        remainingNewSentences,
+      ),
+    );
     setIndex(0);
     setShowAnswer(false);
     setSentenceAnswer("");
@@ -135,22 +199,68 @@ export default function StudySentencesPage() {
     }
 
     let active = true;
+
+    fetchWithAuth("/api/study-settings").then(async (response) => {
+      if (!active || !response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!active) {
+        return;
+      }
+
+      setStudySettings(
+        (data.settings || defaultStudySettings) as StudySettings,
+      );
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [configured]);
+
+  useEffect(() => {
+    if (!configured) {
+      return;
+    }
+
+    let active = true;
     const supabase = createSupabaseBrowserClient();
+    const todayStart = startOfLocalDay(new Date()).toISOString();
     let query = supabase
       .from("sentence_reviews")
       .select("*, sentence_cards!inner(*)")
       .lte("next_review_at", new Date().toISOString())
       .order("next_review_at", { ascending: true })
-      .limit(50);
+      .limit(200);
+
+    let studiedTodayQuery = supabase
+      .from("sentence_reviews")
+      .select("id, sentence_cards!inner(id)", { count: "exact", head: true })
+      .gt("review_count", 0)
+      .gte("updated_at", todayStart);
 
     if (selectedDeckId !== allDecksValue) {
       query = query.eq("sentence_cards.deck_id", selectedDeckId);
+      studiedTodayQuery = studiedTodayQuery.eq(
+        "sentence_cards.deck_id",
+        selectedDeckId,
+      );
     }
 
-    query.then(async ({ data }) => {
+    Promise.all([query, studiedTodayQuery]).then(
+      async ([{ data }, countResult]) => {
       if (!active) {
         return;
       }
+
+      const studiedToday = countResult.count || 0;
+      const remainingNewSentences = Math.max(
+        0,
+        studySettings.daily_new_sentence_limit - studiedToday,
+      );
 
       if (
         selectedDeckId !== allDecksValue &&
@@ -183,13 +293,19 @@ export default function StudySentencesPage() {
               .lte("next_review_at", new Date().toISOString())
               .eq("sentence_cards.deck_id", selectedDeckId)
               .order("next_review_at", { ascending: true })
-              .limit(50);
+              .limit(200);
 
             if (!active) {
               return;
             }
 
-            setReviews((retryResult.data || []) as DueSentenceReview[]);
+            setNewSentencesStudiedToday(studiedToday);
+            setReviews(
+              applyNewSentenceLimit(
+                (retryResult.data || []) as DueSentenceReview[],
+                remainingNewSentences,
+              ),
+            );
             setIndex(0);
             setShowAnswer(false);
             setSentenceAnswer("");
@@ -200,18 +316,25 @@ export default function StudySentencesPage() {
         }
       }
 
-      setReviews((data || []) as DueSentenceReview[]);
+      setNewSentencesStudiedToday(studiedToday);
+      setReviews(
+        applyNewSentenceLimit(
+          (data || []) as DueSentenceReview[],
+          remainingNewSentences,
+        ),
+      );
       setIndex(0);
       setShowAnswer(false);
       setSentenceAnswer("");
       setWritingResult("");
       setLoading(false);
-    });
+      },
+    );
 
     return () => {
       active = false;
     };
-  }, [configured, selectedDeckId]);
+  }, [configured, selectedDeckId, studySettings.daily_new_sentence_limit]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -326,6 +449,10 @@ export default function StudySentencesPage() {
               <h1 className="text-2xl font-semibold">Luyện câu</h1>
               <p className="mt-1 text-sm text-zinc-600">
                 {reviews.length} câu cần ôn ngay trong {selectedDeckName}
+              </p>
+              <p className="mt-1 text-xs text-zinc-500">
+                Câu mới hôm nay: {newSentencesStudiedToday} /{" "}
+                {studySettings.daily_new_sentence_limit}
               </p>
             </div>
             <div className="flex flex-wrap justify-end gap-2">
