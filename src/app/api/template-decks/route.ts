@@ -3,9 +3,48 @@ import { z } from "zod";
 import { getRequestUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
+type TemplateCardRow = {
+  chinese: string;
+  pinyin: string | null;
+  meaning_vi: string | null;
+  example_cn: string | null;
+  example_pinyin?: string | null;
+  example_vi: string | null;
+};
+
 const copySchema = z.object({
   templateDeckId: z.string().uuid(),
 });
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && error && "message" in error) {
+    return String(error.message);
+  }
+
+  return "Unknown error";
+}
+
+function mapTemplateCards(
+  userId: string,
+  deckId: string,
+  templateCards: TemplateCardRow[],
+  includeExamplePinyin: boolean,
+) {
+  return templateCards.map((card) => ({
+    user_id: userId,
+    deck_id: deckId,
+    chinese: card.chinese,
+    pinyin: card.pinyin,
+    meaning_vi: card.meaning_vi,
+    example_cn: card.example_cn,
+    ...(includeExamplePinyin ? { example_pinyin: card.example_pinyin } : {}),
+    example_vi: card.example_vi,
+  }));
+}
 
 export async function GET(request: Request) {
   const { user, error: authError } = await getRequestUser(request);
@@ -103,32 +142,48 @@ export async function POST(request: Request) {
   if (deckError || !deck) {
     console.error(deckError);
     return NextResponse.json(
-      { error: "Không thể tạo bộ thẻ từ mẫu" },
+      { error: `Không thể tạo bộ thẻ từ mẫu: ${getErrorMessage(deckError)}` },
       { status: 500 },
     );
   }
 
-  const { data: cards, error: insertCardsError } = await supabase
+  const mappedCards = mapTemplateCards(
+    user.id,
+    deck.id,
+    templateCards as TemplateCardRow[],
+    true,
+  );
+
+  let { data: cards, error: insertCardsError } = await supabase
     .from("cards")
-    .insert(
-      templateCards.map((card) => ({
-        user_id: user.id,
-        deck_id: deck.id,
-        chinese: card.chinese,
-        pinyin: card.pinyin,
-        meaning_vi: card.meaning_vi,
-        example_cn: card.example_cn,
-        example_pinyin: card.example_pinyin,
-        example_vi: card.example_vi,
-      })),
-    )
+    .insert(mappedCards)
     .select("id");
+
+  if (
+    insertCardsError &&
+    getErrorMessage(insertCardsError).includes("example_pinyin")
+  ) {
+    const retryResult = await supabase
+      .from("cards")
+      .insert(
+        mapTemplateCards(
+          user.id,
+          deck.id,
+          templateCards as TemplateCardRow[],
+          false,
+        ),
+      )
+      .select("id");
+
+    cards = retryResult.data;
+    insertCardsError = retryResult.error;
+  }
 
   if (insertCardsError || !cards) {
     console.error(insertCardsError);
     await supabase.from("decks").delete().eq("id", deck.id).eq("user_id", user.id);
     return NextResponse.json(
-      { error: "Không thể copy thẻ mẫu" },
+      { error: `Không thể copy thẻ mẫu: ${getErrorMessage(insertCardsError)}` },
       { status: 500 },
     );
   }
@@ -144,7 +199,7 @@ export async function POST(request: Request) {
     console.error(reviewsError);
     await supabase.from("decks").delete().eq("id", deck.id).eq("user_id", user.id);
     return NextResponse.json(
-      { error: "Không thể tạo lịch ôn cho thẻ mẫu" },
+      { error: `Không thể tạo lịch ôn cho thẻ mẫu: ${reviewsError.message}` },
       { status: 500 },
     );
   }
