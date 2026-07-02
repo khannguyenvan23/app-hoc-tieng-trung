@@ -593,6 +593,17 @@ export default function StudySentencesPage() {
               >
                 {writingMode ? "Đang luyện viết" : "Bật luyện viết"}
               </button>
+              <button
+                className={`rounded-md border px-4 py-2 text-sm font-medium ${
+                  showPinyinHint
+                    ? "border-teal-700 bg-teal-50 text-teal-800"
+                    : "border-zinc-300 hover:bg-zinc-100"
+                }`}
+                onClick={() => setShowPinyinHint((current) => !current)}
+                type="button"
+              >
+                {showPinyinHint ? "Ẩn pinyin" : "Gợi ý pinyin"}
+              </button>
             </div>
           </div>
 
@@ -687,20 +698,10 @@ export default function StudySentencesPage() {
                     <div className="text-3xl font-semibold leading-relaxed">
                       {card.sentence_cn}
                     </div>
-                    {card.sentence_pinyin ? (
-                      showPinyinHint ? (
-                        <div className="mt-3 text-base text-teal-800">
-                          {card.sentence_pinyin}
-                        </div>
-                      ) : (
-                        <button
-                          className="mt-4 rounded-md border border-teal-700 px-4 py-2 text-sm font-medium text-teal-800 hover:bg-teal-50"
-                          onClick={() => setShowPinyinHint(true)}
-                          type="button"
-                        >
-                          Gợi ý pinyin
-                        </button>
-                      )
+                    {showPinyinHint && card.sentence_pinyin ? (
+                      <div className="mt-3 text-base text-teal-800">
+                        {card.sentence_pinyin}
+                      </div>
                     ) : null}
 
                     {card.sentence_audio_url ? (

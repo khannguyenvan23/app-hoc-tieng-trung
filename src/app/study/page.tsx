@@ -620,6 +620,17 @@ export default function StudyPage() {
               >
                 {writingMode ? "Đang luyện viết" : "Bật luyện viết"}
               </button>
+              <button
+                className={`rounded-md border px-4 py-2 text-sm font-medium ${
+                  showPinyinHint
+                    ? "border-teal-700 bg-teal-50 text-teal-800"
+                    : "border-zinc-300 hover:bg-zinc-100"
+                }`}
+                onClick={() => setShowPinyinHint((current) => !current)}
+                type="button"
+              >
+                {showPinyinHint ? "Ẩn pinyin" : "Gợi ý pinyin"}
+              </button>
             </div>
           </div>
 
@@ -645,11 +656,6 @@ export default function StudyPage() {
                 <div className="mt-3 text-3xl font-semibold">
                   {card.meaning_vi}
                 </div>
-                {false && writingMode && card?.pinyin ? (
-                  <div className="mt-3 text-sm text-teal-800">
-                    Gợi ý pinyin: {card?.pinyin}
-                  </div>
-                ) : null}
               </div>
 
               {!showAnswer ? (
@@ -717,20 +723,10 @@ export default function StudyPage() {
                 <div className="mt-8">
                   <div className="rounded-lg bg-stone-50 p-5 text-center">
                     <div className="text-5xl font-semibold">{card.chinese}</div>
-                    {card?.pinyin ? (
-                      showPinyinHint ? (
-                        <div className="mt-3 text-lg text-teal-800">
-                          {card?.pinyin}
-                        </div>
-                      ) : (
-                        <button
-                          className="mt-4 rounded-md border border-teal-700 px-4 py-2 text-sm font-medium text-teal-800 hover:bg-teal-50"
-                          onClick={() => setShowPinyinHint(true)}
-                          type="button"
-                        >
-                          Gợi ý pinyin
-                        </button>
-                      )
+                    {showPinyinHint && card?.pinyin ? (
+                      <div className="mt-3 text-lg text-teal-800">
+                        {card?.pinyin}
+                      </div>
                     ) : null}
                     <div className="mt-6 text-sm font-medium uppercase tracking-wide text-zinc-500">
                       Câu ví dụ
