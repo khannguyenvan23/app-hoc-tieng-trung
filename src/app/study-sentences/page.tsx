@@ -618,6 +618,9 @@ export default function StudySentencesPage() {
               >
                 {showPinyinHint ? "Tắt pinyin" : "Bật pinyin"}
               </button>
+              <p className="basis-full text-left text-xs text-zinc-500 sm:text-right">
+                Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm.
+              </p>
             </div>
           </div>
 
