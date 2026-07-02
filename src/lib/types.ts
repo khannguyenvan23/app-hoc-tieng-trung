@@ -42,6 +42,9 @@ export type Review = {
   ease_factor: number;
   review_count: number;
   last_rating: ReviewRating | null;
+  weak_score?: number | null;
+  lapse_count?: number | null;
+  weak_since?: string | null;
   updated_at: string;
 };
 
@@ -87,6 +90,9 @@ export type SentenceReview = {
   ease_factor: number;
   review_count: number;
   last_rating: ReviewRating | null;
+  weak_score?: number | null;
+  lapse_count?: number | null;
+  weak_since?: string | null;
   updated_at: string;
 };
 

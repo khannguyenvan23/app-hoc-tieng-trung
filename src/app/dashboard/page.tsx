@@ -30,6 +30,16 @@ type ReviewStats = {
   topDeckCount: number;
 };
 
+type WeakReviewItem = {
+  id: string;
+  type: "word" | "sentence";
+  title: string;
+  detail: string;
+  deckName: string;
+  weakScore: number;
+  lapseCount: number;
+};
+
 const emptyStats: DashboardStats = {
   totalCards: 0,
   dueToday: 0,
@@ -120,6 +130,83 @@ function getNestedDeckName(review: unknown, relationName: string) {
   }
 
   return String((deck as Record<string, unknown>).name || "Không rõ deck");
+}
+
+function getRelationObject(source: unknown, relationName: string) {
+  if (!source || typeof source !== "object") {
+    return null;
+  }
+
+  const relation = (source as Record<string, unknown>)[relationName];
+  const item = Array.isArray(relation) ? relation[0] : relation;
+
+  return item && typeof item === "object"
+    ? (item as Record<string, unknown>)
+    : null;
+}
+
+function getDeckNameFromItem(item: Record<string, unknown> | null) {
+  const deck = getRelationObject(item, "decks");
+
+  return String(deck?.name || "Khong ro deck");
+}
+
+function buildWeakReviewItems(
+  cardReviews: unknown[],
+  sentenceReviews: unknown[],
+) {
+  const cardItems = cardReviews.flatMap((review) => {
+    const row = review as {
+      id?: string;
+      weak_score?: number | null;
+      lapse_count?: number | null;
+    };
+    const card = getRelationObject(review, "cards");
+
+    if (!row.id || !card) {
+      return [];
+    }
+
+    return [
+      {
+        id: row.id,
+        type: "word" as const,
+        title: String(card.chinese || "The tu vung"),
+        detail: String(card.meaning_vi || card.pinyin || ""),
+        deckName: getDeckNameFromItem(card),
+        weakScore: Number(row.weak_score || 0),
+        lapseCount: Number(row.lapse_count || 0),
+      },
+    ];
+  });
+  const sentenceItems = sentenceReviews.flatMap((review) => {
+    const row = review as {
+      id?: string;
+      weak_score?: number | null;
+      lapse_count?: number | null;
+    };
+    const card = getRelationObject(review, "sentence_cards");
+
+    if (!row.id || !card) {
+      return [];
+    }
+
+    return [
+      {
+        id: row.id,
+        type: "sentence" as const,
+        title: String(card.sentence_cn || "Cau luyen tap"),
+        detail: String(card.sentence_vi || card.sentence_pinyin || ""),
+        deckName: getDeckNameFromItem(card),
+        weakScore: Number(row.weak_score || 0),
+        lapseCount: Number(row.lapse_count || 0),
+      },
+    ];
+  });
+
+  return [...cardItems, ...sentenceItems]
+    .sort((left, right) => right.weakScore - left.weakScore)
+    .slice(0, 8);
 }
 
 function calculateReviewStats(
@@ -216,6 +303,7 @@ export default function DashboardPage() {
   const [studySettings, setStudySettings] =
     useState<StudySettings>(defaultStudySettings);
   const [reviewStats, setReviewStats] = useState<ReviewStats>(emptyReviewStats);
+  const [weakItems, setWeakItems] = useState<WeakReviewItem[]>([]);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState("");
 
@@ -282,6 +370,24 @@ export default function DashboardPage() {
         .gte("updated_at", sevenDaysStart)
         .order("updated_at", { ascending: false })
         .limit(500),
+      supabase
+        .from("reviews")
+        .select(
+          "id, weak_score, lapse_count, cards!inner(chinese, pinyin, meaning_vi, decks(name))",
+        )
+        .gte("weak_score", 2)
+        .order("weak_score", { ascending: false })
+        .order("updated_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("sentence_reviews")
+        .select(
+          "id, weak_score, lapse_count, sentence_cards!inner(sentence_cn, sentence_pinyin, sentence_vi, decks(name))",
+        )
+        .gte("weak_score", 2)
+        .order("weak_score", { ascending: false })
+        .order("updated_at", { ascending: false })
+        .limit(8),
     ]).then(
       async ([
         decksResult,
@@ -297,6 +403,8 @@ export default function DashboardPage() {
         settingsResponse,
         sevenDayReviewsResult,
         sevenDaySentenceReviewsResult,
+        weakReviewsResult,
+        weakSentenceReviewsResult,
       ]) => {
         if (!active) {
           return;
@@ -339,6 +447,14 @@ export default function DashboardPage() {
           calculateReviewStats(
             sevenDayReviewsResult.data || [],
             sevenDaySentenceReviewsResult.data || [],
+          ),
+        );
+        setWeakItems(
+          buildWeakReviewItems(
+            weakReviewsResult.error ? [] : weakReviewsResult.data || [],
+            weakSentenceReviewsResult.error
+              ? []
+              : weakSentenceReviewsResult.data || [],
           ),
         );
         setLoading(false);
@@ -590,6 +706,66 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </section>
+
+        <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">Cần học lại</h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                Thẻ bấm Quên nhiều lần sẽ tự vào nhóm yếu để ôn gấp.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                className="inline-flex min-h-10 items-center rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                href="/study?weak=1"
+              >
+                Ôn từ yếu
+              </Link>
+              <Link
+                className="inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                href="/study-sentences?weak=1"
+              >
+                Ôn câu yếu
+              </Link>
+            </div>
+          </div>
+
+          {loading ? (
+            <p className="mt-4 text-sm text-zinc-600">Đang tải nhóm yếu...</p>
+          ) : weakItems.length === 0 ? (
+            <p className="mt-4 text-sm text-zinc-600">
+              Chưa có thẻ nào bị quên nhiều lần.
+            </p>
+          ) : (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {weakItems.map((item) => (
+                <div
+                  className="rounded-md border border-zinc-200 bg-zinc-50 p-4"
+                  key={`${item.type}-${item.id}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700">
+                      {item.type === "word" ? "Từ vựng" : "Câu"}
+                    </span>
+                    <span className="text-xs text-zinc-500">
+                      Quên {item.lapseCount} lần
+                    </span>
+                  </div>
+                  <div className="mt-3 text-lg font-semibold">
+                    {item.title}
+                  </div>
+                  {item.detail ? (
+                    <p className="mt-1 text-sm text-zinc-600">{item.detail}</p>
+                  ) : null}
+                  <p className="mt-3 text-xs text-zinc-500">
+                    {item.deckName} · điểm yếu {item.weakScore}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="mt-8">

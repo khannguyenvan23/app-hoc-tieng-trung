@@ -9,6 +9,54 @@ const schema = z.object({
   rating: z.enum(["again", "hard", "good", "easy"]),
 });
 
+type ReviewRow = {
+  id: string;
+  review_count: number | null;
+  interval_days: number | null;
+  ease_factor: number | null;
+  weak_score?: number | null;
+  lapse_count?: number | null;
+  weak_since?: string | null;
+};
+
+function missingWeakColumns(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error &&
+    "message" in error &&
+    String(error.message).includes("weak_score")
+  );
+}
+
+function getWeakPatch(rating: z.infer<typeof schema>["rating"], review: ReviewRow) {
+  const currentScore = Number(review.weak_score || 0);
+  const currentLapseCount = Number(review.lapse_count || 0);
+  let weakScore = currentScore;
+  let lapseCount = currentLapseCount;
+  let weakSince: string | null = review.weak_since || null;
+
+  if (rating === "again") {
+    weakScore += 1;
+    lapseCount += 1;
+  } else if (rating === "good") {
+    weakScore = Math.max(0, weakScore - 1);
+  } else if (rating === "easy") {
+    weakScore = Math.max(0, weakScore - 2);
+  }
+
+  if (weakScore >= 2 && !weakSince) {
+    weakSince = new Date().toISOString();
+  } else if (weakScore < 2) {
+    weakSince = null;
+  }
+
+  return {
+    weak_score: weakScore,
+    lapse_count: lapseCount,
+    weak_since: weakSince,
+  };
+}
+
 export async function POST(request: Request) {
   const { user, error: authError } = await getRequestUser(request);
 
@@ -23,22 +71,38 @@ export async function POST(request: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
-  const { data: review, error: reviewError } = await supabase
+  let { data: review, error: reviewError } = await supabase
     .from("reviews")
-    .select("id, review_count, interval_days, ease_factor")
+    .select("id, review_count, interval_days, ease_factor, weak_score, lapse_count, weak_since")
     .eq("card_id", body.data.cardId)
     .eq("user_id", user.id)
-    .single();
+    .single<ReviewRow>();
+
+  const supportsWeakQueue = !missingWeakColumns(reviewError);
+
+  if (reviewError && !supportsWeakQueue) {
+    const retryResult = await supabase
+      .from("reviews")
+      .select("id, review_count, interval_days, ease_factor")
+      .eq("card_id", body.data.cardId)
+      .eq("user_id", user.id)
+      .single<ReviewRow>();
+
+    review = retryResult.data;
+    reviewError = retryResult.error;
+  }
 
   if (reviewError || !review) {
     return NextResponse.json({ error: "Review not found" }, { status: 404 });
   }
 
   const nextReview = getNextReview(body.data.rating, review);
+  const weakPatch = supportsWeakQueue ? getWeakPatch(body.data.rating, review) : {};
   const { error } = await supabase
     .from("reviews")
     .update({
       ...nextReview,
+      ...weakPatch,
       review_count: Number(review.review_count || 0) + 1,
       last_rating: body.data.rating,
       updated_at: new Date().toISOString(),

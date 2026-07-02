@@ -41,6 +41,14 @@ const defaultStudySettings: StudySettings = {
   daily_new_sentence_limit: 5,
 };
 
+function isWeakStudyRequest() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return new URLSearchParams(window.location.search).get("weak") === "1";
+}
+
 function startOfLocalDay(date: Date) {
   const nextDate = new Date(date);
   nextDate.setHours(0, 0, 0, 0);
@@ -81,8 +89,12 @@ export default function StudySentencesPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const repairingReviewsRef = useRef(false);
   const [decks, setDecks] = useState<Deck[]>([]);
+  const [weakOnly] = useState(() => isWeakStudyRequest());
   const [selectedDeckId, setSelectedDeckId] = useState(() => {
     if (typeof window === "undefined") {
+      return allDecksValue;
+    }
+    if (isWeakStudyRequest()) {
       return allDecksValue;
     }
     return (
@@ -149,9 +161,18 @@ export default function StudySentencesPage() {
     let query = supabase
       .from("sentence_reviews")
       .select("*, sentence_cards!inner(*)")
-      .lte("next_review_at", dueReviewCutoff())
-      .order("next_review_at", { ascending: true })
       .limit(200);
+
+    if (weakOnly) {
+      query = query
+        .gte("weak_score", 2)
+        .order("weak_score", { ascending: false })
+        .order("next_review_at", { ascending: true });
+    } else {
+      query = query
+        .lte("next_review_at", dueReviewCutoff())
+        .order("next_review_at", { ascending: true });
+    }
 
     if (deckId !== allDecksValue) {
       query = query.eq("sentence_cards.deck_id", deckId);
@@ -238,9 +259,18 @@ export default function StudySentencesPage() {
     let query = supabase
       .from("sentence_reviews")
       .select("*, sentence_cards!inner(*)")
-      .lte("next_review_at", dueReviewCutoff())
-      .order("next_review_at", { ascending: true })
       .limit(200);
+
+    if (weakOnly) {
+      query = query
+        .gte("weak_score", 2)
+        .order("weak_score", { ascending: false })
+        .order("next_review_at", { ascending: true });
+    } else {
+      query = query
+        .lte("next_review_at", dueReviewCutoff())
+        .order("next_review_at", { ascending: true });
+    }
 
     let studiedTodayQuery = supabase
       .from("sentence_reviews")
@@ -269,6 +299,7 @@ export default function StudySentencesPage() {
       );
 
       if (
+        !weakOnly &&
         selectedDeckId !== allDecksValue &&
         (!data || data.length === 0) &&
         !repairingReviewsRef.current
@@ -342,7 +373,7 @@ export default function StudySentencesPage() {
     return () => {
       active = false;
     };
-  }, [configured, selectedDeckId, studySettings.daily_new_sentence_limit]);
+  }, [configured, selectedDeckId, studySettings.daily_new_sentence_limit, weakOnly]);
 
   useEffect(() => {
     if (audioRef.current) {
