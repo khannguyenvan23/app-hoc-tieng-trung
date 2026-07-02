@@ -21,7 +21,13 @@ export default function LoginPage() {
     const result =
       mode === "login"
         ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
+        : await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/login`,
+            },
+          });
 
     setLoading(false);
 
@@ -31,7 +37,9 @@ export default function LoginPage() {
     }
 
     if (mode === "signup" && !result.data.session) {
-      setMessage("Hãy kiểm tra email để xác nhận tài khoản, rồi đăng nhập.");
+      setMessage(
+        "Hãy kiểm tra email để xác nhận tài khoản, rồi quay lại đăng nhập.",
+      );
       return;
     }
 
@@ -51,14 +59,18 @@ export default function LoginPage() {
 
         <div className="mt-6 grid grid-cols-2 rounded-md border border-zinc-200 p-1 text-sm">
           <button
-            className={`rounded px-3 py-2 ${mode === "login" ? "bg-teal-700 text-white" : "hover:bg-zinc-100"}`}
+            className={`rounded px-3 py-2 ${
+              mode === "login" ? "bg-teal-700 text-white" : "hover:bg-zinc-100"
+            }`}
             onClick={() => setMode("login")}
             type="button"
           >
             Đăng nhập
           </button>
           <button
-            className={`rounded px-3 py-2 ${mode === "signup" ? "bg-teal-700 text-white" : "hover:bg-zinc-100"}`}
+            className={`rounded px-3 py-2 ${
+              mode === "signup" ? "bg-teal-700 text-white" : "hover:bg-zinc-100"
+            }`}
             onClick={() => setMode("signup")}
             type="button"
           >
