@@ -269,7 +269,7 @@ export default function StudyPage() {
         if (repairResponse.ok) {
           const repairData = await repairResponse.json();
 
-          if (repairData.created > 0) {
+          if ((repairData.created || 0) + (repairData.updated || 0) > 0) {
             const retryQuery = supabase
               .from("reviews")
               .select("*, cards!inner(*)")

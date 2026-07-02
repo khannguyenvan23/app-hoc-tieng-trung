@@ -286,7 +286,7 @@ export default function StudySentencesPage() {
         if (repairResponse.ok) {
           const repairData = await repairResponse.json();
 
-          if (repairData.created > 0) {
+          if ((repairData.created || 0) + (repairData.updated || 0) > 0) {
             const retryResult = await supabase
               .from("sentence_reviews")
               .select("*, sentence_cards!inner(*)")

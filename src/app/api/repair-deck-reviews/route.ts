@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   const body = schema.safeParse(await request.json().catch(() => null));
 
   if (!body.success) {
-    return NextResponse.json({ error: "Dữ liệu không hợp lệ" }, { status: 400 });
+    return NextResponse.json({ error: "Du lieu khong hop le" }, { status: 400 });
   }
 
   const supabase = createSupabaseAdminClient();
@@ -30,21 +30,21 @@ export async function POST(request: Request) {
 
   if (deckError || !deck) {
     return NextResponse.json(
-      { error: "Không tìm thấy bộ thẻ" },
+      { error: "Khong tim thay bo the" },
       { status: 404 },
     );
   }
 
   const { data: cards, error: cardsError } = await supabase
     .from("cards")
-    .select("id, reviews(id)")
+    .select("id, reviews(id, review_count)")
     .eq("deck_id", body.data.deckId)
     .eq("user_id", user.id);
 
   if (cardsError) {
     console.error(cardsError);
     return NextResponse.json(
-      { error: "Không thể kiểm tra thẻ trong bộ" },
+      { error: "Khong the kiem tra the trong bo" },
       { status: 500 },
     );
   }
@@ -52,30 +52,56 @@ export async function POST(request: Request) {
   const cardsWithoutReviews = (cards || []).filter(
     (card) => !Array.isArray(card.reviews) || card.reviews.length === 0,
   );
+  const newReviewIds = (cards || []).flatMap((card) =>
+    Array.isArray(card.reviews)
+      ? card.reviews
+          .filter((review) => Number(review.review_count || 0) === 0)
+          .map((review) => review.id)
+      : [],
+  );
+  const now = new Date().toISOString();
 
-  if (cardsWithoutReviews.length === 0) {
-    return NextResponse.json({ success: true, created: 0 });
+  if (cardsWithoutReviews.length > 0) {
+    const { error: reviewsError } = await supabase.from("reviews").insert(
+      cardsWithoutReviews.map((card) => ({
+        user_id: user.id,
+        card_id: card.id,
+        next_review_at: now,
+      })),
+    );
+
+    if (reviewsError) {
+      console.error(reviewsError);
+      return NextResponse.json(
+        { error: `Khong the tao lich on: ${reviewsError.message}` },
+        { status: 500 },
+      );
+    }
   }
 
-  const now = new Date().toISOString();
-  const { error: reviewsError } = await supabase.from("reviews").insert(
-    cardsWithoutReviews.map((card) => ({
-      user_id: user.id,
-      card_id: card.id,
-      next_review_at: now,
-    })),
-  );
+  if (newReviewIds.length > 0) {
+    const { error: dueError } = await supabase
+      .from("reviews")
+      .update({
+        interval_days: 0,
+        next_review_at: now,
+        updated_at: now,
+      })
+      .eq("user_id", user.id)
+      .in("id", newReviewIds);
 
-  if (reviewsError) {
-    console.error(reviewsError);
-    return NextResponse.json(
-      { error: `Không thể tạo lịch ôn: ${reviewsError.message}` },
-      { status: 500 },
-    );
+    if (dueError) {
+      console.error(dueError);
+      return NextResponse.json(
+        { error: `Khong the cap nhat lich on: ${dueError.message}` },
+        { status: 500 },
+      );
+    }
   }
 
   return NextResponse.json({
     success: true,
     created: cardsWithoutReviews.length,
+    updated: newReviewIds.length,
   });
 }
