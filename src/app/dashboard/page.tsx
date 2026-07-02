@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppShell, EmptyState, PrimaryLink } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
+import { fetchWithAuth } from "@/lib/fetch-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import type { Deck } from "@/lib/types";
+import type { Deck, TemplateDeck } from "@/lib/types";
 
 type DashboardStats = {
   totalCards: number;
@@ -69,10 +71,14 @@ function calculateStreak(reviewDates: string[]) {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const configured = hasPublicEnv();
   const [decks, setDecks] = useState<Deck[]>([]);
+  const [templates, setTemplates] = useState<TemplateDeck[]>([]);
   const [stats, setStats] = useState<DashboardStats>(emptyStats);
   const [loading, setLoading] = useState(configured);
+  const [copyingTemplateId, setCopyingTemplateId] = useState("");
+  const [templateMessage, setTemplateMessage] = useState("");
 
   useEffect(() => {
     if (!configured) {
@@ -120,8 +126,9 @@ export default function DashboardPage() {
         .gt("review_count", 0)
         .order("updated_at", { ascending: false })
         .limit(250),
+      fetchWithAuth("/api/template-decks"),
     ]).then(
-      ([
+      async ([
         decksResult,
         cardsCountResult,
         sentenceCardsCountResult,
@@ -131,6 +138,7 @@ export default function DashboardPage() {
         newSentenceCardsResult,
         reviewedCardsResult,
         reviewedSentenceCardsResult,
+        templatesResponse,
       ]) => {
         if (!active) {
           return;
@@ -142,6 +150,13 @@ export default function DashboardPage() {
             updated_at: string;
           }[]),
         ].map((review) => review.updated_at);
+
+        if (templatesResponse.ok) {
+          const templateData = await templatesResponse.json();
+          setTemplates((templateData.templates || []) as TemplateDeck[]);
+        } else {
+          setTemplates([]);
+        }
 
         setDecks((decksResult.data || []) as Deck[]);
         setStats({
@@ -163,6 +178,25 @@ export default function DashboardPage() {
       active = false;
     };
   }, [configured]);
+
+  async function copyTemplate(templateDeckId: string) {
+    setCopyingTemplateId(templateDeckId);
+    setTemplateMessage("");
+
+    const response = await fetchWithAuth("/api/template-decks", {
+      method: "POST",
+      body: JSON.stringify({ templateDeckId }),
+    });
+    const data = await response.json();
+    setCopyingTemplateId("");
+
+    if (!response.ok) {
+      setTemplateMessage(data.error || "Không thể thêm bộ thẻ mẫu.");
+      return;
+    }
+
+    router.push(`/decks/${data.deckId}`);
+  }
 
   return (
     <AuthGuard>
@@ -208,32 +242,98 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="mt-6">
-          {loading ? (
-            <p className="text-sm text-zinc-600">Đang tải bộ thẻ...</p>
-          ) : decks.length === 0 ? (
-            <EmptyState
-              action={<PrimaryLink href="/decks/new">Tạo bộ thẻ</PrimaryLink>}
-              body="Bắt đầu với một chủ đề như HSK2, ăn uống hoặc giao tiếp hằng ngày."
-              title="Chưa có bộ thẻ nào"
-            />
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {decks.map((deck) => (
-                <Link
-                  className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm hover:border-teal-700"
-                  href={`/decks/${deck.id}`}
-                  key={deck.id}
+        <section className="mt-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">Bộ thẻ mẫu</h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                Thêm bộ mẫu vào tài khoản của bạn. Mỗi user sẽ có bản copy và
+                tiến độ ôn riêng.
+              </p>
+            </div>
+          </div>
+
+          {templateMessage ? (
+            <p className="mt-3 text-sm text-red-700">{templateMessage}</p>
+          ) : null}
+
+          {templates.length > 0 ? (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {templates.map((template) => (
+                <div
+                  className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm"
+                  key={template.id}
                 >
-                  <h2 className="font-semibold">{deck.name}</h2>
-                  <p className="mt-2 text-sm text-zinc-500">
-                    Tạo ngày{" "}
-                    {new Date(deck.created_at).toLocaleDateString("vi-VN")}
-                  </p>
-                </Link>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold">{template.name}</h3>
+                      {template.level ? (
+                        <p className="mt-1 text-xs font-medium uppercase text-teal-800">
+                          {template.level}
+                        </p>
+                      ) : null}
+                    </div>
+                    <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
+                      {template.card_count} thẻ
+                    </span>
+                  </div>
+                  {template.description ? (
+                    <p className="mt-3 text-sm text-zinc-600">
+                      {template.description}
+                    </p>
+                  ) : null}
+                  <button
+                    className="mt-4 min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+                    disabled={Boolean(copyingTemplateId)}
+                    onClick={() => copyTemplate(template.id)}
+                    type="button"
+                  >
+                    {copyingTemplateId === template.id
+                      ? "Đang thêm..."
+                      : "Thêm bộ này"}
+                  </button>
+                </div>
               ))}
             </div>
+          ) : loading ? (
+            <p className="mt-3 text-sm text-zinc-600">Đang tải bộ mẫu...</p>
+          ) : (
+            <p className="mt-3 text-sm text-zinc-600">
+              Chưa có bộ thẻ mẫu. Hãy chạy migration template trong Supabase.
+            </p>
           )}
+        </section>
+
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold">Bộ thẻ của bạn</h2>
+
+          <div className="mt-4">
+            {loading ? (
+              <p className="text-sm text-zinc-600">Đang tải bộ thẻ...</p>
+            ) : decks.length === 0 ? (
+              <EmptyState
+                action={<PrimaryLink href="/decks/new">Tạo bộ thẻ</PrimaryLink>}
+                body="Bắt đầu với một chủ đề như HSK2, ăn uống hoặc giao tiếp hằng ngày."
+                title="Chưa có bộ thẻ nào"
+              />
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {decks.map((deck) => (
+                  <Link
+                    className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm hover:border-teal-700"
+                    href={`/decks/${deck.id}`}
+                    key={deck.id}
+                  >
+                    <h3 className="font-semibold">{deck.name}</h3>
+                    <p className="mt-2 text-sm text-zinc-500">
+                      Tạo ngày{" "}
+                      {new Date(deck.created_at).toLocaleDateString("vi-VN")}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       </AppShell>
     </AuthGuard>

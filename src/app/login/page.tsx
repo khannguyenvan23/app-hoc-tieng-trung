@@ -4,22 +4,62 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
+type AuthMode = "login" | "signup" | "forgot";
+
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [canResendConfirmation, setCanResendConfirmation] = useState(false);
 
+  function changeMode(nextMode: AuthMode) {
+    setMode(nextMode);
+    setConfirmPassword("");
+    setMessage("");
+    setIsError(false);
+    setCanResendConfirmation(false);
+  }
+
   async function submit(event: FormEvent) {
     event.preventDefault();
-    setLoading(true);
     setMessage("");
+    setIsError(false);
     setCanResendConfirmation(false);
 
+    if (mode === "signup" && password !== confirmPassword) {
+      setIsError(true);
+      setMessage("Hai mật khẩu chưa khớp.");
+      return;
+    }
+
+    setLoading(true);
+
     const supabase = createSupabaseBrowserClient();
+
+    if (mode === "forgot") {
+      const result = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      setLoading(false);
+
+      if (result.error) {
+        setIsError(true);
+        setMessage(result.error.message);
+        return;
+      }
+
+      setMessage(
+        "Đã gửi email đặt lại mật khẩu. Hãy kiểm tra Inbox, Spam và Promotions.",
+      );
+      return;
+    }
+
     const result =
       mode === "login"
         ? await supabase.auth.signInWithPassword({ email, password })
@@ -34,6 +74,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result.error) {
+      setIsError(true);
       setMessage(result.error.message);
       return;
     }
@@ -52,6 +93,7 @@ export default function LoginPage() {
   async function resendConfirmation() {
     setLoading(true);
     setMessage("");
+    setIsError(false);
 
     const supabase = createSupabaseBrowserClient();
     const result = await supabase.auth.resend({
@@ -65,6 +107,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result.error) {
+      setIsError(true);
       setMessage(result.error.message);
       return;
     }
@@ -89,7 +132,7 @@ export default function LoginPage() {
             className={`rounded px-3 py-2 ${
               mode === "login" ? "bg-teal-700 text-white" : "hover:bg-zinc-100"
             }`}
-            onClick={() => setMode("login")}
+            onClick={() => changeMode("login")}
             type="button"
           >
             Đăng nhập
@@ -98,12 +141,18 @@ export default function LoginPage() {
             className={`rounded px-3 py-2 ${
               mode === "signup" ? "bg-teal-700 text-white" : "hover:bg-zinc-100"
             }`}
-            onClick={() => setMode("signup")}
+            onClick={() => changeMode("signup")}
             type="button"
           >
             Đăng ký
           </button>
         </div>
+
+        {mode === "forgot" ? (
+          <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Nhập email tài khoản. App sẽ gửi link để bạn tạo mật khẩu mới.
+          </div>
+        ) : null}
 
         <label className="mt-5 block text-sm font-medium" htmlFor="email">
           Email
@@ -117,20 +166,52 @@ export default function LoginPage() {
           value={email}
         />
 
-        <label className="mt-4 block text-sm font-medium" htmlFor="password">
-          Mật khẩu
-        </label>
-        <input
-          className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
-          id="password"
-          minLength={6}
-          onChange={(event) => setPassword(event.target.value)}
-          required
-          type="password"
-          value={password}
-        />
+        {mode !== "forgot" ? (
+          <>
+            <label className="mt-4 block text-sm font-medium" htmlFor="password">
+              Mật khẩu
+            </label>
+            <input
+              className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
+              id="password"
+              minLength={6}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+              type="password"
+              value={password}
+            />
+          </>
+        ) : null}
 
-        {message ? <p className="mt-4 text-sm text-red-700">{message}</p> : null}
+        {mode === "signup" ? (
+          <>
+            <label
+              className="mt-4 block text-sm font-medium"
+              htmlFor="confirm-password"
+            >
+              Nhập lại mật khẩu
+            </label>
+            <input
+              className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
+              id="confirm-password"
+              minLength={6}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              required
+              type="password"
+              value={confirmPassword}
+            />
+          </>
+        ) : null}
+
+        {message ? (
+          <p
+            className={`mt-4 text-sm ${
+              isError ? "text-red-700" : "text-teal-700"
+            }`}
+          >
+            {message}
+          </p>
+        ) : null}
 
         {canResendConfirmation ? (
           <button
@@ -152,8 +233,30 @@ export default function LoginPage() {
             ? "Đang xử lý..."
             : mode === "login"
               ? "Đăng nhập"
-              : "Tạo tài khoản"}
+              : mode === "signup"
+                ? "Tạo tài khoản"
+                : "Gửi email đặt lại mật khẩu"}
         </button>
+
+        {mode === "login" ? (
+          <button
+            className="mt-4 w-full text-sm font-medium text-teal-800 hover:underline"
+            onClick={() => changeMode("forgot")}
+            type="button"
+          >
+            Quên mật khẩu?
+          </button>
+        ) : null}
+
+        {mode === "forgot" ? (
+          <button
+            className="mt-4 w-full text-sm font-medium text-teal-800 hover:underline"
+            onClick={() => changeMode("login")}
+            type="button"
+          >
+            Quay lại đăng nhập
+          </button>
+        ) : null}
       </form>
     </main>
   );
