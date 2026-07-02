@@ -5,6 +5,7 @@ import { AppShell, EmptyState } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
+import { getNextReview } from "@/lib/review";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Deck, DueReview, ReviewRating } from "@/lib/types";
 
@@ -15,13 +16,6 @@ const ratingLabels: Record<ReviewRating, string> = {
   hard: "Khó",
   good: "Nhớ",
   easy: "Dễ",
-};
-
-const ratingIntervals: Record<ReviewRating, string> = {
-  again: "10 phút",
-  hard: "1 ngày",
-  good: "3 ngày",
-  easy: "7 ngày",
 };
 
 const audioSpeeds = {
@@ -74,6 +68,18 @@ function applyNewCardLimit(reviews: DueReview[], remainingNewCards: number) {
       new Date(left.next_review_at).getTime() -
       new Date(right.next_review_at).getTime(),
   );
+}
+
+function getRatingIntervalLabel(rating: ReviewRating, review: DueReview) {
+  const nextReview = getNextReview(rating, review);
+
+  if (nextReview.interval_days <= 0) {
+    return "10 phút";
+  }
+
+  return nextReview.interval_days === 1
+    ? "1 ngày"
+    : `${nextReview.interval_days} ngày`;
 }
 
 export default function StudyPage() {
@@ -781,7 +787,7 @@ export default function StudyPage() {
                             {ratingLabels[rating]}
                           </span>
                           <span className="mt-1 block text-xs text-zinc-500">
-                            Lặp lại sau {ratingIntervals[rating]}
+                            Lặp lại sau {getRatingIntervalLabel(rating, current)}
                           </span>
                         </button>
                       ),
