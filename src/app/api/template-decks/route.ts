@@ -12,6 +12,13 @@ type TemplateCardRow = {
   example_vi: string | null;
 };
 
+type TemplateSentenceCardRow = {
+  sentence_cn: string;
+  sentence_pinyin: string | null;
+  sentence_vi: string | null;
+  vocab_json: unknown;
+};
+
 const copySchema = z.object({
   templateDeckId: z.string().uuid(),
 });
@@ -56,7 +63,7 @@ export async function GET(request: Request) {
   const supabase = createSupabaseAdminClient();
   const { data: templates, error } = await supabase
     .from("template_decks")
-    .select("*, template_cards(id)")
+    .select("*, template_cards(id), template_sentence_cards(id)")
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -76,7 +83,10 @@ export async function GET(request: Request) {
       level: template.level,
       created_at: template.created_at,
       card_count: Array.isArray(template.template_cards)
-        ? template.template_cards.length
+        ? template.template_cards.length +
+          (Array.isArray(template.template_sentence_cards)
+            ? template.template_sentence_cards.length
+            : 0)
         : 0,
     })),
   });
@@ -122,6 +132,15 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+
+  const { data: templateSentenceCards, error: sentenceCardsError } =
+    await supabase
+      .from("template_sentence_cards")
+      .select("*")
+      .eq("template_deck_id", template.id)
+      .order("position", { ascending: true });
+
+  const hasTemplateSentenceTable = !sentenceCardsError;
 
   if (!templateCards?.length) {
     return NextResponse.json(
@@ -205,9 +224,72 @@ export async function POST(request: Request) {
     );
   }
 
+  let createdSentenceCards = 0;
+
+  if (hasTemplateSentenceTable && templateSentenceCards?.length) {
+    const { data: sentenceCards, error: insertSentenceCardsError } =
+      await supabase
+        .from("sentence_cards")
+        .insert(
+          (templateSentenceCards as TemplateSentenceCardRow[]).map((card) => ({
+            user_id: user.id,
+            deck_id: deck.id,
+            sentence_cn: card.sentence_cn,
+            sentence_pinyin: card.sentence_pinyin,
+            sentence_vi: card.sentence_vi,
+            vocab_json: card.vocab_json,
+          })),
+        )
+        .select("id");
+
+    if (insertSentenceCardsError || !sentenceCards) {
+      console.error(insertSentenceCardsError);
+      await supabase
+        .from("decks")
+        .delete()
+        .eq("id", deck.id)
+        .eq("user_id", user.id);
+      return NextResponse.json(
+        {
+          error: `Không thể copy câu mẫu: ${getErrorMessage(
+            insertSentenceCardsError,
+          )}`,
+        },
+        { status: 500 },
+      );
+    }
+
+    const { error: sentenceReviewsError } = await supabase
+      .from("sentence_reviews")
+      .insert(
+        sentenceCards.map((card) => ({
+          user_id: user.id,
+          sentence_card_id: card.id,
+          next_review_at: new Date().toISOString(),
+        })),
+      );
+
+    if (sentenceReviewsError) {
+      console.error(sentenceReviewsError);
+      await supabase
+        .from("decks")
+        .delete()
+        .eq("id", deck.id)
+        .eq("user_id", user.id);
+      return NextResponse.json(
+        {
+          error: `Không thể tạo lịch ôn câu mẫu: ${sentenceReviewsError.message}`,
+        },
+        { status: 500 },
+      );
+    }
+
+    createdSentenceCards = sentenceCards.length;
+  }
+
   return NextResponse.json({
     success: true,
     deckId: deck.id,
-    created: cards.length,
+    created: cards.length + createdSentenceCards,
   });
 }

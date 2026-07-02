@@ -41,6 +41,7 @@ function normalizeSentenceHanzi(value: string) {
 export default function StudySentencesPage() {
   const configured = hasPublicEnv();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const repairingReviewsRef = useRef(false);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [selectedDeckId, setSelectedDeckId] = useState(() => {
     if (typeof window === "undefined") {
@@ -74,6 +75,7 @@ export default function StudySentencesPage() {
   const [writingResult, setWritingResult] = useState<"correct" | "wrong" | "">(
     "",
   );
+  const [repairingReviews, setRepairingReviews] = useState(false);
 
   async function loadReviews(deckId = selectedDeckId) {
     if (!configured) {
@@ -145,9 +147,57 @@ export default function StudySentencesPage() {
       query = query.eq("sentence_cards.deck_id", selectedDeckId);
     }
 
-    query.then(({ data }) => {
+    query.then(async ({ data }) => {
       if (!active) {
         return;
+      }
+
+      if (
+        selectedDeckId !== allDecksValue &&
+        (!data || data.length === 0) &&
+        !repairingReviewsRef.current
+      ) {
+        repairingReviewsRef.current = true;
+        setRepairingReviews(true);
+        const repairResponse = await fetchWithAuth(
+          "/api/repair-sentence-deck-reviews",
+          {
+            method: "POST",
+            body: JSON.stringify({ deckId: selectedDeckId }),
+          },
+        );
+        repairingReviewsRef.current = false;
+        setRepairingReviews(false);
+
+        if (!active) {
+          return;
+        }
+
+        if (repairResponse.ok) {
+          const repairData = await repairResponse.json();
+
+          if (repairData.created > 0) {
+            const retryResult = await supabase
+              .from("sentence_reviews")
+              .select("*, sentence_cards!inner(*)")
+              .lte("next_review_at", new Date().toISOString())
+              .eq("sentence_cards.deck_id", selectedDeckId)
+              .order("next_review_at", { ascending: true })
+              .limit(50);
+
+            if (!active) {
+              return;
+            }
+
+            setReviews((retryResult.data || []) as DueSentenceReview[]);
+            setIndex(0);
+            setShowAnswer(false);
+            setSentenceAnswer("");
+            setWritingResult("");
+            setLoading(false);
+            return;
+          }
+        }
       }
 
       setReviews((data || []) as DueSentenceReview[]);
@@ -329,8 +379,10 @@ export default function StudySentencesPage() {
             </div>
           </div>
 
-          {loading ? (
-            <p className="text-sm text-zinc-600">Đang tải câu...</p>
+          {loading || repairingReviews ? (
+            <p className="text-sm text-zinc-600">
+              {repairingReviews ? "Đang kiểm tra lịch ôn câu..." : "Đang tải câu..."}
+            </p>
           ) : !card ? (
             <EmptyState
               body="Hiện chưa có câu nào cần ôn trong bộ đã chọn."
