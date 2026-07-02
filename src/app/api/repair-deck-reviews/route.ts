@@ -60,13 +60,14 @@ export async function POST(request: Request) {
       : [],
   );
   const now = new Date().toISOString();
+  const dueNow = new Date(Date.now() - 60_000).toISOString();
 
   if (cardsWithoutReviews.length > 0) {
     const { error: reviewsError } = await supabase.from("reviews").insert(
       cardsWithoutReviews.map((card) => ({
         user_id: user.id,
         card_id: card.id,
-        next_review_at: now,
+        next_review_at: dueNow,
       })),
     );
 
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
       .from("reviews")
       .update({
         interval_days: 0,
-        next_review_at: now,
+        next_review_at: dueNow,
         updated_at: now,
       })
       .eq("user_id", user.id)

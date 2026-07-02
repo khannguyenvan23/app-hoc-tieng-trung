@@ -47,6 +47,10 @@ function startOfLocalDay(date: Date) {
   return nextDate;
 }
 
+function dueReviewCutoff() {
+  return new Date(Date.now() + 60_000).toISOString();
+}
+
 function normalizeSentenceHanzi(value: string) {
   return value
     .replace(/\s+/g, "")
@@ -145,7 +149,7 @@ export default function StudySentencesPage() {
     let query = supabase
       .from("sentence_reviews")
       .select("*, sentence_cards!inner(*)")
-      .lte("next_review_at", new Date().toISOString())
+      .lte("next_review_at", dueReviewCutoff())
       .order("next_review_at", { ascending: true })
       .limit(200);
 
@@ -234,7 +238,7 @@ export default function StudySentencesPage() {
     let query = supabase
       .from("sentence_reviews")
       .select("*, sentence_cards!inner(*)")
-      .lte("next_review_at", new Date().toISOString())
+      .lte("next_review_at", dueReviewCutoff())
       .order("next_review_at", { ascending: true })
       .limit(200);
 
@@ -292,7 +296,7 @@ export default function StudySentencesPage() {
             const retryResult = await supabase
               .from("sentence_reviews")
               .select("*, sentence_cards!inner(*)")
-              .lte("next_review_at", new Date().toISOString())
+              .lte("next_review_at", dueReviewCutoff())
               .eq("sentence_cards.deck_id", selectedDeckId)
               .order("next_review_at", { ascending: true })
               .limit(200);

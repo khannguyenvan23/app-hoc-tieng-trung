@@ -207,11 +207,12 @@ export async function POST(request: Request) {
     );
   }
 
+  const dueNow = new Date(Date.now() - 60_000).toISOString();
   const { error: reviewsError } = await supabase.from("reviews").insert(
     cards.map((card) => ({
       user_id: user.id,
       card_id: card.id,
-      next_review_at: new Date().toISOString(),
+      next_review_at: dueNow,
     })),
   );
 
@@ -265,7 +266,7 @@ export async function POST(request: Request) {
         sentenceCards.map((card) => ({
           user_id: user.id,
           sentence_card_id: card.id,
-          next_review_at: new Date().toISOString(),
+          next_review_at: dueNow,
         })),
       );
 

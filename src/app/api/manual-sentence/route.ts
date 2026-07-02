@@ -94,7 +94,7 @@ export async function POST(request: Request) {
       .insert({
         user_id: user.id,
         sentence_card_id: sentenceCard.id,
-        next_review_at: new Date().toISOString(),
+        next_review_at: new Date(Date.now() - 60_000).toISOString(),
       });
 
     if (reviewError) {

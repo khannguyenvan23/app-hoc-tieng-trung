@@ -133,6 +133,7 @@ export async function POST(request: Request) {
   }
 
   const now = new Date().toISOString();
+  const dueNow = new Date(Date.now() - 60_000).toISOString();
   const cardIds = (cards || []).map((card) => card.id);
   const sentenceCardIds = (sentenceCards || []).map((card) => card.id);
 
@@ -141,7 +142,7 @@ export async function POST(request: Request) {
       ? supabase
           .from("reviews")
           .update({
-            next_review_at: now,
+            next_review_at: dueNow,
             interval_days: 0,
             ease_factor: 2.5,
             review_count: 0,
@@ -155,7 +156,7 @@ export async function POST(request: Request) {
       ? supabase
           .from("sentence_reviews")
           .update({
-            next_review_at: now,
+            next_review_at: dueNow,
             interval_days: 0,
             ease_factor: 2.5,
             review_count: 0,
