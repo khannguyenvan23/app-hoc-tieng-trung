@@ -39,6 +39,7 @@ export default function StudyPage() {
   const configured = hasPublicEnv();
   const wordAudioRef = useRef<HTMLAudioElement | null>(null);
   const sentenceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const repairingReviewsRef = useRef(false);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [selectedDeckId, setSelectedDeckId] = useState(() => {
     if (typeof window === "undefined") {
@@ -69,6 +70,7 @@ export default function StudyPage() {
   const [writingResult, setWritingResult] = useState<"correct" | "wrong" | "">(
     "",
   );
+  const [repairingReviews, setRepairingReviews] = useState(false);
 
   async function loadReviews(deckId = selectedDeckId) {
     if (!configured) {
@@ -140,9 +142,55 @@ export default function StudyPage() {
       query = query.eq("cards.deck_id", selectedDeckId);
     }
 
-    query.then(({ data }) => {
+    query.then(async ({ data }) => {
       if (!active) {
         return;
+      }
+
+      if (
+        selectedDeckId !== allDecksValue &&
+        (!data || data.length === 0) &&
+        !repairingReviewsRef.current
+      ) {
+        repairingReviewsRef.current = true;
+        setRepairingReviews(true);
+        const repairResponse = await fetchWithAuth("/api/repair-deck-reviews", {
+          method: "POST",
+          body: JSON.stringify({ deckId: selectedDeckId }),
+        });
+        repairingReviewsRef.current = false;
+        setRepairingReviews(false);
+
+        if (!active) {
+          return;
+        }
+
+        if (repairResponse.ok) {
+          const repairData = await repairResponse.json();
+
+          if (repairData.created > 0) {
+            const retryQuery = supabase
+              .from("reviews")
+              .select("*, cards!inner(*)")
+              .lte("next_review_at", new Date().toISOString())
+              .eq("cards.deck_id", selectedDeckId)
+              .order("next_review_at", { ascending: true })
+              .limit(50);
+            const retryResult = await retryQuery;
+
+            if (!active) {
+              return;
+            }
+
+            setReviews((retryResult.data || []) as DueReview[]);
+            setIndex(0);
+            setShowAnswer(false);
+            setWritingAnswer("");
+            setWritingResult("");
+            setLoading(false);
+            return;
+          }
+        }
       }
 
       setReviews((data || []) as DueReview[]);
@@ -329,8 +377,10 @@ export default function StudyPage() {
             </div>
           </div>
 
-          {loading ? (
-            <p className="text-sm text-zinc-600">Đang tải thẻ...</p>
+          {loading || repairingReviews ? (
+            <p className="text-sm text-zinc-600">
+              {repairingReviews ? "Đang kiểm tra lịch ôn..." : "Đang tải thẻ..."}
+            </p>
           ) : !card ? (
             <EmptyState
               body="Hiện chưa có thẻ nào cần ôn trong bộ đã chọn."

@@ -192,6 +192,7 @@ export async function POST(request: Request) {
     cards.map((card) => ({
       user_id: user.id,
       card_id: card.id,
+      next_review_at: new Date().toISOString(),
     })),
   );
 
