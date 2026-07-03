@@ -744,11 +744,19 @@ export default function StudySentencesPage() {
 
   useEffect(() => {
     keyboardActionsRef.current = {
-      replayAudio: playSentenceAudio,
+      replayAudio: () => {
+        if (showAnswer) {
+          playSentenceAudio();
+        }
+      },
       showAnswer: showAnswerAndPlayAudio,
       togglePinyin: togglePinyinHint,
       toggleWriting: toggleWritingMode,
-      rate,
+      rate: (rating) => {
+        if (showAnswer) {
+          rate(rating);
+        }
+      },
     };
   });
 
@@ -835,7 +843,7 @@ export default function StudySentencesPage() {
                 {showPinyinHint ? "Tắt pinyin" : "Bật pinyin"}
               </button>
               <p className="basis-full text-left text-xs text-zinc-500 sm:text-right">
-                Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Phím tắt: R audio, Space đáp án, P pinyin, W luyện viết, 1-4 đánh giá.
+                Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Space hiện đáp án; sau khi hiện đáp án dùng R audio, 1-4 đánh giá. P pinyin, W luyện viết.
               </p>
             </div>
           </div>
