@@ -306,6 +306,7 @@ export default function DashboardPage() {
   const [weakItems, setWeakItems] = useState<WeakReviewItem[]>([]);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState("");
+  const [onboardingMessage, setOnboardingMessage] = useState("");
 
   useEffect(() => {
     if (!configured) {
@@ -516,6 +517,85 @@ export default function DashboardPage() {
     setSettingsMessage("Đã lưu giới hạn học mỗi ngày.");
   }
 
+  async function copyStarterTemplate() {
+    if (!hsk1Template) {
+      setOnboardingMessage("Chưa tìm thấy bộ HSK1 mẫu. Hãy thêm template HSK1 trong Supabase trước.");
+      return;
+    }
+
+    if (hsk1Template.already_added && hsk1Template.user_deck_id) {
+      router.push(`/decks/${hsk1Template.user_deck_id}`);
+      return;
+    }
+
+    setCopyingTemplateId(hsk1Template.id);
+    setOnboardingMessage("");
+
+    const response = await fetchWithAuth("/api/template-decks", {
+      method: "POST",
+      body: JSON.stringify({ templateDeckId: hsk1Template.id }),
+    });
+    const data = await response.json();
+    setCopyingTemplateId("");
+
+    if (!response.ok) {
+      if (data.alreadyAdded && data.deckId) {
+        router.push(`/decks/${data.deckId}`);
+        return;
+      }
+
+      setOnboardingMessage(data.error || "Không thể thêm bộ HSK1 mẫu.");
+      return;
+    }
+
+    router.push(`/decks/${data.deckId}`);
+  }
+
+  async function applyStarterStudyPlan() {
+    const starterSettings = {
+      daily_new_card_limit: 10,
+      daily_new_sentence_limit: 5,
+    };
+
+    setSavingSettings(true);
+    setSettingsMessage("");
+    setOnboardingMessage("");
+    setStudySettings(starterSettings);
+
+    const response = await fetchWithAuth("/api/study-settings", {
+      method: "PUT",
+      body: JSON.stringify(starterSettings),
+    });
+    const data = await response.json();
+    setSavingSettings(false);
+
+    if (!response.ok) {
+      setOnboardingMessage(data.error || "Không thể đặt mục tiêu học mỗi ngày.");
+      setStudySettings(studySettings);
+      return;
+    }
+
+    setStudySettings((data.settings || starterSettings) as StudySettings);
+    setOnboardingMessage("Đã đặt mục tiêu 10 từ mới và 5 câu mới mỗi ngày.");
+  }
+
+  function enablePinyinAndStartStudy() {
+    window.localStorage.setItem("hanzi-show-pinyin", "true");
+    router.push("/study");
+  }
+
+  const hsk1Template = templates.find((template) => {
+    const name = template.name.toLowerCase();
+    const slug = template.slug.toLowerCase();
+    const level = template.level?.toLowerCase() || "";
+
+    return name.includes("hsk1") || slug.includes("hsk1") || level === "hsk1";
+  });
+  const showOnboarding = !loading && stats.totalCards === 0;
+  const starterPlanReady =
+    studySettings.daily_new_card_limit === 10 &&
+    studySettings.daily_new_sentence_limit === 5;
+
   return (
     <AuthGuard>
       <AppShell>
@@ -528,6 +608,107 @@ export default function DashboardPage() {
           </div>
           <PrimaryLink href="/decks/new">Tạo bộ thẻ</PrimaryLink>
         </div>
+
+        {showOnboarding ? (
+          <section className="mt-6 rounded-lg border border-teal-200 bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold">Bắt đầu học trong 3 bước</h2>
+                <p className="mt-1 text-sm text-zinc-600">
+                  Tài khoản mới chưa có thẻ. Làm nhanh 3 bước này để có HSK1, mục tiêu học
+                  mỗi ngày và chế độ pinyin/audio sẵn sàng.
+                </p>
+              </div>
+              <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-800">
+                Gợi ý cho người mới
+              </span>
+            </div>
+
+            <div className="mt-5 grid gap-3 lg:grid-cols-3">
+              <div className="rounded-lg border border-zinc-200 bg-stone-50 p-4">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-700 text-sm font-semibold text-white">
+                    1
+                  </span>
+                  <h3 className="font-semibold">Thêm HSK1 cơ bản</h3>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-zinc-600">
+                  Copy bộ HSK1 mẫu vào tài khoản để có từ vựng học ngay, không phải tự nhập
+                  từ đầu.
+                </p>
+                <button
+                  className="mt-4 min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+                  disabled={!hsk1Template || Boolean(copyingTemplateId)}
+                  onClick={copyStarterTemplate}
+                  type="button"
+                >
+                  {copyingTemplateId === hsk1Template?.id
+                    ? "Đang thêm HSK1..."
+                    : hsk1Template?.already_added
+                      ? "Mở bộ HSK1"
+                      : "Thêm HSK1"}
+                </button>
+              </div>
+
+              <div className="rounded-lg border border-zinc-200 bg-stone-50 p-4">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-700 text-sm font-semibold text-white">
+                    2
+                  </span>
+                  <h3 className="font-semibold">Học 10 thẻ mỗi ngày</h3>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-zinc-600">
+                  Đặt nhịp học nhẹ: 10 từ mới và 5 câu mới mỗi ngày. Thẻ cũ đến hạn vẫn
+                  được ôn bình thường.
+                </p>
+                <button
+                  className={`mt-4 min-h-10 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-60 ${
+                    starterPlanReady
+                      ? "border border-teal-700 bg-teal-50 text-teal-800"
+                      : "bg-teal-700 text-white hover:bg-teal-800"
+                  }`}
+                  disabled={savingSettings || starterPlanReady}
+                  onClick={applyStarterStudyPlan}
+                  type="button"
+                >
+                  {starterPlanReady ? "Đã đặt 10 thẻ/ngày" : "Đặt mục tiêu 10 thẻ"}
+                </button>
+              </div>
+
+              <div className="rounded-lg border border-zinc-200 bg-stone-50 p-4">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-700 text-sm font-semibold text-white">
+                    3
+                  </span>
+                  <h3 className="font-semibold">Bật pinyin và audio</h3>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-zinc-600">
+                  Pinyin sẽ hiện khi ôn tập. Audio tự phát khi bấm hiện đáp án, giúp nghe
+                  phát âm ngay từ buổi đầu.
+                </p>
+                <button
+                  className="mt-4 min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                  onClick={enablePinyinAndStartStudy}
+                  type="button"
+                >
+                  Bật và bắt đầu học
+                </button>
+              </div>
+            </div>
+
+            {onboardingMessage ? (
+              <p
+                className={`mt-4 text-sm ${
+                  onboardingMessage.startsWith("Đã")
+                    ? "text-teal-700"
+                    : "text-red-700"
+                }`}
+              >
+                {onboardingMessage}
+              </p>
+            ) : null}
+          </section>
+        ) : null}
 
         <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
