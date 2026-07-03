@@ -5,6 +5,7 @@ import { AppShell, EmptyState } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
+import { isEditableKeyboardTarget } from "@/lib/keyboard";
 import { getNextReview } from "@/lib/review";
 import {
   defaultStudySettings,
@@ -133,6 +134,7 @@ export default function StudySentencesPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const transientAudioRef = useRef<HTMLAudioElement | null>(null);
   const audioCacheRef = useRef<Map<string, HTMLAudioElement>>(new Map());
+  const replaySentenceAudioRef = useRef<() => void>(() => {});
   const repairingReviewsRef = useRef(false);
   const pendingReviewSavesRef = useRef<Promise<void>[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
@@ -565,6 +567,35 @@ export default function StudySentencesPage() {
     });
   }
 
+  useEffect(() => {
+    replaySentenceAudioRef.current = () => {
+      playSentenceAudio();
+    };
+  });
+
+  useEffect(() => {
+    function handleReplayAudioShortcut(event: KeyboardEvent) {
+      if (
+        event.key.toLowerCase() !== "r" ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        isEditableKeyboardTarget(event.target)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      replaySentenceAudioRef.current();
+    }
+
+    window.addEventListener("keydown", handleReplayAudioShortcut);
+
+    return () => {
+      window.removeEventListener("keydown", handleReplayAudioShortcut);
+    };
+  }, []);
+
   function stopSentenceAudio() {
     [audioRef.current, transientAudioRef.current].forEach((audio) => {
       if (!audio) {
@@ -759,7 +790,7 @@ export default function StudySentencesPage() {
                 {showPinyinHint ? "Tắt pinyin" : "Bật pinyin"}
               </button>
               <p className="basis-full text-left text-xs text-zinc-500 sm:text-right">
-                Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm.
+                Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Phím R: phát lại âm thanh.
               </p>
             </div>
           </div>
