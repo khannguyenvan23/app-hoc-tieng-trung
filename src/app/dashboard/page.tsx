@@ -63,7 +63,7 @@ const defaultCredits: UserCredits = {
   plan: "free",
   credit_balance: 0,
   lifetime_credits: 0,
-  monthly_credit_limit: 50,
+  monthly_credit_limit: 100,
 };
 
 const emptyReviewStats: ReviewStats = {
@@ -793,6 +793,12 @@ export default function DashboardPage() {
                 Credit dùng để import bằng AI và tạo audio. Ôn tập thẻ đã có sẵn không
                 tốn credit.
               </p>
+              <Link
+                className="mt-3 inline-flex min-h-10 items-center rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
+                href="/pricing"
+              >
+                Xem bảng giá và nạp credit
+              </Link>
               {creditsMessage ? (
                 <p className="mt-2 text-sm text-red-700">{creditsMessage}</p>
               ) : null}

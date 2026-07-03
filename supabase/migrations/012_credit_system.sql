@@ -1,9 +1,9 @@
 create table if not exists public.user_credits (
   user_id uuid primary key references auth.users(id) on delete cascade,
   plan text not null default 'free',
-  credit_balance integer not null default 50 check (credit_balance >= 0),
-  lifetime_credits integer not null default 50 check (lifetime_credits >= 0),
-  monthly_credit_limit integer not null default 50 check (monthly_credit_limit >= 0),
+  credit_balance integer not null default 100 check (credit_balance >= 0),
+  lifetime_credits integer not null default 100 check (lifetime_credits >= 0),
+  monthly_credit_limit integer not null default 100 check (monthly_credit_limit >= 0),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

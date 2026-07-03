@@ -38,6 +38,7 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 OPENAI_API_KEY=
+NEXT_PUBLIC_CONTACT_PHONE=
 ```
 
 `OPENAI_API_KEY` is optional for local UI testing. Without it, import still creates cards with fallback data but no audio.
@@ -66,6 +67,7 @@ OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4.1-mini
 OPENAI_TTS_MODEL=gpt-4o-mini-tts
 OPENAI_TTS_VOICE=alloy
+NEXT_PUBLIC_CONTACT_PHONE=
 ```
 
 4. Use the default build settings:
@@ -96,6 +98,7 @@ Redirect URLs: https://your-project.vercel.app/**
 ## Routes
 
 - `/login` - sign in or sign up with Supabase Auth
+- `/pricing` - public credit pricing and phone/Zalo contact page
 - `/dashboard` - list decks
 - `/decks/new` - create a deck
 - `/decks/[deckId]` - view deck cards

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export const freeStartingCredits = 50;
+export const freeStartingCredits = 100;
 
 export const creditCosts = {
   cardAi: 1,

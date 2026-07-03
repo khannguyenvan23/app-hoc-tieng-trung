@@ -72,6 +72,12 @@ export default async function Home() {
           <nav className="flex items-center gap-2 text-sm">
             <Link
               className="rounded-md px-3 py-2 text-white/85 hover:bg-white/10 hover:text-white"
+              href="/pricing"
+            >
+              Bảng giá
+            </Link>
+            <Link
+              className="rounded-md px-3 py-2 text-white/85 hover:bg-white/10 hover:text-white"
               href="/login"
             >
               Đăng nhập
@@ -110,6 +116,12 @@ export default async function Home() {
               >
                 Xem tính năng
               </a>
+              <Link
+                className="rounded-md border border-white/35 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
+                href="/pricing"
+              >
+                Xem bảng giá
+              </Link>
             </div>
             <div className="mt-8 flex flex-wrap gap-2 text-sm text-stone-100">
               <span className="rounded-md bg-white/12 px-3 py-2">HSK1/HSK2</span>
@@ -227,6 +239,9 @@ export default async function Home() {
             </Link>
             <Link className="hover:text-teal-800 hover:underline" href="/terms">
               Điều khoản sử dụng
+            </Link>
+            <Link className="hover:text-teal-800 hover:underline" href="/pricing">
+              Bảng giá credit
             </Link>
           </nav>
         </div>
