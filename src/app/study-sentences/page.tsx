@@ -135,6 +135,19 @@ export default function StudySentencesPage() {
   const transientAudioRef = useRef<HTMLAudioElement | null>(null);
   const audioCacheRef = useRef<Map<string, HTMLAudioElement>>(new Map());
   const replaySentenceAudioRef = useRef<() => void>(() => {});
+  const keyboardActionsRef = useRef<{
+    replayAudio: () => void;
+    showAnswer: () => void;
+    togglePinyin: () => void;
+    toggleWriting: () => void;
+    rate: (rating: ReviewRating) => void;
+  }>({
+    replayAudio: () => {},
+    showAnswer: () => {},
+    togglePinyin: () => {},
+    toggleWriting: () => {},
+    rate: () => {},
+  });
   const repairingReviewsRef = useRef(false);
   const pendingReviewSavesRef = useRef<Promise<void>[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
@@ -574,9 +587,8 @@ export default function StudySentencesPage() {
   });
 
   useEffect(() => {
-    function handleReplayAudioShortcut(event: KeyboardEvent) {
+    function handleStudyShortcut(event: KeyboardEvent) {
       if (
-        event.key.toLowerCase() !== "r" ||
         event.ctrlKey ||
         event.metaKey ||
         event.altKey ||
@@ -585,14 +597,37 @@ export default function StudySentencesPage() {
         return;
       }
 
-      event.preventDefault();
-      replaySentenceAudioRef.current();
+      const key = event.key.toLowerCase();
+      const ratingByKey: Partial<Record<string, ReviewRating>> = {
+        "1": "again",
+        "2": "hard",
+        "3": "good",
+        "4": "easy",
+      };
+      const rating = ratingByKey[key];
+
+      if (key === "r") {
+        event.preventDefault();
+        keyboardActionsRef.current.replayAudio();
+      } else if (event.key === " ") {
+        event.preventDefault();
+        keyboardActionsRef.current.showAnswer();
+      } else if (key === "p") {
+        event.preventDefault();
+        keyboardActionsRef.current.togglePinyin();
+      } else if (key === "w") {
+        event.preventDefault();
+        keyboardActionsRef.current.toggleWriting();
+      } else if (rating) {
+        event.preventDefault();
+        keyboardActionsRef.current.rate(rating);
+      }
     }
 
-    window.addEventListener("keydown", handleReplayAudioShortcut);
+    window.addEventListener("keydown", handleStudyShortcut);
 
     return () => {
-      window.removeEventListener("keydown", handleReplayAudioShortcut);
+      window.removeEventListener("keydown", handleStudyShortcut);
     };
   }, []);
 
@@ -707,6 +742,16 @@ export default function StudySentencesPage() {
     }
   }
 
+  useEffect(() => {
+    keyboardActionsRef.current = {
+      replayAudio: playSentenceAudio,
+      showAnswer: showAnswerAndPlayAudio,
+      togglePinyin: togglePinyinHint,
+      toggleWriting: toggleWritingMode,
+      rate,
+    };
+  });
+
   const current = reviews[index];
   const card = current?.sentence_cards;
   const vocabItems = Array.isArray(card?.vocab_json) ? card.vocab_json : [];
@@ -790,7 +835,7 @@ export default function StudySentencesPage() {
                 {showPinyinHint ? "Tắt pinyin" : "Bật pinyin"}
               </button>
               <p className="basis-full text-left text-xs text-zinc-500 sm:text-right">
-                Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Phím R: phát lại âm thanh.
+                Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Phím tắt: R audio, Space đáp án, P pinyin, W luyện viết, 1-4 đánh giá.
               </p>
             </div>
           </div>
