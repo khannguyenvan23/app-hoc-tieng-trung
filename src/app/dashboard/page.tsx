@@ -7,6 +7,10 @@ import { AppShell, EmptyState, PrimaryLink } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
+import {
+  defaultStudySettings,
+  type StudySettings,
+} from "@/lib/study-settings";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Deck, ReviewRating, TemplateDeck } from "@/lib/types";
 
@@ -15,11 +19,6 @@ type DashboardStats = {
   dueToday: number;
   newToday: number;
   streakDays: number;
-};
-
-type StudySettings = {
-  daily_new_card_limit: number;
-  daily_new_sentence_limit: number;
 };
 
 type UserCredits = {
@@ -52,11 +51,6 @@ const emptyStats: DashboardStats = {
   dueToday: 0,
   newToday: 0,
   streakDays: 0,
-};
-
-const defaultStudySettings: StudySettings = {
-  daily_new_card_limit: 10,
-  daily_new_sentence_limit: 5,
 };
 
 const defaultCredits: UserCredits = {
@@ -535,7 +529,10 @@ export default function DashboardPage() {
     router.push(`/decks/${data.deckId}`);
   }
 
-  function updateStudySetting(name: keyof StudySettings, value: string) {
+  function updateStudySetting(
+    name: "daily_new_card_limit" | "daily_new_sentence_limit",
+    value: string,
+  ) {
     const numericValue = Math.min(100, Math.max(0, Number(value) || 0));
     setStudySettings((current) => ({ ...current, [name]: numericValue }));
     setSettingsMessage("");
@@ -597,6 +594,7 @@ export default function DashboardPage() {
 
   async function applyStarterStudyPlan() {
     const starterSettings = {
+      ...studySettings,
       daily_new_card_limit: 10,
       daily_new_sentence_limit: 5,
     };

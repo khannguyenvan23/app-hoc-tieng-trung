@@ -6,6 +6,11 @@ import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
 import { getNextReview } from "@/lib/review";
+import {
+  defaultStudySettings,
+  formatReviewIntervalLabel,
+  type StudySettings,
+} from "@/lib/study-settings";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Card, Deck, DueReview, ReviewRating } from "@/lib/types";
 
@@ -31,16 +36,6 @@ type CardAudioData = {
   sentenceAudioUrl: string | null;
 };
 
-type StudySettings = {
-  daily_new_card_limit: number;
-  daily_new_sentence_limit: number;
-};
-
-const defaultStudySettings: StudySettings = {
-  daily_new_card_limit: 10,
-  daily_new_sentence_limit: 5,
-};
-
 function isWeakStudyRequest() {
   if (typeof window === "undefined") {
     return false;
@@ -63,11 +58,37 @@ function normalizeHanzi(value: string) {
   return value.replace(/\s+/g, "").trim();
 }
 
-function applyNewCardLimit(reviews: DueReview[], remainingNewCards: number) {
+function shuffleReviews(reviews: DueReview[]) {
+  const nextReviews = [...reviews];
+
+  for (let index = nextReviews.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [nextReviews[index], nextReviews[swapIndex]] = [
+      nextReviews[swapIndex],
+      nextReviews[index],
+    ];
+  }
+
+  return nextReviews;
+}
+
+function applyNewCardLimit(
+  reviews: DueReview[],
+  remainingNewCards: number,
+  settings: StudySettings,
+) {
   const reviewCards = reviews.filter((review) => Number(review.review_count) > 0);
-  const newCards = reviews
+  const newCardCandidates = reviews
     .filter((review) => Number(review.review_count) === 0)
-    .slice(0, remainingNewCards);
+    .sort(
+      (left, right) =>
+        new Date(left.cards?.created_at || left.next_review_at).getTime() -
+        new Date(right.cards?.created_at || right.next_review_at).getTime(),
+    );
+  const newCards =
+    settings.insertion_order === "random"
+      ? shuffleReviews(newCardCandidates).slice(0, remainingNewCards)
+      : newCardCandidates.slice(0, remainingNewCards);
 
   return [...reviewCards, ...newCards].sort(
     (left, right) =>
@@ -76,16 +97,19 @@ function applyNewCardLimit(reviews: DueReview[], remainingNewCards: number) {
   );
 }
 
-function getRatingIntervalLabel(rating: ReviewRating, review: DueReview) {
-  const nextReview = getNextReview(rating, review);
+function getRatingIntervalLabel(
+  rating: ReviewRating,
+  review: DueReview,
+  settings: StudySettings,
+) {
+  const now = new Date();
+  const nextReview = getNextReview(rating, review, now, settings);
 
-  if (nextReview.interval_days <= 0) {
-    return "10 phút";
-  }
-
-  return nextReview.interval_days === 1
-    ? "1 ngày"
-    : `${nextReview.interval_days} ngày`;
+  return formatReviewIntervalLabel(
+    nextReview.next_review_at,
+    nextReview.interval_days,
+    now,
+  );
 }
 
 function getCardAudioData(card: Card | null | undefined): CardAudioData | null {
@@ -319,7 +343,11 @@ export default function StudyPage() {
 
     setNewCardsStudiedToday(studiedToday);
     setReviews(
-      applyNewCardLimit((data || []) as DueReview[], remainingNewCards),
+      applyNewCardLimit(
+        (data || []) as DueReview[],
+        remainingNewCards,
+        studySettings,
+      ),
     );
     setIndex(0);
     setShowAnswer(false);
@@ -468,6 +496,7 @@ export default function StudyPage() {
               applyNewCardLimit(
                 (retryResult.data || []) as DueReview[],
                 remainingNewCards,
+                studySettings,
               ),
             );
             setIndex(0);
@@ -482,7 +511,11 @@ export default function StudyPage() {
 
       setNewCardsStudiedToday(studiedToday);
       setReviews(
-        applyNewCardLimit((data || []) as DueReview[], remainingNewCards),
+        applyNewCardLimit(
+          (data || []) as DueReview[],
+          remainingNewCards,
+          studySettings,
+        ),
       );
       setIndex(0);
       setShowAnswer(false);
@@ -494,7 +527,7 @@ export default function StudyPage() {
     return () => {
       active = false;
     };
-  }, [configured, selectedDeckId, studySettings.daily_new_card_limit, weakOnly]);
+  }, [configured, selectedDeckId, studySettings, weakOnly]);
 
   useEffect(() => {
     if (wordAudioRef.current) {
@@ -945,7 +978,12 @@ export default function StudyPage() {
                             {ratingLabels[rating]}
                           </span>
                           <span className="mt-1 block text-xs text-zinc-500">
-                            Lặp lại sau {getRatingIntervalLabel(rating, current)}
+                            Lặp lại sau{" "}
+                            {getRatingIntervalLabel(
+                              rating,
+                              current,
+                              studySettings,
+                            )}
                           </span>
                         </button>
                       ),

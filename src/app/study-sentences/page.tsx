@@ -6,6 +6,11 @@ import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
 import { getNextReview } from "@/lib/review";
+import {
+  defaultStudySettings,
+  formatReviewIntervalLabel,
+  type StudySettings,
+} from "@/lib/study-settings";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type {
   Deck,
@@ -30,16 +35,6 @@ const audioSpeeds = {
 } as const;
 
 type AudioSpeed = keyof typeof audioSpeeds;
-
-type StudySettings = {
-  daily_new_card_limit: number;
-  daily_new_sentence_limit: number;
-};
-
-const defaultStudySettings: StudySettings = {
-  daily_new_card_limit: 10,
-  daily_new_sentence_limit: 5,
-};
 
 function isWeakStudyRequest() {
   if (typeof window === "undefined") {
@@ -66,16 +61,46 @@ function normalizeSentenceHanzi(value: string) {
     .trim();
 }
 
+function shuffleSentenceReviews(reviews: DueSentenceReview[]) {
+  const nextReviews = [...reviews];
+
+  for (let index = nextReviews.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [nextReviews[index], nextReviews[swapIndex]] = [
+      nextReviews[swapIndex],
+      nextReviews[index],
+    ];
+  }
+
+  return nextReviews;
+}
+
 function applyNewSentenceLimit(
   reviews: DueSentenceReview[],
   remainingNewSentences: number,
+  settings: StudySettings,
 ) {
   const reviewSentences = reviews.filter(
     (review) => Number(review.review_count) > 0,
   );
-  const newSentences = reviews
+  const newSentenceCandidates = reviews
     .filter((review) => Number(review.review_count) === 0)
-    .slice(0, remainingNewSentences);
+    .sort(
+      (left, right) =>
+        new Date(
+          left.sentence_cards?.created_at || left.next_review_at,
+        ).getTime() -
+        new Date(
+          right.sentence_cards?.created_at || right.next_review_at,
+        ).getTime(),
+    );
+  const newSentences =
+    settings.insertion_order === "random"
+      ? shuffleSentenceReviews(newSentenceCandidates).slice(
+          0,
+          remainingNewSentences,
+        )
+      : newSentenceCandidates.slice(0, remainingNewSentences);
 
   return [...reviewSentences, ...newSentences].sort(
     (left, right) =>
@@ -87,16 +112,16 @@ function applyNewSentenceLimit(
 function getRatingIntervalLabel(
   rating: ReviewRating,
   review: DueSentenceReview,
+  settings: StudySettings,
 ) {
-  const nextReview = getNextReview(rating, review);
+  const now = new Date();
+  const nextReview = getNextReview(rating, review, now, settings);
 
-  if (nextReview.interval_days <= 0) {
-    return "10 phút";
-  }
-
-  return nextReview.interval_days === 1
-    ? "1 ngày"
-    : `${nextReview.interval_days} ngày`;
+  return formatReviewIntervalLabel(
+    nextReview.next_review_at,
+    nextReview.interval_days,
+    now,
+  );
 }
 
 function getSentenceAudioUrl(card: SentenceCard | null | undefined) {
@@ -255,6 +280,7 @@ export default function StudySentencesPage() {
       applyNewSentenceLimit(
         (data || []) as DueSentenceReview[],
         remainingNewSentences,
+        studySettings,
       ),
     );
     setIndex(0);
@@ -410,6 +436,7 @@ export default function StudySentencesPage() {
               applyNewSentenceLimit(
                 (retryResult.data || []) as DueSentenceReview[],
                 remainingNewSentences,
+                studySettings,
               ),
             );
             setIndex(0);
@@ -427,6 +454,7 @@ export default function StudySentencesPage() {
         applyNewSentenceLimit(
           (data || []) as DueSentenceReview[],
           remainingNewSentences,
+          studySettings,
         ),
       );
       setIndex(0);
@@ -440,7 +468,7 @@ export default function StudySentencesPage() {
     return () => {
       active = false;
     };
-  }, [configured, selectedDeckId, studySettings.daily_new_sentence_limit, weakOnly]);
+  }, [configured, selectedDeckId, studySettings, weakOnly]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -876,7 +904,12 @@ export default function StudySentencesPage() {
                             {ratingLabels[rating]}
                           </span>
                           <span className="mt-1 block text-xs text-zinc-500">
-                            Lặp lại sau {getRatingIntervalLabel(rating, current)}
+                            Lặp lại sau{" "}
+                            {getRatingIntervalLabel(
+                              rating,
+                              current,
+                              studySettings,
+                            )}
                           </span>
                         </button>
                       ),

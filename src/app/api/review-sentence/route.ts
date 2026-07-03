@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth";
 import { getNextReview } from "@/lib/review";
+import {
+  defaultStudySettings,
+  normalizeStudySettings,
+} from "@/lib/study-settings";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const schema = z.object({
@@ -99,7 +103,25 @@ export async function POST(request: Request) {
     );
   }
 
-  const nextReview = getNextReview(body.data.rating, review);
+  const { data: studySettingsRow, error: settingsError } = await supabase
+    .from("user_study_settings")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (settingsError) {
+    console.warn(settingsError);
+  }
+
+  const studySettings = normalizeStudySettings(
+    settingsError ? defaultStudySettings : studySettingsRow,
+  );
+  const nextReview = getNextReview(
+    body.data.rating,
+    review,
+    new Date(),
+    studySettings,
+  );
   const weakPatch = supportsWeakQueue ? getWeakPatch(body.data.rating, review) : {};
   const { error } = await supabase
     .from("sentence_reviews")

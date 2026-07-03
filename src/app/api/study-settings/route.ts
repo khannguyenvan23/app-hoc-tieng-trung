@@ -1,16 +1,31 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth";
+import {
+  defaultStudySettings,
+  insertionOrders,
+  isValidLearningSteps,
+  normalizeStudySettings,
+} from "@/lib/study-settings";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-
-const defaultSettings = {
-  daily_new_card_limit: 10,
-  daily_new_sentence_limit: 5,
-};
 
 const updateSchema = z.object({
   daily_new_card_limit: z.number().int().min(0).max(100),
   daily_new_sentence_limit: z.number().int().min(0).max(100),
+  learning_steps: z
+    .string()
+    .trim()
+    .min(1)
+    .max(80)
+    .refine(isValidLearningSteps, "Invalid learning steps"),
+  graduating_interval_days: z.number().int().min(1).max(365),
+  easy_interval_days: z.number().int().min(1).max(365),
+  insertion_order: z.enum(insertionOrders),
+  review_again_interval_minutes: z.number().int().min(1).max(1440),
+  hard_interval_multiplier: z.number().min(1).max(5),
+  starting_ease_factor: z.number().min(1.3).max(5),
+  minimum_ease_factor: z.number().min(1.1).max(5),
+  maximum_interval_days: z.number().int().min(1).max(3650),
 });
 
 export async function GET(request: Request) {
@@ -23,7 +38,7 @@ export async function GET(request: Request) {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("user_study_settings")
-    .select("daily_new_card_limit, daily_new_sentence_limit")
+    .select("*")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -35,7 +50,9 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json({ settings: data || defaultSettings });
+  return NextResponse.json({
+    settings: normalizeStudySettings(data || defaultStudySettings),
+  });
 }
 
 export async function PUT(request: Request) {
@@ -48,19 +65,22 @@ export async function PUT(request: Request) {
   const body = updateSchema.safeParse(await request.json().catch(() => null));
 
   if (!body.success) {
-    return NextResponse.json({ error: "Dữ liệu không hợp lệ" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Dữ liệu không hợp lệ" },
+      { status: 400 },
+    );
   }
 
   const supabase = createSupabaseAdminClient();
+  const nextSettings = normalizeStudySettings(body.data);
   const { data, error } = await supabase
     .from("user_study_settings")
     .upsert({
       user_id: user.id,
-      daily_new_card_limit: body.data.daily_new_card_limit,
-      daily_new_sentence_limit: body.data.daily_new_sentence_limit,
+      ...nextSettings,
       updated_at: new Date().toISOString(),
     })
-    .select("daily_new_card_limit, daily_new_sentence_limit")
+    .select("*")
     .single();
 
   if (error) {
@@ -71,5 +91,8 @@ export async function PUT(request: Request) {
     );
   }
 
-  return NextResponse.json({ success: true, settings: data });
+  return NextResponse.json({
+    success: true,
+    settings: normalizeStudySettings(data),
+  });
 }

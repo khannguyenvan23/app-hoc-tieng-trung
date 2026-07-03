@@ -42,6 +42,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               Nạp credit
             </Link>
+            <Link
+              className="rounded-md px-3 py-2 hover:bg-zinc-100"
+              href="/options"
+            >
+              Cài đặt
+            </Link>
             <button
               className="rounded-md border border-zinc-300 px-3 py-2 hover:bg-zinc-100"
               onClick={signOut}
