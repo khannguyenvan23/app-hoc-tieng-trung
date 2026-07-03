@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { hasPublicEnv } from "@/lib/env";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Hanzi Cards - Học từ vựng tiếng Trung với SRS và audio",
@@ -33,7 +36,24 @@ const steps = [
   "Ôn mỗi ngày bằng flashcard, luyện câu và lịch SRS.",
 ];
 
-export default function Home() {
+async function redirectAuthenticatedUser() {
+  if (!hasPublicEnv()) {
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
+}
+
+export default async function Home() {
+  await redirectAuthenticatedUser();
+
   return (
     <main className="bg-stone-50 text-zinc-950">
       <section className="relative isolate min-h-[78svh] overflow-hidden bg-zinc-950 text-white">

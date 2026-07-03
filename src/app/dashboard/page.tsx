@@ -560,6 +560,38 @@ export default function DashboardPage() {
           </div>
         </section>
 
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold">Bộ thẻ của bạn</h2>
+
+          <div className="mt-4">
+            {loading ? (
+              <p className="text-sm text-zinc-600">Đang tải bộ thẻ...</p>
+            ) : decks.length === 0 ? (
+              <EmptyState
+                action={<PrimaryLink href="/decks/new">Tạo bộ thẻ</PrimaryLink>}
+                body="Bắt đầu với một chủ đề như HSK2, ăn uống hoặc giao tiếp hằng ngày."
+                title="Chưa có bộ thẻ nào"
+              />
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {decks.map((deck) => (
+                  <Link
+                    className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm hover:border-teal-700"
+                    href={`/decks/${deck.id}`}
+                    key={deck.id}
+                  >
+                    <h3 className="font-semibold">{deck.name}</h3>
+                    <p className="mt-2 text-sm text-zinc-500">
+                      Tạo ngày{" "}
+                      {new Date(deck.created_at).toLocaleDateString("vi-VN")}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
         <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -848,37 +880,6 @@ export default function DashboardPage() {
           )}
         </section>
 
-        <section className="mt-8">
-          <h2 className="text-lg font-semibold">Bộ thẻ của bạn</h2>
-
-          <div className="mt-4">
-            {loading ? (
-              <p className="text-sm text-zinc-600">Đang tải bộ thẻ...</p>
-            ) : decks.length === 0 ? (
-              <EmptyState
-                action={<PrimaryLink href="/decks/new">Tạo bộ thẻ</PrimaryLink>}
-                body="Bắt đầu với một chủ đề như HSK2, ăn uống hoặc giao tiếp hằng ngày."
-                title="Chưa có bộ thẻ nào"
-              />
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {decks.map((deck) => (
-                  <Link
-                    className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm hover:border-teal-700"
-                    href={`/decks/${deck.id}`}
-                    key={deck.id}
-                  >
-                    <h3 className="font-semibold">{deck.name}</h3>
-                    <p className="mt-2 text-sm text-zinc-500">
-                      Tạo ngày{" "}
-                      {new Date(deck.created_at).toLocaleDateString("vi-VN")}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
       </AppShell>
     </AuthGuard>
   );
