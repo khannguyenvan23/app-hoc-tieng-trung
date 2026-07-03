@@ -182,6 +182,16 @@ export function getFirstLearningStepMinutes(settings: StudySettings) {
   );
 }
 
+export function getHardLearningStepMinutes(settings: StudySettings) {
+  const steps = parseLearningSteps(settings.learning_steps);
+  const firstStep = steps[0] || getFirstLearningStepMinutes(settings);
+
+  return (
+    steps[1] ||
+    Math.max(firstStep * 3, settings.review_again_interval_minutes, 15)
+  );
+}
+
 export function addMinutes(date: Date, minutes: number) {
   const nextDate = new Date(date);
   nextDate.setMinutes(nextDate.getMinutes() + minutes);

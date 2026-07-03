@@ -4,6 +4,7 @@ import {
   addMinutes,
   defaultStudySettings,
   getFirstLearningStepMinutes,
+  getHardLearningStepMinutes,
   type StudySettings,
 } from "@/lib/study-settings";
 
@@ -40,9 +41,9 @@ function getLearningInterval(
 
   if (rating === "hard") {
     return {
-      nextInterval: settings.graduating_interval_days,
+      nextInterval: 0,
       nextEase: clampEase(currentEase - 0.15, settings),
-      nextReviewAt: addDays(now, settings.graduating_interval_days),
+      nextReviewAt: addMinutes(now, getHardLearningStepMinutes(settings)),
     };
   }
 
