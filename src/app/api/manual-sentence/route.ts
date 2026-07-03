@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth";
+import {
+  createCreditErrorResponse,
+  creditCosts,
+  refundCredits,
+  spendCredits,
+} from "@/lib/credits";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createAndUploadSpeech } from "@/lib/tts";
 
@@ -49,7 +55,21 @@ export async function POST(request: Request) {
     );
   }
 
+  const shouldCreateAudio = !body.data.sentence_audio_url?.trim();
+  let spentCredits = 0;
+
   try {
+    if (shouldCreateAudio) {
+      const creditCharge = await spendCredits({
+        supabase,
+        userId: user.id,
+        credits: creditCosts.ttsAudio,
+        eventType: "manual_sentence_audio",
+        metadata: { deckId: body.data.deckId },
+      });
+      spentCredits = creditCharge.creditsUsed;
+    }
+
     const { data: sentenceCard, error: cardError } = await supabase
       .from("sentence_cards")
       .insert({
@@ -68,7 +88,7 @@ export async function POST(request: Request) {
       throw cardError || new Error("Sentence card insert failed");
     }
 
-    if (!body.data.sentence_audio_url?.trim()) {
+    if (shouldCreateAudio) {
       const sentenceAudioUrl = await createAndUploadSpeech(
         user.id,
         sentenceCard.id,
@@ -104,9 +124,26 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       sentenceCardId: sentenceCard.id,
+      creditsUsed: spentCredits,
     });
   } catch (error) {
     console.error(error);
+    const creditResponse = createCreditErrorResponse(error);
+
+    if (creditResponse) {
+      return creditResponse;
+    }
+
+    if (spentCredits > 0) {
+      await refundCredits({
+        supabase,
+        userId: user.id,
+        credits: spentCredits,
+        eventType: "refund_manual_sentence_audio",
+        metadata: { reason: "manual_sentence_failed" },
+      }).catch(console.error);
+    }
+
     return NextResponse.json(
       { error: "Không thể tạo câu thủ công" },
       { status: 500 },

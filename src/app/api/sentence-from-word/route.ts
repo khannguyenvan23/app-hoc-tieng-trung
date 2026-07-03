@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { generateSentenceFromWord } from "@/lib/ai";
 import { getRequestUser } from "@/lib/auth";
+import {
+  createCreditErrorResponse,
+  creditCosts,
+  refundCredits,
+  spendCredits,
+} from "@/lib/credits";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createAndUploadSpeech } from "@/lib/tts";
 
@@ -38,7 +44,19 @@ export async function POST(request: Request) {
     );
   }
 
+  const creditsRequired = creditCosts.sentenceAi + creditCosts.ttsAudio;
+  let spentCredits = 0;
+
   try {
+    const creditCharge = await spendCredits({
+      supabase,
+      userId: user.id,
+      credits: creditsRequired,
+      eventType: "sentence_from_word",
+      metadata: { word: body.data.word.trim() },
+    });
+    spentCredits = creditCharge.creditsUsed;
+
     const generated = await generateSentenceFromWord(body.data.word.trim());
     const { data: sentenceCard, error: cardError } = await supabase
       .from("sentence_cards")
@@ -90,9 +108,27 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       sentenceCardId: sentenceCard.id,
+      creditBalance: creditCharge.balance,
+      creditsUsed: spentCredits,
     });
   } catch (error) {
     console.error(error);
+    const creditResponse = createCreditErrorResponse(error);
+
+    if (creditResponse) {
+      return creditResponse;
+    }
+
+    if (spentCredits > 0) {
+      await refundCredits({
+        supabase,
+        userId: user.id,
+        credits: spentCredits,
+        eventType: "refund_sentence_from_word",
+        metadata: { reason: "sentence_from_word_failed" },
+      }).catch(console.error);
+    }
+
     return NextResponse.json(
       { error: "Không thể tạo câu từ từ vựng" },
       { status: 500 },

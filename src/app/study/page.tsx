@@ -516,15 +516,8 @@ export default function StudyPage() {
 
       cacheAudio(audioData?.wordAudioUrl);
       cacheAudio(audioData?.sentenceAudioUrl);
-
-      if (
-        review.cards &&
-        (!review.cards.word_audio_url || !review.cards.sentence_audio_url)
-      ) {
-        void ensureCardAudioForReview(review);
-      }
     });
-  }, [cacheAudio, ensureCardAudioForReview, index, reviews]);
+  }, [cacheAudio, index, reviews]);
 
   useEffect(() => {
     const audioCache = audioCacheRef.current;

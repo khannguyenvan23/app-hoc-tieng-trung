@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { generateSentenceCardData } from "@/lib/ai";
 import { getRequestUser } from "@/lib/auth";
+import {
+  createCreditErrorResponse,
+  creditCosts,
+  refundCredits,
+  spendCredits,
+} from "@/lib/credits";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createAndUploadSpeech } from "@/lib/tts";
 
@@ -46,8 +52,23 @@ export async function POST(request: Request) {
   }
 
   let created = 0;
+  let spentCredits = 0;
+  const creditsRequired =
+    body.data.items.length * (creditCosts.sentenceAi + creditCosts.ttsAudio);
 
   try {
+    const creditCharge = await spendCredits({
+      supabase,
+      userId: user.id,
+      credits: creditsRequired,
+      eventType: "import_sentences",
+      metadata: {
+        itemCount: body.data.items.length,
+        creditsRequired,
+      },
+    });
+    spentCredits = creditCharge.creditsUsed;
+
     for (const item of body.data.items) {
       const generated = await generateSentenceCardData(item.sentence_cn);
       const { data: sentenceCard, error: cardError } = await supabase
@@ -100,9 +121,30 @@ export async function POST(request: Request) {
       created += 1;
     }
 
-    return NextResponse.json({ success: true, created });
+    return NextResponse.json({
+      success: true,
+      created,
+      creditBalance: creditCharge.balance,
+      creditsUsed: spentCredits,
+    });
   } catch (error) {
     console.error(error);
+    const creditResponse = createCreditErrorResponse(error);
+
+    if (creditResponse) {
+      return creditResponse;
+    }
+
+    if (spentCredits > 0 && created === 0) {
+      await refundCredits({
+        supabase,
+        userId: user.id,
+        credits: spentCredits,
+        eventType: "refund_import_sentences",
+        metadata: { reason: "import_failed" },
+      }).catch(console.error);
+    }
+
     return NextResponse.json(
       { error: "Import câu thất bại", created },
       { status: 500 },

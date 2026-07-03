@@ -70,7 +70,8 @@ export default function ImportSentencesPage() {
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-zinc-600">
-              {items.length} câu sẵn sàng gửi AI
+              {items.length} câu sẵn sàng gửi AI · dự kiến cần {items.length * 3}{" "}
+              credit
             </p>
             <button
               className="min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"

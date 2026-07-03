@@ -90,7 +90,7 @@ export default function NewManualSentencePage() {
               <h1 className="text-2xl font-semibold">Thêm câu thủ công</h1>
               <p className="mt-1 text-sm text-zinc-600">
                 Tự nhập câu luyện tập. Khi lưu, app sẽ tự tạo audio nếu bạn để
-                trống ô audio.
+                trống ô audio. Tạo audio tự động cần 1 credit.
               </p>
             </div>
             <Link

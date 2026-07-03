@@ -210,7 +210,7 @@ export default function EditCardPage() {
               onClick={regenerateAudio}
               type="button"
             >
-              Tạo lại audio
+              Tạo lại audio (1-2 credit)
             </button>
             <button
               className="min-h-11 rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"

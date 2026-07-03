@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth";
+import {
+  createCreditErrorResponse,
+  creditCosts,
+  refundCredits,
+  spendCredits,
+} from "@/lib/credits";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createAndUploadSpeech } from "@/lib/tts";
 
@@ -36,7 +42,21 @@ export async function POST(request: Request) {
     );
   }
 
+  const missingAudioCount =
+    (card.word_audio_url ? 0 : 1) +
+    (card.sentence_audio_url || !card.example_cn ? 0 : 1);
+  let spentCredits = 0;
+
   try {
+    const creditCharge = await spendCredits({
+      supabase,
+      userId: user.id,
+      credits: missingAudioCount * creditCosts.ttsAudio,
+      eventType: "ensure_card_audio",
+      metadata: { cardId: card.id, missingAudioCount },
+    });
+    spentCredits = creditCharge.creditsUsed;
+
     const [wordAudioUrl, sentenceAudioUrl] = await Promise.all([
       card.word_audio_url
         ? Promise.resolve(card.word_audio_url)
@@ -70,9 +90,27 @@ export async function POST(request: Request) {
       success: true,
       wordAudioUrl,
       sentenceAudioUrl,
+      creditBalance: creditCharge.balance,
+      creditsUsed: spentCredits,
     });
   } catch (error) {
     console.error(error);
+    const creditResponse = createCreditErrorResponse(error);
+
+    if (creditResponse) {
+      return creditResponse;
+    }
+
+    if (spentCredits > 0) {
+      await refundCredits({
+        supabase,
+        userId: user.id,
+        credits: spentCredits,
+        eventType: "refund_ensure_card_audio",
+        metadata: { reason: "ensure_card_audio_failed" },
+      }).catch(console.error);
+    }
+
     return NextResponse.json(
       { error: "Không thể tạo audio cho thẻ" },
       { status: 500 },

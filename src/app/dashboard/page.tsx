@@ -22,6 +22,13 @@ type StudySettings = {
   daily_new_sentence_limit: number;
 };
 
+type UserCredits = {
+  plan: string;
+  credit_balance: number;
+  lifetime_credits: number;
+  monthly_credit_limit: number;
+};
+
 type ReviewStats = {
   studiedToday: number;
   ratingCounts: Record<ReviewRating, number>;
@@ -50,6 +57,13 @@ const emptyStats: DashboardStats = {
 const defaultStudySettings: StudySettings = {
   daily_new_card_limit: 10,
   daily_new_sentence_limit: 5,
+};
+
+const defaultCredits: UserCredits = {
+  plan: "free",
+  credit_balance: 0,
+  lifetime_credits: 0,
+  monthly_credit_limit: 50,
 };
 
 const emptyReviewStats: ReviewStats = {
@@ -307,6 +321,8 @@ export default function DashboardPage() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState("");
   const [onboardingMessage, setOnboardingMessage] = useState("");
+  const [credits, setCredits] = useState<UserCredits>(defaultCredits);
+  const [creditsMessage, setCreditsMessage] = useState("");
 
   useEffect(() => {
     if (!configured) {
@@ -461,6 +477,34 @@ export default function DashboardPage() {
         setLoading(false);
       },
     );
+
+    return () => {
+      active = false;
+    };
+  }, [configured]);
+
+  useEffect(() => {
+    if (!configured) {
+      return;
+    }
+
+    let active = true;
+
+    fetchWithAuth("/api/credits").then(async (response) => {
+      const data = await response.json().catch(() => null);
+
+      if (!active) {
+        return;
+      }
+
+      if (!response.ok) {
+        setCreditsMessage(data?.error || "Không thể tải credit.");
+        return;
+      }
+
+      setCredits((data.credits || defaultCredits) as UserCredits);
+      setCreditsMessage("");
+    });
 
     return () => {
       active = false;
@@ -738,6 +782,47 @@ export default function DashboardPage() {
               {loading ? "..." : stats.streakDays}
             </div>
             <p className="mt-1 text-xs text-zinc-500">Ngày học liên tiếp</p>
+          </div>
+        </section>
+
+        <section className="mt-4 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold">Credit AI</h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                Credit dùng để import bằng AI và tạo audio. Ôn tập thẻ đã có sẵn không
+                tốn credit.
+              </p>
+              {creditsMessage ? (
+                <p className="mt-2 text-sm text-red-700">{creditsMessage}</p>
+              ) : null}
+            </div>
+            <div className="min-w-36 rounded-md border border-teal-100 bg-teal-50 px-4 py-3 text-right">
+              <div className="text-xs font-medium uppercase text-teal-800">
+                Còn lại
+              </div>
+              <div className="mt-1 text-3xl font-semibold text-teal-900">
+                {credits.credit_balance}
+              </div>
+              <div className="mt-1 text-xs text-teal-800">
+                Gói {credits.plan}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+            <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3">
+              <div className="font-medium">Import từ bằng AI</div>
+              <p className="mt-1 text-zinc-600">1 credit / từ tạo nghĩa, pinyin và câu ví dụ.</p>
+            </div>
+            <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3">
+              <div className="font-medium">Tạo câu luyện tập</div>
+              <p className="mt-1 text-zinc-600">2 credit / câu AI tạo từ một từ vựng.</p>
+            </div>
+            <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3">
+              <div className="font-medium">Tạo audio</div>
+              <p className="mt-1 text-zinc-600">1 credit / file audio từ vựng hoặc câu.</p>
+            </div>
           </div>
         </section>
 

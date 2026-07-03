@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { generateCardData } from "@/lib/ai";
 import { getRequestUser } from "@/lib/auth";
+import {
+  createCreditErrorResponse,
+  creditCosts,
+  refundCredits,
+  spendCredits,
+} from "@/lib/credits";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createAndUploadSpeech } from "@/lib/tts";
 
@@ -21,6 +27,16 @@ const schema = z.object({
     .min(1)
     .max(100),
 });
+
+function needsAiGeneration(item: z.infer<typeof schema>["items"][number]) {
+  return !(
+    item.pinyin &&
+    item.meaning_vi &&
+    item.example_cn &&
+    item.example_pinyin &&
+    item.example_vi
+  );
+}
 
 export async function POST(request: Request) {
   const { user, error: authError } = await getRequestUser(request);
@@ -48,22 +64,37 @@ export async function POST(request: Request) {
   }
 
   let created = 0;
+  let spentCredits = 0;
+  const creditsRequired = body.data.items.reduce((total, item) => {
+    const aiCost = needsAiGeneration(item) ? creditCosts.cardAi : 0;
+    const audioCost = creditCosts.ttsAudio * 2;
+
+    return total + aiCost + audioCost;
+  }, 0);
 
   try {
+    const creditCharge = await spendCredits({
+      supabase,
+      userId: user.id,
+      credits: creditsRequired,
+      eventType: "import_vocabulary",
+      metadata: {
+        itemCount: body.data.items.length,
+        creditsRequired,
+      },
+    });
+    spentCredits = creditCharge.creditsUsed;
+
     for (const item of body.data.items) {
       const generated =
-        item.pinyin &&
-        item.meaning_vi &&
-        item.example_cn &&
-        item.example_pinyin &&
-        item.example_vi
+        !needsAiGeneration(item)
           ? {
               chinese: item.chinese,
-              pinyin: item.pinyin,
-              meaning_vi: item.meaning_vi,
-              example_cn: item.example_cn,
-              example_pinyin: item.example_pinyin,
-              example_vi: item.example_vi,
+              pinyin: item.pinyin || "",
+              meaning_vi: item.meaning_vi || "",
+              example_cn: item.example_cn || "",
+              example_pinyin: item.example_pinyin || "",
+              example_vi: item.example_vi || "",
             }
           : await generateCardData(item.chinese, item.meaning_vi);
 
@@ -118,9 +149,30 @@ export async function POST(request: Request) {
       created += 1;
     }
 
-    return NextResponse.json({ success: true, created });
+    return NextResponse.json({
+      success: true,
+      created,
+      creditBalance: creditCharge.balance,
+      creditsUsed: spentCredits,
+    });
   } catch (error) {
     console.error(error);
+    const creditResponse = createCreditErrorResponse(error);
+
+    if (creditResponse) {
+      return creditResponse;
+    }
+
+    if (spentCredits > 0 && created === 0) {
+      await refundCredits({
+        supabase,
+        userId: user.id,
+        credits: spentCredits,
+        eventType: "refund_import_vocabulary",
+        metadata: { reason: "import_failed" },
+      }).catch(console.error);
+    }
+
     return NextResponse.json(
       { error: "Import failed", created },
       { status: 500 },

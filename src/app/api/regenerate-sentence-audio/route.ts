@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth";
+import {
+  createCreditErrorResponse,
+  creditCosts,
+  refundCredits,
+  spendCredits,
+} from "@/lib/credits";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createAndUploadSpeech } from "@/lib/tts";
 
@@ -36,7 +42,18 @@ export async function POST(request: Request) {
     );
   }
 
+  let spentCredits = 0;
+
   try {
+    const creditCharge = await spendCredits({
+      supabase,
+      userId: user.id,
+      credits: creditCosts.ttsAudio,
+      eventType: "regenerate_sentence_audio",
+      metadata: { sentenceCardId: sentenceCard.id },
+    });
+    spentCredits = creditCharge.creditsUsed;
+
     const sentenceAudioUrl = await createAndUploadSpeech(
       user.id,
       sentenceCard.id,
@@ -54,9 +71,30 @@ export async function POST(request: Request) {
       throw error;
     }
 
-    return NextResponse.json({ success: true, sentenceAudioUrl });
+    return NextResponse.json({
+      success: true,
+      sentenceAudioUrl,
+      creditBalance: creditCharge.balance,
+      creditsUsed: spentCredits,
+    });
   } catch (error) {
     console.error(error);
+    const creditResponse = createCreditErrorResponse(error);
+
+    if (creditResponse) {
+      return creditResponse;
+    }
+
+    if (spentCredits > 0) {
+      await refundCredits({
+        supabase,
+        userId: user.id,
+        credits: spentCredits,
+        eventType: "refund_regenerate_sentence_audio",
+        metadata: { reason: "regenerate_sentence_audio_failed" },
+      }).catch(console.error);
+    }
+
     const message =
       error instanceof Error ? error.message : "Không thể tạo lại audio";
     return NextResponse.json({ error: message }, { status: 500 });

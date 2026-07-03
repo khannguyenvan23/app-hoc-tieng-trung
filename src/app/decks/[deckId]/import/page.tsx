@@ -149,7 +149,8 @@ export default function ImportPage() {
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-zinc-600">
-                {items.length} từ sẵn sàng gửi AI
+                {items.length} từ sẵn sàng gửi AI · tạo preview cần{" "}
+                {items.length} credit
               </p>
               <button
                 className="min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
@@ -167,7 +168,8 @@ export default function ImportPage() {
                 <div>
                   <h2 className="text-lg font-semibold">Preview trước khi lưu</h2>
                   <p className="mt-1 text-sm text-zinc-600">
-                    Sửa nghĩa, pinyin hoặc câu ví dụ trực tiếp trong bảng.
+                    Sửa nghĩa, pinyin hoặc câu ví dụ trực tiếp trong bảng. Khi lưu,
+                    app tạo audio và cần {previewCards.length * 2} credit.
                   </p>
                 </div>
                 <button

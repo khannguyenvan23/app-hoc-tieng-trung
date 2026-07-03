@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth";
+import {
+  createCreditErrorResponse,
+  creditCosts,
+  refundCredits,
+  spendCredits,
+} from "@/lib/credits";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createAndUploadSpeech } from "@/lib/tts";
 
@@ -36,10 +42,25 @@ export async function POST(request: Request) {
     );
   }
 
+  const creditsRequired =
+    creditCosts.ttsAudio + (card.example_cn ? creditCosts.ttsAudio : 0);
+  let spentCredits = 0;
+
   try {
+    const creditCharge = await spendCredits({
+      supabase,
+      userId: user.id,
+      credits: creditsRequired,
+      eventType: "regenerate_card_audio",
+      metadata: { cardId: card.id },
+    });
+    spentCredits = creditCharge.creditsUsed;
+
     const [wordAudioUrl, sentenceAudioUrl] = await Promise.all([
       createAndUploadSpeech(user.id, card.id, "word", card.chinese),
-      createAndUploadSpeech(user.id, card.id, "sentence", card.example_cn),
+      card.example_cn
+        ? createAndUploadSpeech(user.id, card.id, "sentence", card.example_cn)
+        : Promise.resolve(null),
     ]);
 
     const { error } = await supabase
@@ -55,9 +76,31 @@ export async function POST(request: Request) {
       throw error;
     }
 
-    return NextResponse.json({ success: true, wordAudioUrl, sentenceAudioUrl });
+    return NextResponse.json({
+      success: true,
+      wordAudioUrl,
+      sentenceAudioUrl,
+      creditBalance: creditCharge.balance,
+      creditsUsed: spentCredits,
+    });
   } catch (error) {
     console.error(error);
+    const creditResponse = createCreditErrorResponse(error);
+
+    if (creditResponse) {
+      return creditResponse;
+    }
+
+    if (spentCredits > 0) {
+      await refundCredits({
+        supabase,
+        userId: user.id,
+        credits: spentCredits,
+        eventType: "refund_regenerate_card_audio",
+        metadata: { reason: "regenerate_card_audio_failed" },
+      }).catch(console.error);
+    }
+
     const message =
       error instanceof Error ? error.message : "Không thể tạo lại audio";
     return NextResponse.json({ error: message }, { status: 500 });

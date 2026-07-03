@@ -46,7 +46,7 @@ export default function NewSentenceFromWordPage() {
               <h1 className="text-2xl font-semibold">Tạo câu từ từ vựng</h1>
               <p className="mt-1 text-sm text-zinc-600">
                 Nhập một từ tiếng Trung. AI sẽ tự tạo câu ví dụ, nghĩa tiếng
-                Việt, pinyin, từ vựng trong câu và audio.
+                Việt, pinyin, từ vựng trong câu và audio. Dự kiến cần 3 credit.
               </p>
             </div>
             <Link
