@@ -180,6 +180,7 @@ export default function StudySentencesPage() {
   const [repairingReviews, setRepairingReviews] = useState(false);
   const [studySettings, setStudySettings] =
     useState<StudySettings>(defaultStudySettings);
+  const [settingsLoaded, setSettingsLoaded] = useState(!configured);
   const [newSentencesStudiedToday, setNewSentencesStudiedToday] = useState(0);
 
   const cacheSentenceAudio = useCallback(
@@ -322,21 +323,32 @@ export default function StudySentencesPage() {
 
     let active = true;
 
-    fetchWithAuth("/api/study-settings").then(async (response) => {
-      if (!active || !response.ok) {
-        return;
-      }
+    fetchWithAuth("/api/study-settings")
+      .then(async (response) => {
+        if (!active) {
+          return;
+        }
 
-      const data = await response.json();
+        if (!response.ok) {
+          setSettingsLoaded(true);
+          return;
+        }
 
-      if (!active) {
-        return;
-      }
+        const data = await response.json();
+        if (!active) {
+          return;
+        }
 
-      setStudySettings(
-        (data.settings || defaultStudySettings) as StudySettings,
-      );
-    });
+        setStudySettings(
+          (data.settings || defaultStudySettings) as StudySettings,
+        );
+        setSettingsLoaded(true);
+      })
+      .catch(() => {
+        if (active) {
+          setSettingsLoaded(true);
+        }
+      });
 
     return () => {
       active = false;
@@ -344,7 +356,7 @@ export default function StudySentencesPage() {
   }, [configured]);
 
   useEffect(() => {
-    if (!configured) {
+    if (!configured || !settingsLoaded) {
       return;
     }
 
@@ -468,7 +480,7 @@ export default function StudySentencesPage() {
     return () => {
       active = false;
     };
-  }, [configured, selectedDeckId, studySettings, weakOnly]);
+  }, [configured, selectedDeckId, settingsLoaded, studySettings, weakOnly]);
 
   useEffect(() => {
     if (audioRef.current) {
