@@ -610,6 +610,17 @@ export default function StudySentencesPage() {
     setSentenceAnswer("");
     setWritingResult("");
 
+    if (rating === "again") {
+      const requeuedReviews = [
+        ...reviews.slice(0, index),
+        ...reviews.slice(index + 1),
+        current,
+      ];
+      setReviews(requeuedReviews);
+      setIndex(Math.min(index, Math.max(0, requeuedReviews.length - 1)));
+      return;
+    }
+
     if (nextIndex >= reviews.length) {
       setReviews([]);
       setIndex(0);
