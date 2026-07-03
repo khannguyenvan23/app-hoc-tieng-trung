@@ -217,6 +217,20 @@ export default async function Home() {
           </Link>
         </div>
       </section>
+
+      <footer className="border-t border-zinc-200 bg-white">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-6 text-sm text-zinc-600">
+          <div>© 2026 Hanzi Cards</div>
+          <nav className="flex flex-wrap gap-4">
+            <Link className="hover:text-teal-800 hover:underline" href="/privacy">
+              Chính sách bảo mật
+            </Link>
+            <Link className="hover:text-teal-800 hover:underline" href="/terms">
+              Điều khoản sử dụng
+            </Link>
+          </nav>
+        </div>
+      </footer>
     </main>
   );
 }

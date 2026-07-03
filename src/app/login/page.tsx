@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import {
@@ -260,6 +261,18 @@ export default function LoginPage() {
             Quay lại đăng nhập
           </button>
         ) : null}
+
+        <p className="mt-6 text-center text-xs leading-5 text-zinc-500">
+          Khi sử dụng Hanzi Cards, bạn đồng ý với{" "}
+          <Link className="font-medium text-teal-800 hover:underline" href="/terms">
+            Điều khoản sử dụng
+          </Link>{" "}
+          và{" "}
+          <Link className="font-medium text-teal-800 hover:underline" href="/privacy">
+            Chính sách bảo mật
+          </Link>
+          .
+        </p>
       </form>
     </main>
   );
