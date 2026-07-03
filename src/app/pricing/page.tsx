@@ -148,10 +148,6 @@ function PricingContent({
                 </div>
               ))}
             </div>
-            <p className="mt-4 text-sm leading-6 text-zinc-600">
-              Khi hết credit, app sẽ chặn trước khi gọi AI để tránh phát sinh
-              chi phí ngoài ý muốn.
-            </p>
           </div>
         </div>
       </section>
