@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell, EmptyState } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
 import { getNextReview } from "@/lib/review";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import type { Deck, DueSentenceReview, ReviewRating } from "@/lib/types";
+import type {
+  Deck,
+  DueSentenceReview,
+  ReviewRating,
+  SentenceCard,
+} from "@/lib/types";
 
 const allDecksValue = "all";
+const audioCacheLimit = 16;
 
 const ratingLabels: Record<ReviewRating, string> = {
   again: "Quên",
@@ -93,10 +99,15 @@ function getRatingIntervalLabel(
     : `${nextReview.interval_days} ngày`;
 }
 
+function getSentenceAudioUrl(card: SentenceCard | null | undefined) {
+  return card?.sentence_audio_url || null;
+}
+
 export default function StudySentencesPage() {
   const configured = hasPublicEnv();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const transientAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioCacheRef = useRef<Map<string, HTMLAudioElement>>(new Map());
   const repairingReviewsRef = useRef(false);
   const pendingReviewSavesRef = useRef<Promise<void>[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
@@ -145,6 +156,50 @@ export default function StudySentencesPage() {
   const [studySettings, setStudySettings] =
     useState<StudySettings>(defaultStudySettings);
   const [newSentencesStudiedToday, setNewSentencesStudiedToday] = useState(0);
+
+  const cacheSentenceAudio = useCallback(
+    (audioUrl: string | null | undefined) => {
+      if (!audioUrl) {
+        return null;
+      }
+
+      const cache = audioCacheRef.current;
+      const cachedAudio = cache.get(audioUrl);
+
+      if (cachedAudio) {
+        cachedAudio.playbackRate = audioSpeeds[audioSpeed];
+        return cachedAudio;
+      }
+
+      const audio = new Audio(audioUrl);
+      audio.preload = "auto";
+      audio.playbackRate = audioSpeeds[audioSpeed];
+      cache.set(audioUrl, audio);
+
+      try {
+        audio.load();
+      } catch (error) {
+        console.warn("Could not preload sentence audio", error);
+      }
+
+      if (cache.size > audioCacheLimit) {
+        const oldestUrl = cache.keys().next().value;
+
+        if (oldestUrl) {
+          const oldestAudio = cache.get(oldestUrl);
+
+          if (oldestAudio && oldestAudio !== transientAudioRef.current) {
+            oldestAudio.pause();
+          }
+
+          cache.delete(oldestUrl);
+        }
+      }
+
+      return audio;
+    },
+    [audioSpeed],
+  );
 
   async function getNewSentencesStudiedToday(deckId = selectedDeckId) {
     const supabase = createSupabaseBrowserClient();
@@ -391,7 +446,28 @@ export default function StudySentencesPage() {
     if (audioRef.current) {
       audioRef.current.playbackRate = audioSpeeds[audioSpeed];
     }
+
+    audioCacheRef.current.forEach((audio) => {
+      audio.playbackRate = audioSpeeds[audioSpeed];
+    });
   }, [audioSpeed, showAnswer, index]);
+
+  useEffect(() => {
+    reviews.slice(index, index + 3).forEach((review) => {
+      cacheSentenceAudio(getSentenceAudioUrl(review.sentence_cards));
+    });
+  }, [cacheSentenceAudio, index, reviews]);
+
+  useEffect(() => {
+    const audioCache = audioCacheRef.current;
+
+    return () => {
+      audioCache.forEach((audio) => {
+        audio.pause();
+      });
+      audioCache.clear();
+    };
+  }, []);
 
   function changeDeck(deckId: string) {
     setLoading(true);
@@ -406,6 +482,10 @@ export default function StudySentencesPage() {
     if (audioRef.current) {
       audioRef.current.playbackRate = audioSpeeds[nextSpeed];
     }
+
+    audioCacheRef.current.forEach((audio) => {
+      audio.playbackRate = audioSpeeds[nextSpeed];
+    });
   }
 
   function togglePinyinHint() {
@@ -423,14 +503,23 @@ export default function StudySentencesPage() {
   }
 
   function playSentenceAudio() {
-    if (!card?.sentence_audio_url) {
+    const audioUrl = getSentenceAudioUrl(card);
+
+    if (!audioUrl) {
       return;
     }
 
     stopSentenceAudio();
-    const audio = new Audio(card.sentence_audio_url);
+    const audio = cacheSentenceAudio(audioUrl) || new Audio(audioUrl);
     transientAudioRef.current = audio;
     audio.playbackRate = audioSpeeds[audioSpeed];
+    try {
+      if (audio.readyState > 0) {
+        audio.currentTime = 0;
+      }
+    } catch (error) {
+      console.warn("Could not rewind sentence audio", error);
+    }
     audio.play().catch(() => {
       // Browsers can block autoplay if the click gesture is lost.
     });
@@ -729,6 +818,7 @@ export default function StudySentencesPage() {
                             event.currentTarget.playbackRate =
                               audioSpeeds[audioSpeed];
                           }}
+                          preload="auto"
                           ref={audioRef}
                           src={card.sentence_audio_url}
                         />

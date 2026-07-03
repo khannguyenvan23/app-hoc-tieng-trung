@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell, EmptyState } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
 import { getNextReview } from "@/lib/review";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import type { Deck, DueReview, ReviewRating } from "@/lib/types";
+import type { Card, Deck, DueReview, ReviewRating } from "@/lib/types";
 
 const allDecksValue = "all";
+const audioCacheLimit = 16;
 
 const ratingLabels: Record<ReviewRating, string> = {
   again: "Quên",
@@ -24,6 +25,11 @@ const audioSpeeds = {
 } as const;
 
 type AudioSpeed = keyof typeof audioSpeeds;
+
+type CardAudioData = {
+  wordAudioUrl: string | null;
+  sentenceAudioUrl: string | null;
+};
 
 type StudySettings = {
   daily_new_card_limit: number;
@@ -82,11 +88,30 @@ function getRatingIntervalLabel(rating: ReviewRating, review: DueReview) {
     : `${nextReview.interval_days} ngày`;
 }
 
+function getCardAudioData(card: Card | null | undefined): CardAudioData | null {
+  if (!card) {
+    return null;
+  }
+
+  return {
+    wordAudioUrl: card.word_audio_url,
+    sentenceAudioUrl: card.sentence_audio_url,
+  };
+}
+
+function getPreferredCardAudioUrl(audioData: CardAudioData | null) {
+  return audioData?.wordAudioUrl || audioData?.sentenceAudioUrl || null;
+}
+
 export default function StudyPage() {
   const configured = hasPublicEnv();
   const wordAudioRef = useRef<HTMLAudioElement | null>(null);
   const sentenceAudioRef = useRef<HTMLAudioElement | null>(null);
   const transientAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioCacheRef = useRef<Map<string, HTMLAudioElement>>(new Map());
+  const pendingCardAudioRef = useRef<Map<string, Promise<CardAudioData | null>>>(
+    new Map(),
+  );
   const repairingReviewsRef = useRef(false);
   const pendingReviewSavesRef = useRef<Promise<void>[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
@@ -132,6 +157,119 @@ export default function StudyPage() {
   const [studySettings, setStudySettings] =
     useState<StudySettings>(defaultStudySettings);
   const [newCardsStudiedToday, setNewCardsStudiedToday] = useState(0);
+
+  const cacheAudio = useCallback(
+    (audioUrl: string | null | undefined) => {
+      if (!audioUrl) {
+        return null;
+      }
+
+      const cache = audioCacheRef.current;
+      const cachedAudio = cache.get(audioUrl);
+
+      if (cachedAudio) {
+        cachedAudio.playbackRate = audioSpeeds[audioSpeed];
+        return cachedAudio;
+      }
+
+      const audio = new Audio(audioUrl);
+      audio.preload = "auto";
+      audio.playbackRate = audioSpeeds[audioSpeed];
+      cache.set(audioUrl, audio);
+
+      try {
+        audio.load();
+      } catch (error) {
+        console.warn("Could not preload card audio", error);
+      }
+
+      if (cache.size > audioCacheLimit) {
+        const oldestUrl = cache.keys().next().value;
+
+        if (oldestUrl) {
+          const oldestAudio = cache.get(oldestUrl);
+
+          if (oldestAudio && oldestAudio !== transientAudioRef.current) {
+            oldestAudio.pause();
+          }
+
+          cache.delete(oldestUrl);
+        }
+      }
+
+      return audio;
+    },
+    [audioSpeed],
+  );
+
+  const ensureCardAudioForReview = useCallback(
+    async (review: DueReview | null | undefined) => {
+      const reviewCard = review?.cards;
+
+      if (!reviewCard) {
+        return null;
+      }
+
+      if (reviewCard.word_audio_url && reviewCard.sentence_audio_url) {
+        const audioData = getCardAudioData(reviewCard);
+        cacheAudio(audioData?.wordAudioUrl);
+        cacheAudio(audioData?.sentenceAudioUrl);
+        return audioData;
+      }
+
+      const pendingAudio = pendingCardAudioRef.current.get(reviewCard.id);
+
+      if (pendingAudio) {
+        return pendingAudio;
+      }
+
+      const pendingRequest = fetchWithAuth("/api/ensure-card-audio", {
+        method: "POST",
+        body: JSON.stringify({ cardId: reviewCard.id }),
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            return getCardAudioData(reviewCard);
+          }
+
+          const data = (await response.json()) as CardAudioData;
+          const audioData = {
+            wordAudioUrl: data.wordAudioUrl || reviewCard.word_audio_url,
+            sentenceAudioUrl:
+              data.sentenceAudioUrl || reviewCard.sentence_audio_url,
+          };
+
+          setReviews((currentReviews) =>
+            currentReviews.map((currentReview) =>
+              currentReview.cards?.id === reviewCard.id
+                ? {
+                    ...currentReview,
+                    cards: {
+                      ...currentReview.cards,
+                      word_audio_url: audioData.wordAudioUrl,
+                      sentence_audio_url: audioData.sentenceAudioUrl,
+                    },
+                  }
+                : currentReview,
+            ),
+          );
+          cacheAudio(audioData.wordAudioUrl);
+          cacheAudio(audioData.sentenceAudioUrl);
+          return audioData;
+        })
+        .catch((error) => {
+          console.warn("Could not ensure card audio", error);
+          return getCardAudioData(reviewCard);
+        })
+        .finally(() => {
+          pendingCardAudioRef.current.delete(reviewCard.id);
+        });
+
+      pendingCardAudioRef.current.set(reviewCard.id, pendingRequest);
+      return pendingRequest;
+    },
+    [cacheAudio],
+  );
 
   async function getNewCardsStudiedToday(deckId = selectedDeckId) {
     const supabase = createSupabaseBrowserClient();
@@ -366,7 +504,40 @@ export default function StudyPage() {
     if (sentenceAudioRef.current) {
       sentenceAudioRef.current.playbackRate = audioSpeeds[audioSpeed];
     }
+
+    audioCacheRef.current.forEach((audio) => {
+      audio.playbackRate = audioSpeeds[audioSpeed];
+    });
   }, [audioSpeed, showAnswer, index]);
+
+  useEffect(() => {
+    reviews.slice(index, index + 3).forEach((review) => {
+      const audioData = getCardAudioData(review.cards);
+
+      cacheAudio(audioData?.wordAudioUrl);
+      cacheAudio(audioData?.sentenceAudioUrl);
+
+      if (
+        review.cards &&
+        (!review.cards.word_audio_url || !review.cards.sentence_audio_url)
+      ) {
+        void ensureCardAudioForReview(review);
+      }
+    });
+  }, [cacheAudio, ensureCardAudioForReview, index, reviews]);
+
+  useEffect(() => {
+    const audioCache = audioCacheRef.current;
+    const pendingCardAudio = pendingCardAudioRef.current;
+
+    return () => {
+      audioCache.forEach((audio) => {
+        audio.pause();
+      });
+      audioCache.clear();
+      pendingCardAudio.clear();
+    };
+  }, []);
 
   function changeDeck(deckId: string) {
     setLoading(true);
@@ -385,6 +556,10 @@ export default function StudyPage() {
     if (sentenceAudioRef.current) {
       sentenceAudioRef.current.playbackRate = audioSpeeds[nextSpeed];
     }
+
+    audioCacheRef.current.forEach((audio) => {
+      audio.playbackRate = audioSpeeds[nextSpeed];
+    });
   }
 
   function togglePinyinHint() {
@@ -402,65 +577,33 @@ export default function StudyPage() {
   }
 
   async function ensureCardAudio() {
-    if (!card) {
-      return null;
-    }
-
-    if (card.word_audio_url || card.sentence_audio_url) {
-      return {
-        wordAudioUrl: card.word_audio_url,
-        sentenceAudioUrl: card.sentence_audio_url,
-      };
-    }
-
-    const response = await fetchWithAuth("/api/ensure-card-audio", {
-      method: "POST",
-      body: JSON.stringify({ cardId: card.id }),
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = await response.json();
-
-    setReviews((currentReviews) =>
-      currentReviews.map((review) =>
-        review.cards?.id === card.id
-          ? {
-              ...review,
-              cards: {
-                ...review.cards,
-                word_audio_url: data.wordAudioUrl || null,
-                sentence_audio_url: data.sentenceAudioUrl || null,
-              },
-            }
-          : review,
-      ),
-    );
-
-    return data as {
-      wordAudioUrl: string | null;
-      sentenceAudioUrl: string | null;
-    };
+    return ensureCardAudioForReview(current);
   }
 
   async function playCardAudio() {
-    const audioData = await ensureCardAudio();
-    const audioUrl =
-      audioData?.wordAudioUrl ||
-      audioData?.sentenceAudioUrl ||
-      card?.word_audio_url ||
-      card?.sentence_audio_url;
+    let audioData = getCardAudioData(card);
+    let audioUrl = getPreferredCardAudioUrl(audioData);
+
+    if (!audioUrl) {
+      audioData = await ensureCardAudio();
+      audioUrl = getPreferredCardAudioUrl(audioData);
+    }
 
     if (!audioUrl) {
       return;
     }
 
     stopCardAudio();
-    const audio = new Audio(audioUrl);
+    const audio = cacheAudio(audioUrl) || new Audio(audioUrl);
     transientAudioRef.current = audio;
     audio.playbackRate = audioSpeeds[audioSpeed];
+    try {
+      if (audio.readyState > 0) {
+        audio.currentTime = 0;
+      }
+    } catch (error) {
+      console.warn("Could not rewind card audio", error);
+    }
     audio.play().catch(() => {
       // Some browsers may still block autoplay if the click gesture is lost.
     });
@@ -765,6 +908,7 @@ export default function StudyPage() {
                             event.currentTarget.playbackRate =
                               audioSpeeds[audioSpeed];
                           }}
+                          preload="auto"
                           ref={wordAudioRef}
                           src={card.word_audio_url}
                         />
@@ -776,6 +920,7 @@ export default function StudyPage() {
                             event.currentTarget.playbackRate =
                               audioSpeeds[audioSpeed];
                           }}
+                          preload="auto"
                           ref={sentenceAudioRef}
                           src={card.sentence_audio_url}
                         />

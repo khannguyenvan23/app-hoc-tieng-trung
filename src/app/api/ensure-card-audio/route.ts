@@ -43,7 +43,14 @@ export async function POST(request: Request) {
         : createAndUploadSpeech(user.id, card.id, "word", card.chinese),
       card.sentence_audio_url
         ? Promise.resolve(card.sentence_audio_url)
-        : createAndUploadSpeech(user.id, card.id, "sentence", card.example_cn),
+        : card.example_cn
+          ? createAndUploadSpeech(
+              user.id,
+              card.id,
+              "sentence",
+              card.example_cn,
+            )
+          : Promise.resolve(null),
     ]);
 
     const { error: updateError } = await supabase
