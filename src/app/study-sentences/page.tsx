@@ -242,21 +242,36 @@ export default function StudySentencesPage() {
     [audioSpeed],
   );
 
-  async function getNewSentencesStudiedToday(deckId = selectedDeckId) {
+  const getNewSentencesStudiedToday = useCallback(async (deckId = selectedDeckId) => {
     const supabase = createSupabaseBrowserClient();
     let query = supabase
       .from("sentence_reviews")
       .select("id, sentence_cards!inner(id)", { count: "exact", head: true })
-      .gt("review_count", 0)
-      .gte("updated_at", startOfLocalDay(new Date()).toISOString());
+      .gte("first_reviewed_at", startOfLocalDay(new Date()).toISOString());
 
     if (deckId !== allDecksValue) {
       query = query.eq("sentence_cards.deck_id", deckId);
     }
 
-    const { count } = await query;
-    return count || 0;
-  }
+    const { count, error } = await query;
+
+    if (!error) {
+      return count || 0;
+    }
+
+    let fallbackQuery = supabase
+      .from("sentence_reviews")
+      .select("id, sentence_cards!inner(id)", { count: "exact", head: true })
+      .eq("review_count", 1)
+      .gte("updated_at", startOfLocalDay(new Date()).toISOString());
+
+    if (deckId !== allDecksValue) {
+      fallbackQuery = fallbackQuery.eq("sentence_cards.deck_id", deckId);
+    }
+
+    const { count: fallbackCount } = await fallbackQuery;
+    return fallbackCount || 0;
+  }, [selectedDeckId]);
 
   async function loadReviews(deckId = selectedDeckId) {
     if (!configured) {
@@ -377,7 +392,6 @@ export default function StudySentencesPage() {
 
     let active = true;
     const supabase = createSupabaseBrowserClient();
-    const todayStart = startOfLocalDay(new Date()).toISOString();
     let query = supabase
       .from("sentence_reviews")
       .select("*, sentence_cards!inner(*)")
@@ -394,27 +408,16 @@ export default function StudySentencesPage() {
         .order("next_review_at", { ascending: true });
     }
 
-    let studiedTodayQuery = supabase
-      .from("sentence_reviews")
-      .select("id, sentence_cards!inner(id)", { count: "exact", head: true })
-      .gt("review_count", 0)
-      .gte("updated_at", todayStart);
-
     if (selectedDeckId !== allDecksValue) {
       query = query.eq("sentence_cards.deck_id", selectedDeckId);
-      studiedTodayQuery = studiedTodayQuery.eq(
-        "sentence_cards.deck_id",
-        selectedDeckId,
-      );
     }
 
-    Promise.all([query, studiedTodayQuery]).then(
-      async ([{ data }, countResult]) => {
+    Promise.all([query, getNewSentencesStudiedToday(selectedDeckId)]).then(
+      async ([{ data }, studiedToday]) => {
       if (!active) {
         return;
       }
 
-      const studiedToday = countResult.count || 0;
       const remainingNewSentences = Math.max(
         0,
         studySettings.daily_new_sentence_limit - studiedToday,
@@ -495,7 +498,14 @@ export default function StudySentencesPage() {
     return () => {
       active = false;
     };
-  }, [configured, selectedDeckId, settingsLoaded, studySettings, weakOnly]);
+  }, [
+    configured,
+    getNewSentencesStudiedToday,
+    selectedDeckId,
+    settingsLoaded,
+    studySettings,
+    weakOnly,
+  ]);
 
   useEffect(() => {
     if (audioRef.current) {

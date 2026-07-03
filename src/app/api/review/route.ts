@@ -18,6 +18,7 @@ type ReviewRow = {
   review_count: number | null;
   interval_days: number | null;
   ease_factor: number | null;
+  first_reviewed_at?: string | null;
   weak_score?: number | null;
   lapse_count?: number | null;
   weak_since?: string | null;
@@ -29,6 +30,15 @@ function missingWeakColumns(error: unknown) {
     error &&
     "message" in error &&
     String(error.message).includes("weak_score")
+  );
+}
+
+function missingFirstReviewedColumn(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error &&
+    "message" in error &&
+    String(error.message).includes("first_reviewed_at")
   );
 }
 
@@ -75,19 +85,25 @@ export async function POST(request: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
+  let supportsFirstReviewedAt = true;
   let { data: review, error: reviewError } = await supabase
     .from("reviews")
-    .select("id, review_count, interval_days, ease_factor, weak_score, lapse_count, weak_since")
+    .select("id, review_count, interval_days, ease_factor, first_reviewed_at, weak_score, lapse_count, weak_since")
     .eq("card_id", body.data.cardId)
     .eq("user_id", user.id)
     .single<ReviewRow>();
 
   const supportsWeakQueue = !missingWeakColumns(reviewError);
 
-  if (reviewError && !supportsWeakQueue) {
+  if (reviewError && (missingFirstReviewedColumn(reviewError) || !supportsWeakQueue)) {
+    supportsFirstReviewedAt = !missingFirstReviewedColumn(reviewError);
     const retryResult = await supabase
       .from("reviews")
-      .select("id, review_count, interval_days, ease_factor")
+      .select(
+        supportsWeakQueue
+          ? "id, review_count, interval_days, ease_factor, weak_score, lapse_count, weak_since"
+          : "id, review_count, interval_days, ease_factor",
+      )
       .eq("card_id", body.data.cardId)
       .eq("user_id", user.id)
       .single<ReviewRow>();
@@ -120,11 +136,18 @@ export async function POST(request: Request) {
     studySettings,
   );
   const weakPatch = supportsWeakQueue ? getWeakPatch(body.data.rating, review) : {};
+  const firstReviewPatch =
+    supportsFirstReviewedAt &&
+    Number(review.review_count || 0) === 0 &&
+    !review.first_reviewed_at
+      ? { first_reviewed_at: new Date().toISOString() }
+      : {};
   const { error } = await supabase
     .from("reviews")
     .update({
       ...nextReview,
       ...weakPatch,
+      ...firstReviewPatch,
       review_count: Number(review.review_count || 0) + 1,
       last_rating: body.data.rating,
       updated_at: new Date().toISOString(),
