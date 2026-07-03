@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AppShell } from "@/components/app-shell";
+import { hasPublicEnv } from "@/lib/env";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Bảng giá credit - Hanzi Cards",
@@ -50,31 +53,9 @@ const usageRules = [
   ["Ôn tập thẻ đã có sẵn", "0 credit"],
 ];
 
-export default function PricingPage() {
+function PricingContent({ signedIn }: { signedIn: boolean }) {
   return (
-    <main className="min-h-screen bg-stone-50 text-zinc-950">
-      <header className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-          <Link className="font-semibold" href="/">
-            Hanzi Cards
-          </Link>
-          <nav className="flex items-center gap-2 text-sm">
-            <Link
-              className="rounded-md px-3 py-2 hover:bg-zinc-100"
-              href="/login"
-            >
-              Đăng nhập
-            </Link>
-            <Link
-              className="rounded-md bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800"
-              href="/login"
-            >
-              Bắt đầu học
-            </Link>
-          </nav>
-        </div>
-      </header>
-
+    <>
       <section className="border-b border-zinc-200 bg-white">
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
@@ -109,6 +90,14 @@ export default function PricingPage() {
                 >
                   Nhắn Zalo
                 </a>
+              ) : null}
+              {signedIn ? (
+                <Link
+                  className="inline-flex min-h-11 items-center justify-center rounded-md border border-zinc-300 bg-white px-5 py-3 text-sm font-semibold hover:bg-zinc-50"
+                  href="/dashboard"
+                >
+                  Quay lại dashboard
+                </Link>
               ) : null}
             </div>
           </div>
@@ -217,6 +206,58 @@ export default function PricingPage() {
           </nav>
         </div>
       </footer>
+    </>
+  );
+}
+
+async function isSignedIn() {
+  if (!hasPublicEnv()) {
+    return false;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return Boolean(user);
+}
+
+export default async function PricingPage() {
+  const signedIn = await isSignedIn();
+
+  if (signedIn) {
+    return (
+      <AppShell>
+        <PricingContent signedIn />
+      </AppShell>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-stone-50 text-zinc-950">
+      <header className="border-b border-zinc-200 bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
+          <Link className="font-semibold" href="/">
+            Hanzi Cards
+          </Link>
+          <nav className="flex items-center gap-2 text-sm">
+            <Link
+              className="rounded-md px-3 py-2 hover:bg-zinc-100"
+              href="/login"
+            >
+              Đăng nhập
+            </Link>
+            <Link
+              className="rounded-md bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800"
+              href="/login"
+            >
+              Bắt đầu học
+            </Link>
+          </nav>
+        </div>
+      </header>
+      <PricingContent signedIn={false} />
     </main>
   );
 }
