@@ -21,13 +21,6 @@ type DashboardStats = {
   streakDays: number;
 };
 
-type UserCredits = {
-  plan: string;
-  credit_balance: number;
-  lifetime_credits: number;
-  monthly_credit_limit: number;
-};
-
 type ReviewStats = {
   studiedToday: number;
   ratingCounts: Record<ReviewRating, number>;
@@ -51,13 +44,6 @@ const emptyStats: DashboardStats = {
   dueToday: 0,
   newToday: 0,
   streakDays: 0,
-};
-
-const defaultCredits: UserCredits = {
-  plan: "free",
-  credit_balance: 0,
-  lifetime_credits: 0,
-  monthly_credit_limit: 100,
 };
 
 const emptyReviewStats: ReviewStats = {
@@ -313,10 +299,7 @@ export default function DashboardPage() {
   const [reviewStats, setReviewStats] = useState<ReviewStats>(emptyReviewStats);
   const [weakItems, setWeakItems] = useState<WeakReviewItem[]>([]);
   const [savingSettings, setSavingSettings] = useState(false);
-  const [settingsMessage, setSettingsMessage] = useState("");
   const [onboardingMessage, setOnboardingMessage] = useState("");
-  const [credits, setCredits] = useState<UserCredits>(defaultCredits);
-  const [creditsMessage, setCreditsMessage] = useState("");
 
   useEffect(() => {
     if (!configured) {
@@ -477,34 +460,6 @@ export default function DashboardPage() {
     };
   }, [configured]);
 
-  useEffect(() => {
-    if (!configured) {
-      return;
-    }
-
-    let active = true;
-
-    fetchWithAuth("/api/credits").then(async (response) => {
-      const data = await response.json().catch(() => null);
-
-      if (!active) {
-        return;
-      }
-
-      if (!response.ok) {
-        setCreditsMessage(data?.error || "Không thể tải credit.");
-        return;
-      }
-
-      setCredits((data.credits || defaultCredits) as UserCredits);
-      setCreditsMessage("");
-    });
-
-    return () => {
-      active = false;
-    };
-  }, [configured]);
-
   async function copyTemplate(templateDeckId: string) {
     setCopyingTemplateId(templateDeckId);
     setTemplateMessage("");
@@ -527,35 +482,6 @@ export default function DashboardPage() {
     }
 
     router.push(`/decks/${data.deckId}`);
-  }
-
-  function updateStudySetting(
-    name: "daily_new_card_limit" | "daily_new_sentence_limit",
-    value: string,
-  ) {
-    const numericValue = Math.min(100, Math.max(0, Number(value) || 0));
-    setStudySettings((current) => ({ ...current, [name]: numericValue }));
-    setSettingsMessage("");
-  }
-
-  async function saveStudySettings() {
-    setSavingSettings(true);
-    setSettingsMessage("");
-
-    const response = await fetchWithAuth("/api/study-settings", {
-      method: "PUT",
-      body: JSON.stringify(studySettings),
-    });
-    const data = await response.json();
-    setSavingSettings(false);
-
-    if (!response.ok) {
-      setSettingsMessage(data.error || "Không thể lưu cài đặt học.");
-      return;
-    }
-
-    setStudySettings((data.settings || studySettings) as StudySettings);
-    setSettingsMessage("Đã lưu giới hạn học mỗi ngày.");
   }
 
   async function copyStarterTemplate() {
@@ -600,7 +526,6 @@ export default function DashboardPage() {
     };
 
     setSavingSettings(true);
-    setSettingsMessage("");
     setOnboardingMessage("");
     setStudySettings(starterSettings);
 
@@ -783,53 +708,6 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="mt-4 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">Credit AI</h2>
-              <p className="mt-1 text-sm text-zinc-600">
-                Credit dùng để import bằng AI và tạo audio. Ôn tập thẻ đã có sẵn không
-                tốn credit.
-              </p>
-              <Link
-                className="mt-3 inline-flex min-h-10 items-center rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
-                href="/pricing"
-              >
-                Xem bảng giá và nạp credit
-              </Link>
-              {creditsMessage ? (
-                <p className="mt-2 text-sm text-red-700">{creditsMessage}</p>
-              ) : null}
-            </div>
-            <div className="min-w-36 rounded-md border border-teal-100 bg-teal-50 px-4 py-3 text-right">
-              <div className="text-xs font-medium uppercase text-teal-800">
-                Còn lại
-              </div>
-              <div className="mt-1 text-3xl font-semibold text-teal-900">
-                {credits.credit_balance}
-              </div>
-              <div className="mt-1 text-xs text-teal-800">
-                Gói {credits.plan}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3">
-              <div className="font-medium">Import từ bằng AI</div>
-              <p className="mt-1 text-zinc-600">1 credit / từ tạo nghĩa, pinyin và câu ví dụ.</p>
-            </div>
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3">
-              <div className="font-medium">Tạo câu luyện tập</div>
-              <p className="mt-1 text-zinc-600">2 credit / câu AI tạo từ một từ vựng.</p>
-            </div>
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3">
-              <div className="font-medium">Tạo audio</div>
-              <p className="mt-1 text-zinc-600">1 credit / file audio từ vựng hoặc câu.</p>
-            </div>
-          </div>
-        </section>
-
         <section className="mt-8">
           <h2 className="text-lg font-semibold">Bộ thẻ của bạn</h2>
 
@@ -860,71 +738,6 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-        </section>
-
-        <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">Giới hạn học mỗi ngày</h2>
-              <p className="mt-1 text-sm text-zinc-600">
-                Thẻ cũ đến hạn vẫn được ôn bình thường. Giới hạn này chỉ áp
-                dụng cho thẻ mới chưa học.
-              </p>
-            </div>
-            <button
-              className="min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
-              disabled={savingSettings}
-              onClick={saveStudySettings}
-              type="button"
-            >
-              {savingSettings ? "Đang lưu..." : "Lưu cài đặt"}
-            </button>
-          </div>
-
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm font-medium">
-              Từ mới mỗi ngày
-              <input
-                className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
-                max={100}
-                min={0}
-                onChange={(event) =>
-                  updateStudySetting(
-                    "daily_new_card_limit",
-                    event.target.value,
-                  )
-                }
-                type="number"
-                value={studySettings.daily_new_card_limit}
-              />
-            </label>
-            <label className="block text-sm font-medium">
-              Câu mới mỗi ngày
-              <input
-                className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
-                max={100}
-                min={0}
-                onChange={(event) =>
-                  updateStudySetting(
-                    "daily_new_sentence_limit",
-                    event.target.value,
-                  )
-                }
-                type="number"
-                value={studySettings.daily_new_sentence_limit}
-              />
-            </label>
-          </div>
-
-          {settingsMessage ? (
-            <p
-              className={`mt-3 text-sm ${
-                settingsMessage.startsWith("Đã") ? "text-teal-700" : "text-red-700"
-              }`}
-            >
-              {settingsMessage}
-            </p>
-          ) : null}
         </section>
 
         <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">

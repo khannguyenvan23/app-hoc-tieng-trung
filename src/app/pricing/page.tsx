@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { getUserCredits, type UserCreditSummary } from "@/lib/credits";
 import { hasPublicEnv } from "@/lib/env";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -53,7 +55,15 @@ const usageRules = [
   ["Ôn tập thẻ đã có sẵn", "0 credit"],
 ];
 
-function PricingContent({ signedIn }: { signedIn: boolean }) {
+function PricingContent({
+  creditError,
+  credits,
+  signedIn,
+}: {
+  creditError?: string;
+  credits?: UserCreditSummary | null;
+  signedIn: boolean;
+}) {
   return (
     <>
       <section className="border-b border-zinc-200 bg-white">
@@ -103,6 +113,29 @@ function PricingContent({ signedIn }: { signedIn: boolean }) {
           </div>
 
           <div className="rounded-lg border border-zinc-200 bg-stone-50 p-5">
+            {signedIn ? (
+              <div className="mb-4 rounded-md border border-teal-100 bg-teal-50 p-4">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-medium uppercase text-teal-800">
+                      Credit còn lại
+                    </div>
+                    <div className="mt-1 text-4xl font-semibold text-teal-950">
+                      {credits ? credits.credit_balance : "..."}
+                    </div>
+                  </div>
+                  <div className="text-right text-sm text-teal-900">
+                    <div>Gói {credits?.plan || "free"}</div>
+                    <div className="mt-1 text-xs">
+                      Tổng đã nhận {credits?.lifetime_credits || 0} credit
+                    </div>
+                  </div>
+                </div>
+                {creditError ? (
+                  <p className="mt-3 text-sm text-red-700">{creditError}</p>
+                ) : null}
+              </div>
+            ) : null}
             <h2 className="text-lg font-semibold">Cách dùng credit</h2>
             <div className="mt-4 divide-y divide-zinc-200 rounded-md border border-zinc-200 bg-white">
               {usageRules.map(([label, value]) => (
@@ -210,9 +243,13 @@ function PricingContent({ signedIn }: { signedIn: boolean }) {
   );
 }
 
-async function isSignedIn() {
+async function getPricingSession() {
   if (!hasPublicEnv()) {
-    return false;
+    return {
+      creditError: "",
+      credits: null,
+      signedIn: false,
+    };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -220,16 +257,45 @@ async function isSignedIn() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  return Boolean(user);
+  if (!user) {
+    return {
+      creditError: "",
+      credits: null,
+      signedIn: false,
+    };
+  }
+
+  try {
+    const adminSupabase = createSupabaseAdminClient();
+    const credits = await getUserCredits(adminSupabase, user.id);
+
+    return {
+      creditError: "",
+      credits,
+      signedIn: true,
+    };
+  } catch (error) {
+    console.error(error);
+
+    return {
+      creditError: "Không thể tải số dư credit.",
+      credits: null,
+      signedIn: true,
+    };
+  }
 }
 
 export default async function PricingPage() {
-  const signedIn = await isSignedIn();
+  const { creditError, credits, signedIn } = await getPricingSession();
 
   if (signedIn) {
     return (
       <AppShell>
-        <PricingContent signedIn />
+        <PricingContent
+          creditError={creditError}
+          credits={credits}
+          signedIn
+        />
       </AppShell>
     );
   }
