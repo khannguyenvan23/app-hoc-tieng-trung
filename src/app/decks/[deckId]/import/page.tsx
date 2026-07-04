@@ -141,6 +141,11 @@ export default function ImportPage() {
               </Link>
             </div>
 
+            <div className="mt-4 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-950">
+              Nên import 10-30 từ/lần để tạo AI và audio nhanh hơn. Tối đa
+              100 từ/lần. Mỗi từ đặt trên một dòng.
+            </div>
+
             <textarea
               className="mt-6 h-56 w-full rounded-lg border border-zinc-300 bg-white p-4 font-mono text-sm outline-none focus:border-teal-700"
               onChange={(event) => setText(event.target.value)}

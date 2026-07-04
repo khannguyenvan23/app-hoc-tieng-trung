@@ -60,7 +60,12 @@ export default function ImportSentencesPage() {
             >
               Quay lại bộ thẻ
             </Link>
-          </div>
+            </div>
+
+            <div className="mt-4 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-950">
+              Nên import 10-20 câu/lần để tạo AI và audio nhanh hơn. Tối đa
+              50 câu/lần. Mỗi câu đặt trên một dòng.
+            </div>
 
           <textarea
             className="mt-6 h-72 w-full rounded-lg border border-zinc-300 bg-white p-4 font-mono text-sm outline-none focus:border-teal-700"
