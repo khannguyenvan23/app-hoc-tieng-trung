@@ -1,11 +1,18 @@
 import type { MetadataRoute } from "next";
+import { seoPageList } from "@/lib/seo-pages";
 import { absoluteSiteUrl, siteConfig } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/pricing", "/privacy", "/terms"],
+      allow: [
+        "/",
+        ...seoPageList.map((page) => page.path),
+        "/pricing",
+        "/privacy",
+        "/terms",
+      ],
       disallow: [
         "/api/",
         "/auth/",

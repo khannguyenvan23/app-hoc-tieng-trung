@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasPublicEnv } from "@/lib/env";
+import { seoPageList } from "@/lib/seo-pages";
 import { absoluteSiteUrl, siteConfig } from "@/lib/site";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -294,6 +295,15 @@ export default async function Home() {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-6 text-sm text-zinc-600">
           <div>© 2026 Tiếng Trung Hihi</div>
           <nav className="flex flex-wrap gap-4">
+            {seoPageList.map((page) => (
+              <Link
+                className="hover:text-teal-800 hover:underline"
+                href={page.path}
+                key={page.path}
+              >
+                {page.navLabel}
+              </Link>
+            ))}
             <Link className="hover:text-teal-800 hover:underline" href="/privacy">
               Chính sách bảo mật
             </Link>
