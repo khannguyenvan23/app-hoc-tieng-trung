@@ -7,9 +7,9 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Bảng giá credit - Hanzi Cards",
+  title: "Bảng giá credit - Tiếng Trung Hihi",
   description:
-    "Bảng giá credit Hanzi Cards cho import AI, tạo câu luyện tập và audio tiếng Trung.",
+    "Bảng giá credit Tiếng Trung Hihi cho import AI, tạo câu luyện tập và audio tiếng Trung.",
 };
 
 const rawContactPhone = process.env.NEXT_PUBLIC_CONTACT_PHONE?.trim() || "";
@@ -224,7 +224,7 @@ function PricingContent({
 
       <footer className="bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-6 text-sm text-zinc-600">
-          <div>© 2026 Hanzi Cards</div>
+          <div>© 2026 Tiếng Trung Hihi</div>
           <nav className="flex flex-wrap gap-4">
             <Link className="hover:text-teal-800 hover:underline" href="/privacy">
               Chính sách bảo mật
@@ -301,7 +301,7 @@ export default async function PricingPage() {
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
           <Link className="font-semibold" href="/">
-            Hanzi Cards
+            Tiếng Trung Hihi
           </Link>
           <nav className="flex items-center gap-2 text-sm">
             <Link

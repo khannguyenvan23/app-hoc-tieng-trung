@@ -5,9 +5,9 @@ const lastUpdated = "03/07/2026";
 const contactEmail = "support@khanweb.vn";
 
 export const metadata: Metadata = {
-  title: "Chính sách bảo mật - Hanzi Cards",
+  title: "Chính sách bảo mật - Tiếng Trung Hihi",
   description:
-    "Chính sách bảo mật của Hanzi Cards về tài khoản, dữ liệu học tập, AI, audio và dịch vụ bên thứ ba.",
+    "Chính sách bảo mật của Tiếng Trung Hihi về tài khoản, dữ liệu học tập, AI, audio và dịch vụ bên thứ ba.",
 };
 
 export default function PrivacyPage() {
@@ -16,7 +16,7 @@ export default function PrivacyPage() {
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5">
           <Link className="text-lg font-semibold" href="/">
-            Hanzi Cards
+            Tiếng Trung Hihi
           </Link>
           <Link
             className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
@@ -42,7 +42,7 @@ export default function PrivacyPage() {
               1. Chúng tôi thu thập thông tin nào
             </h2>
             <p className="mt-3">
-              Khi bạn dùng Hanzi Cards, app có thể lưu email đăng nhập, trạng
+              Khi bạn dùng Tiếng Trung Hihi, app có thể lưu email đăng nhập, trạng
               thái tài khoản, bộ thẻ, từ vựng, câu luyện tập, tiến độ ôn tập,
               lựa chọn học như tốc độ audio, bật/tắt pinyin và giới hạn học mỗi
               ngày.
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
               4. Dịch vụ bên thứ ba
             </h2>
             <p className="mt-3">
-              Hanzi Cards sử dụng Supabase để quản lý đăng nhập, cơ sở dữ liệu
+              Tiếng Trung Hihi sử dụng Supabase để quản lý đăng nhập, cơ sở dữ liệu
               và lưu phiên người dùng. App có thể sử dụng OpenAI để tạo nội dung
               học tập và audio. Các dịch vụ này xử lý dữ liệu theo chính sách và
               điều khoản riêng của họ.
@@ -136,7 +136,7 @@ export default function PrivacyPage() {
               9. Trẻ em
             </h2>
             <p className="mt-3">
-              Hanzi Cards không chủ động hướng đến trẻ em dưới 13 tuổi. Nếu bạn
+              Tiếng Trung Hihi không chủ động hướng đến trẻ em dưới 13 tuổi. Nếu bạn
               là phụ huynh hoặc người giám hộ và cho rằng trẻ em đã cung cấp dữ
               liệu cá nhân, vui lòng liên hệ để chúng tôi hỗ trợ xử lý.
             </p>

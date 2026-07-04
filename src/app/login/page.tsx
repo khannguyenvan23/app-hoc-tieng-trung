@@ -123,7 +123,7 @@ export default function LoginPage() {
         className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-6 shadow-sm"
         onSubmit={submit}
       >
-        <h1 className="text-2xl font-semibold">Hanzi Cards</h1>
+        <h1 className="text-2xl font-semibold">Tiếng Trung Hihi</h1>
         <p className="mt-2 text-sm text-zinc-600">
           Học từ vựng tiếng Trung bằng flashcard và lặp lại ngắt quãng.
         </p>
@@ -260,7 +260,7 @@ export default function LoginPage() {
         ) : null}
 
         <p className="mt-6 text-center text-xs leading-5 text-zinc-500">
-          Khi sử dụng Hanzi Cards, bạn đồng ý với{" "}
+          Khi sử dụng Tiếng Trung Hihi, bạn đồng ý với{" "}
           <Link className="font-medium text-teal-800 hover:underline" href="/terms">
             Điều khoản sử dụng
           </Link>{" "}

@@ -5,9 +5,9 @@ const lastUpdated = "03/07/2026";
 const contactEmail = "support@khanweb.vn";
 
 export const metadata: Metadata = {
-  title: "Điều khoản sử dụng - Hanzi Cards",
+  title: "Điều khoản sử dụng - Tiếng Trung Hihi",
   description:
-    "Điều khoản sử dụng Hanzi Cards cho tài khoản, nội dung học tập, AI, audio và giới hạn dịch vụ.",
+    "Điều khoản sử dụng Tiếng Trung Hihi cho tài khoản, nội dung học tập, AI, audio và giới hạn dịch vụ.",
 };
 
 export default function TermsPage() {
@@ -16,7 +16,7 @@ export default function TermsPage() {
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5">
           <Link className="text-lg font-semibold" href="/">
-            Hanzi Cards
+            Tiếng Trung Hihi
           </Link>
           <Link
             className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
@@ -42,7 +42,7 @@ export default function TermsPage() {
               1. Chấp nhận điều khoản
             </h2>
             <p className="mt-3">
-              Khi truy cập hoặc sử dụng Hanzi Cards, bạn đồng ý tuân thủ các
+              Khi truy cập hoặc sử dụng Tiếng Trung Hihi, bạn đồng ý tuân thủ các
               điều khoản này và Chính sách bảo mật của app. Nếu bạn không đồng
               ý, vui lòng không sử dụng dịch vụ.
             </p>
@@ -53,7 +53,7 @@ export default function TermsPage() {
               2. Mục đích dịch vụ
             </h2>
             <p className="mt-3">
-              Hanzi Cards là công cụ hỗ trợ học từ vựng tiếng Trung bằng
+              Tiếng Trung Hihi là công cụ hỗ trợ học từ vựng tiếng Trung bằng
               flashcard, câu ví dụ, audio và lặp lại ngắt quãng. App không thay
               thế giáo viên, khóa học chính thức hoặc chứng nhận ngôn ngữ.
             </p>
@@ -124,7 +124,7 @@ export default function TermsPage() {
               8. Sở hữu trí tuệ
             </h2>
             <p className="mt-3">
-              Tên Hanzi Cards, giao diện, mã nguồn và nội dung do app cung cấp
+              Tên Tiếng Trung Hihi, giao diện, mã nguồn và nội dung do app cung cấp
               thuộc về chủ sở hữu app hoặc bên cấp phép tương ứng. Bạn vẫn giữ
               quyền với nội dung học tập do bạn tự nhập, trong phạm vi pháp luật
               cho phép.

@@ -189,7 +189,7 @@ export default function ResetPasswordPage() {
       >
         <h1 className="text-2xl font-semibold">Đặt lại mật khẩu</h1>
         <p className="mt-2 text-sm text-zinc-600">
-          Nhập mật khẩu mới cho tài khoản Hanzi Cards.
+          Nhập mật khẩu mới cho tài khoản Tiếng Trung Hihi.
         </p>
 
         <label className="mt-5 block text-sm font-medium" htmlFor="password">

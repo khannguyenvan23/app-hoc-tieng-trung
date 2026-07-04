@@ -18,7 +18,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <Link href="/dashboard" className="font-semibold">
-            Hanzi Cards
+            Tiếng Trung Hihi
           </Link>
           <nav className="flex items-center gap-2 text-sm">
             <Link className="rounded-md px-3 py-2 hover:bg-zinc-100" href="/study">

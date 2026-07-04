@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hanzi Cards",
+  title: "Tiếng Trung Hihi",
   description: "Chinese vocabulary flashcards with spaced repetition",
 };
 

@@ -6,7 +6,7 @@ import { hasPublicEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Hanzi Cards - Học từ vựng tiếng Trung với SRS và audio",
+  title: "Tiếng Trung Hihi - Học từ vựng tiếng Trung với SRS và audio",
   description:
     "Học từ vựng tiếng Trung HSK bằng flashcard, audio, câu ví dụ và lặp lại ngắt quãng.",
 };
@@ -58,7 +58,7 @@ export default async function Home() {
     <main className="bg-stone-50 text-zinc-950">
       <section className="relative isolate min-h-[78svh] overflow-hidden bg-zinc-950 text-white">
         <Image
-          alt="Màn hình luyện câu Hanzi Cards"
+          alt="Màn hình luyện câu Tiếng Trung Hihi"
           className="absolute inset-0 -z-20 h-full w-full object-cover object-left-top opacity-55"
           height={815}
           priority
@@ -68,7 +68,7 @@ export default async function Home() {
         <div className="absolute inset-0 -z-10 bg-zinc-950/65" />
 
         <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-          <div className="text-lg font-semibold">Hanzi Cards</div>
+          <div className="text-lg font-semibold">Tiếng Trung Hihi</div>
           <nav className="flex items-center gap-2 text-sm">
             <Link
               className="rounded-md px-3 py-2 text-white/85 hover:bg-white/10 hover:text-white"
@@ -97,7 +97,7 @@ export default async function Home() {
               Flashcard tiếng Trung cho người tự học
             </p>
             <h1 className="mt-4 max-w-2xl text-5xl font-semibold leading-tight sm:text-6xl">
-              Hanzi Cards
+              Tiếng Trung Hihi
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-stone-100 sm:text-xl">
               Học từ vựng HSK bằng flashcard, audio, câu ví dụ và thuật toán
@@ -179,7 +179,7 @@ export default async function Home() {
 
           <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
             <Image
-              alt="Màn hình ôn tập flashcard Hanzi Cards"
+              alt="Màn hình ôn tập flashcard Tiếng Trung Hihi"
               className="h-auto w-full"
               height={535}
               src="/landing-flashcard.png"
@@ -232,7 +232,7 @@ export default async function Home() {
 
       <footer className="border-t border-zinc-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-6 text-sm text-zinc-600">
-          <div>© 2026 Hanzi Cards</div>
+          <div>© 2026 Tiếng Trung Hihi</div>
           <nav className="flex flex-wrap gap-4">
             <Link className="hover:text-teal-800 hover:underline" href="/privacy">
               Chính sách bảo mật
