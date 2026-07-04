@@ -3,12 +3,66 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasPublicEnv } from "@/lib/env";
+import { absoluteSiteUrl, siteConfig } from "@/lib/site";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Tiếng Trung Hihi - Học từ vựng tiếng Trung với SRS và audio",
-  description:
-    "Học từ vựng tiếng Trung HSK bằng flashcard, audio, câu ví dụ và lặp lại ngắt quãng.",
+  title: `${siteConfig.name} - Học từ vựng tiếng Trung với SRS và audio`,
+  description: siteConfig.description,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: `${siteConfig.name} - Học từ vựng tiếng Trung với SRS và audio`,
+    description: siteConfig.description,
+    url: absoluteSiteUrl("/"),
+    type: "website",
+  },
+};
+
+const landingJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${siteConfig.url}/#organization`,
+      name: siteConfig.name,
+      url: siteConfig.url,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteConfig.url}/#website`,
+      name: siteConfig.name,
+      url: siteConfig.url,
+      description: siteConfig.description,
+      inLanguage: "vi-VN",
+      publisher: {
+        "@id": `${siteConfig.url}/#organization`,
+      },
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": `${siteConfig.url}/#app`,
+      name: siteConfig.name,
+      applicationCategory: "EducationalApplication",
+      operatingSystem: "Web",
+      url: siteConfig.url,
+      description: siteConfig.description,
+      inLanguage: "vi-VN",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "VND",
+      },
+      featureList: [
+        "Flashcard từ vựng HSK",
+        "Audio tiếng Trung",
+        "Lặp lại ngắt quãng SRS",
+        "Luyện câu tiếng Trung",
+        "Ẩn hiện pinyin",
+      ],
+    },
+  ],
 };
 
 const features = [
@@ -56,6 +110,12 @@ export default async function Home() {
 
   return (
     <main className="bg-stone-50 text-zinc-950">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(landingJsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <section className="relative isolate min-h-[78svh] overflow-hidden bg-zinc-950 text-white">
         <Image
           alt="Màn hình luyện câu Tiếng Trung Hihi"

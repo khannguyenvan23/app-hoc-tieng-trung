@@ -1,0 +1,16 @@
+
+> app-hoc-tiengtrung@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://26.247.99.63:3000
+- Environments: .env.local
+✓ Ready in 520ms
+
+ GET / 200 in 643ms (next.js: 343ms, application-code: 299ms)
+ GET / 200 in 116ms (next.js: 7ms, application-code: 109ms)
+ GET /robots.txt 200 in 429ms (next.js: 417ms, application-code: 12ms)
+ GET /sitemap.xml 200 in 527ms (next.js: 521ms, application-code: 6ms)
+ GET /opengraph-image 200 in 735ms (next.js: 381ms, application-code: 354ms)
+ GET / 200 in 45ms (next.js: 3ms, application-code: 42ms)

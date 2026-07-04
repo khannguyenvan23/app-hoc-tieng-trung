@@ -3,13 +3,24 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { getUserCredits, type UserCreditSummary } from "@/lib/credits";
 import { hasPublicEnv } from "@/lib/env";
+import { absoluteSiteUrl, siteConfig } from "@/lib/site";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Bảng giá credit - Tiếng Trung Hihi",
+  title: `Bảng giá credit - ${siteConfig.name}`,
   description:
     "Bảng giá credit Tiếng Trung Hihi cho import AI, tạo câu luyện tập và audio tiếng Trung.",
+  alternates: {
+    canonical: "/pricing",
+  },
+  openGraph: {
+    title: `Bảng giá credit - ${siteConfig.name}`,
+    description:
+      "Ôn tập miễn phí. Credit chỉ dùng khi tạo dữ liệu bằng AI hoặc tạo audio tiếng Trung.",
+    url: absoluteSiteUrl("/pricing"),
+    type: "website",
+  },
 };
 
 const rawContactPhone = process.env.NEXT_PUBLIC_CONTACT_PHONE?.trim() || "";

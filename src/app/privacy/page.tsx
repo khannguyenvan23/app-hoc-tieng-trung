@@ -1,13 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { absoluteSiteUrl, siteConfig } from "@/lib/site";
 
 const lastUpdated = "03/07/2026";
 const contactEmail = "support@khanweb.vn";
 
 export const metadata: Metadata = {
-  title: "Chính sách bảo mật - Tiếng Trung Hihi",
+  title: `Chính sách bảo mật - ${siteConfig.name}`,
   description:
     "Chính sách bảo mật của Tiếng Trung Hihi về tài khoản, dữ liệu học tập, AI, audio và dịch vụ bên thứ ba.",
+  alternates: {
+    canonical: "/privacy",
+  },
+  openGraph: {
+    title: `Chính sách bảo mật - ${siteConfig.name}`,
+    description:
+      "Cách Tiếng Trung Hihi xử lý tài khoản, dữ liệu học tập, AI, audio và dịch vụ bên thứ ba.",
+    url: absoluteSiteUrl("/privacy"),
+    type: "article",
+  },
 };
 
 export default function PrivacyPage() {

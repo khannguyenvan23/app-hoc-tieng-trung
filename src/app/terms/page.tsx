@@ -1,13 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { absoluteSiteUrl, siteConfig } from "@/lib/site";
 
 const lastUpdated = "03/07/2026";
 const contactEmail = "support@khanweb.vn";
 
 export const metadata: Metadata = {
-  title: "Điều khoản sử dụng - Tiếng Trung Hihi",
+  title: `Điều khoản sử dụng - ${siteConfig.name}`,
   description:
     "Điều khoản sử dụng Tiếng Trung Hihi cho tài khoản, nội dung học tập, AI, audio và giới hạn dịch vụ.",
+  alternates: {
+    canonical: "/terms",
+  },
+  openGraph: {
+    title: `Điều khoản sử dụng - ${siteConfig.name}`,
+    description:
+      "Điều khoản sử dụng Tiếng Trung Hihi cho tài khoản, nội dung học tập, AI, audio và giới hạn dịch vụ.",
+    url: absoluteSiteUrl("/terms"),
+    type: "article",
+  },
 };
 
 export default function TermsPage() {
