@@ -36,6 +36,10 @@ type UserDeckRow = {
   source_template_slug?: string | null;
 };
 
+type CreatedCardRow = {
+  id: string;
+};
+
 const copySchema = z.object({
   templateDeckId: z.string().uuid(),
 });
@@ -245,10 +249,14 @@ export async function POST(request: Request) {
       .order("position", { ascending: true });
 
   const hasTemplateSentenceTable = !sentenceCardsError;
+  const hasTemplateCards = Boolean(templateCards?.length);
+  const hasTemplateSentenceCards = Boolean(
+    hasTemplateSentenceTable && templateSentenceCards?.length,
+  );
 
-  if (!templateCards?.length) {
+  if (!hasTemplateCards && !hasTemplateSentenceCards) {
     return NextResponse.json(
-      { error: "Bộ thẻ mẫu chưa có thẻ" },
+      { error: "Bộ mẫu chưa có thẻ hoặc câu luyện tập." },
       { status: 400 },
     );
   }
@@ -302,14 +310,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const mappedCards = mapTemplateCards(
+  const dueNow = new Date(Date.now() - 60_000).toISOString();
+  let cards: CreatedCardRow[] = [];
+
+  if (hasTemplateCards) {
+    const mappedCards = mapTemplateCards(
     user.id,
     deck.id,
     templateCards as TemplateCardRow[],
     true,
   );
 
-  let { data: cards, error: insertCardsError } = await supabase
+    let { data: insertedCards, error: insertCardsError } = await supabase
     .from("cards")
     .insert(mappedCards)
     .select("id");
@@ -330,11 +342,11 @@ export async function POST(request: Request) {
       )
       .select("id");
 
-    cards = retryResult.data;
+      insertedCards = retryResult.data;
     insertCardsError = retryResult.error;
   }
 
-  if (insertCardsError || !cards) {
+    if (insertCardsError || !insertedCards) {
     console.error(insertCardsError);
     await supabase.from("decks").delete().eq("id", deck.id).eq("user_id", user.id);
     return NextResponse.json(
@@ -343,8 +355,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const dueNow = new Date(Date.now() - 60_000).toISOString();
-  const { error: reviewsError } = await supabase.from("reviews").insert(
+    cards = insertedCards as CreatedCardRow[];
+
+    const { error: reviewsError } = await supabase.from("reviews").insert(
     cards.map((card) => ({
       user_id: user.id,
       card_id: card.id,
@@ -352,18 +365,19 @@ export async function POST(request: Request) {
     })),
   );
 
-  if (reviewsError) {
+    if (reviewsError) {
     console.error(reviewsError);
     await supabase.from("decks").delete().eq("id", deck.id).eq("user_id", user.id);
     return NextResponse.json(
       { error: `Không thể tạo lịch ôn cho thẻ mẫu: ${reviewsError.message}` },
       { status: 500 },
     );
+    }
   }
 
   let createdSentenceCards = 0;
 
-  if (hasTemplateSentenceTable && templateSentenceCards?.length) {
+  if (hasTemplateSentenceCards) {
     const { data: sentenceCards, error: insertSentenceCardsError } =
       await supabase
         .from("sentence_cards")
