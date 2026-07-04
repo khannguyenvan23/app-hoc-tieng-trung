@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell, EmptyState } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
-import { fetchWithAuth } from "@/lib/fetch-auth";
+import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
 import { getNextReview } from "@/lib/review";
 import {
@@ -129,12 +130,19 @@ function getSentenceAudioUrl(card: SentenceCard | null | undefined) {
   return card?.sentence_audio_url || null;
 }
 
+type SentenceAudioData = {
+  sentenceAudioUrl: string | null;
+};
+
 export default function StudySentencesPage() {
   const configured = hasPublicEnv();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const transientAudioRef = useRef<HTMLAudioElement | null>(null);
   const audioCacheRef = useRef<Map<string, HTMLAudioElement>>(new Map());
   const replaySentenceAudioRef = useRef<() => void>(() => {});
+  const pendingSentenceAudioRef = useRef<Map<string, Promise<string | null>>>(
+    new Map(),
+  );
   const keyboardActionsRef = useRef<{
     replayAudio: () => void;
     showAnswer: () => void;
@@ -197,6 +205,8 @@ export default function StudySentencesPage() {
     useState<StudySettings>(defaultStudySettings);
   const [settingsLoaded, setSettingsLoaded] = useState(!configured);
   const [newSentencesStudiedToday, setNewSentencesStudiedToday] = useState(0);
+  const [audioNotice, setAudioNotice] = useState("");
+  const [creatingAudioId, setCreatingAudioId] = useState<string | null>(null);
 
   const cacheSentenceAudio = useCallback(
     (audioUrl: string | null | undefined) => {
@@ -240,6 +250,81 @@ export default function StudySentencesPage() {
       return audio;
     },
     [audioSpeed],
+  );
+
+  const ensureSentenceAudioForCard = useCallback(
+    async (sentenceCard: SentenceCard | null | undefined) => {
+      if (!sentenceCard) {
+        return null;
+      }
+
+      if (sentenceCard.sentence_audio_url) {
+        cacheSentenceAudio(sentenceCard.sentence_audio_url);
+        return sentenceCard.sentence_audio_url;
+      }
+
+      const pendingAudio = pendingSentenceAudioRef.current.get(sentenceCard.id);
+
+      if (pendingAudio) {
+        return pendingAudio;
+      }
+
+      setCreatingAudioId(sentenceCard.id);
+
+      const pendingRequest = fetchWithAuth("/api/ensure-sentence-audio", {
+        method: "POST",
+        body: JSON.stringify({ sentenceCardId: sentenceCard.id }),
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            const data = await response.json().catch(() => null);
+            setAudioNotice(
+              getApiErrorMessage(data, "Không thể tự tạo audio cho câu này."),
+            );
+            return sentenceCard.sentence_audio_url;
+          }
+
+          const data = (await response.json()) as SentenceAudioData;
+          const sentenceAudioUrl =
+            data.sentenceAudioUrl || sentenceCard.sentence_audio_url;
+
+          setAudioNotice("");
+
+          if (sentenceAudioUrl) {
+            setReviews((currentReviews) =>
+              currentReviews.map((currentReview) =>
+                currentReview.sentence_cards?.id === sentenceCard.id
+                  ? {
+                      ...currentReview,
+                      sentence_cards: {
+                        ...currentReview.sentence_cards,
+                        sentence_audio_url: sentenceAudioUrl,
+                      },
+                    }
+                  : currentReview,
+              ),
+            );
+            cacheSentenceAudio(sentenceAudioUrl);
+          }
+
+          return sentenceAudioUrl;
+        })
+        .catch((error) => {
+          console.warn("Could not ensure sentence audio", error);
+          setAudioNotice("Không thể tự tạo audio cho câu này.");
+          return sentenceCard.sentence_audio_url;
+        })
+        .finally(() => {
+          pendingSentenceAudioRef.current.delete(sentenceCard.id);
+          setCreatingAudioId((currentId) =>
+            currentId === sentenceCard.id ? null : currentId,
+          );
+        });
+
+      pendingSentenceAudioRef.current.set(sentenceCard.id, pendingRequest);
+      return pendingRequest;
+    },
+    [cacheSentenceAudio],
   );
 
   const getNewSentencesStudiedToday = useCallback(async (deckId = selectedDeckId) => {
@@ -525,12 +610,14 @@ export default function StudySentencesPage() {
 
   useEffect(() => {
     const audioCache = audioCacheRef.current;
+    const pendingSentenceAudio = pendingSentenceAudioRef.current;
 
     return () => {
       audioCache.forEach((audio) => {
         audio.pause();
       });
       audioCache.clear();
+      pendingSentenceAudio.clear();
     };
   }, []);
 
@@ -567,8 +654,12 @@ export default function StudySentencesPage() {
     window.localStorage.setItem("hanzi-sentence-writing-mode", String(nextValue));
   }
 
-  function playSentenceAudio() {
-    const audioUrl = getSentenceAudioUrl(card);
+  async function playSentenceAudio() {
+    let audioUrl = getSentenceAudioUrl(card);
+
+    if (!audioUrl) {
+      audioUrl = await ensureSentenceAudioForCard(card);
+    }
 
     if (!audioUrl) {
       return;
@@ -592,7 +683,7 @@ export default function StudySentencesPage() {
 
   useEffect(() => {
     replaySentenceAudioRef.current = () => {
-      playSentenceAudio();
+      void playSentenceAudio();
     };
   });
 
@@ -661,7 +752,7 @@ export default function StudySentencesPage() {
 
   function showAnswerAndPlayAudio() {
     setShowAnswer(true);
-    playSentenceAudio();
+    void playSentenceAudio();
   }
 
   function checkSentenceAnswer() {
@@ -756,7 +847,7 @@ export default function StudySentencesPage() {
     keyboardActionsRef.current = {
       replayAudio: () => {
         if (showAnswer) {
-          playSentenceAudio();
+          void playSentenceAudio();
         }
       },
       showAnswer: showAnswerAndPlayAudio,
@@ -855,6 +946,14 @@ export default function StudySentencesPage() {
               <p className="basis-full text-left text-xs text-zinc-500 sm:text-right">
                 Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Space hiện đáp án; sau khi hiện đáp án dùng R audio, 1-4 đánh giá. P pinyin, W luyện viết.
               </p>
+              {audioNotice ? (
+                <p className="basis-full text-left text-xs text-red-700 sm:text-right">
+                  {audioNotice}{" "}
+                  <Link className="font-medium underline" href="/pricing">
+                    Nạp credit
+                  </Link>
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -968,6 +1067,10 @@ export default function StudySentencesPage() {
                           src={card.sentence_audio_url}
                         />
                       </div>
+                    ) : creatingAudioId === card.id ? (
+                      <p className="mt-5 text-sm text-zinc-500">
+                        Đang tạo audio câu...
+                      </p>
                     ) : null}
                   </div>
 
