@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
-import { fetchWithAuth } from "@/lib/fetch-auth";
+import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 
 export default function NewSentenceFromWordPage() {
   const params = useParams<{ deckId: string }>();
@@ -30,7 +30,7 @@ export default function NewSentenceFromWordPage() {
     setLoading(false);
 
     if (!response.ok) {
-      setMessage(data.error || "Không thể tạo câu.");
+      setMessage(getApiErrorMessage(data, "Không thể tạo câu."));
       return;
     }
 

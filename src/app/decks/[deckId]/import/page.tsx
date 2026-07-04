@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
-import { fetchWithAuth } from "@/lib/fetch-auth";
+import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { parseVocabularyText } from "@/lib/parse-vocabulary";
 import type { GeneratedCard } from "@/lib/types";
 
@@ -35,6 +35,7 @@ export default function ImportPage() {
   const [text, setText] = useState(sample);
   const [previewCards, setPreviewCards] = useState<PreviewCard[]>([]);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"error" | "success" | "">("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const items = useMemo(() => parseVocabularyText(text), [text]);
@@ -61,6 +62,7 @@ export default function ImportPage() {
     event.preventDefault();
     setGenerating(true);
     setMessage("");
+    setMessageType("");
     setPreviewCards([]);
 
     const response = await fetchWithAuth("/api/preview-vocabulary", {
@@ -74,12 +76,14 @@ export default function ImportPage() {
     setGenerating(false);
 
     if (!response.ok) {
-      setMessage(data.error || "Tạo preview thất bại");
+      setMessage(getApiErrorMessage(data, "Tạo preview thất bại"));
+      setMessageType("error");
       return;
     }
 
     setPreviewCards((data.cards || []) as PreviewCard[]);
     setMessage("Đã tạo preview. Bạn có thể sửa trước khi lưu.");
+    setMessageType("success");
   }
 
   async function saveCards() {
@@ -95,11 +99,13 @@ export default function ImportPage() {
 
     if (validCards.length === 0) {
       setMessage("Preview chưa có thẻ hợp lệ để lưu.");
+      setMessageType("error");
       return;
     }
 
     setSaving(true);
     setMessage("");
+    setMessageType("");
 
     const response = await fetchWithAuth("/api/import-vocabulary", {
       method: "POST",
@@ -112,11 +118,13 @@ export default function ImportPage() {
     setSaving(false);
 
     if (!response.ok) {
-      setMessage(data.error || "Import thất bại");
+      setMessage(getApiErrorMessage(data, "Import thất bại"));
+      setMessageType("error");
       return;
     }
 
-    setMessage(`Đã lưu ${data.created} thẻ.`);
+    setMessage(`Import thành công. Đã lưu ${data.created} thẻ.`);
+    setMessageType("success");
     setPreviewCards([]);
   }
 
@@ -249,7 +257,15 @@ export default function ImportPage() {
           ) : null}
 
           {message ? (
-            <p className="mt-4 text-sm text-zinc-700">{message}</p>
+            <p
+              className={`mt-4 text-sm ${
+                messageType === "success"
+                  ? "text-teal-700"
+                  : "text-red-700"
+              }`}
+            >
+              {message}
+            </p>
           ) : null}
         </div>
       </AppShell>

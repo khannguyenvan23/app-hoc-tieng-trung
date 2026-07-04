@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
-import { fetchWithAuth } from "@/lib/fetch-auth";
+import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { parseSentenceText } from "@/lib/parse-sentences";
 
 const sample = `我去过中国。
@@ -16,6 +16,7 @@ export default function ImportSentencesPage() {
   const params = useParams<{ deckId: string }>();
   const [text, setText] = useState(sample);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"error" | "success" | "">("");
   const [loading, setLoading] = useState(false);
   const items = useMemo(() => parseSentenceText(text), [text]);
 
@@ -23,6 +24,7 @@ export default function ImportSentencesPage() {
     event.preventDefault();
     setLoading(true);
     setMessage("");
+    setMessageType("");
 
     const response = await fetchWithAuth("/api/import-sentences", {
       method: "POST",
@@ -35,11 +37,13 @@ export default function ImportSentencesPage() {
     setLoading(false);
 
     if (!response.ok) {
-      setMessage(data.error || "Import câu thất bại");
+      setMessage(getApiErrorMessage(data, "Import câu thất bại"));
+      setMessageType("error");
       return;
     }
 
-    setMessage(`Đã tạo ${data.created} câu luyện tập.`);
+    setMessage(`Import thành công. Đã tạo ${data.created} câu luyện tập.`);
+    setMessageType("success");
   }
 
   return (
@@ -87,7 +91,17 @@ export default function ImportSentencesPage() {
             </button>
           </div>
 
-          {message ? <p className="mt-4 text-sm text-zinc-700">{message}</p> : null}
+          {message ? (
+            <p
+              className={`mt-4 text-sm ${
+                messageType === "success"
+                  ? "text-teal-700"
+                  : "text-red-700"
+              }`}
+            >
+              {message}
+            </p>
+          ) : null}
         </form>
       </AppShell>
     </AuthGuard>

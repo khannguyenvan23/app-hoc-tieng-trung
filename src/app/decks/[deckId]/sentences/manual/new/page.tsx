@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
-import { fetchWithAuth } from "@/lib/fetch-auth";
+import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import type { SentenceVocabItem } from "@/lib/types";
 
 type ManualSentenceForm = {
@@ -74,7 +74,7 @@ export default function NewManualSentencePage() {
     setLoading(false);
 
     if (!response.ok) {
-      setError(data.error || "Không thể tạo câu luyện tập.");
+      setError(getApiErrorMessage(data, "Không thể tạo câu luyện tập."));
       return;
     }
 

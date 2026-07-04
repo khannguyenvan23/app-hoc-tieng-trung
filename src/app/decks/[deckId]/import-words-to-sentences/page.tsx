@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
-import { fetchWithAuth } from "@/lib/fetch-auth";
+import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { parseVocabularyText } from "@/lib/parse-vocabulary";
 
 const sample = `过
@@ -18,6 +18,7 @@ export default function ImportWordsToSentencesPage() {
   const router = useRouter();
   const [text, setText] = useState(sample);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"error" | "success" | "">("");
   const [loading, setLoading] = useState(false);
   const items = useMemo(() => parseVocabularyText(text), [text]);
 
@@ -25,6 +26,7 @@ export default function ImportWordsToSentencesPage() {
     event.preventDefault();
     setLoading(true);
     setMessage("");
+    setMessageType("");
 
     const response = await fetchWithAuth("/api/import-words-to-sentences", {
       method: "POST",
@@ -37,12 +39,16 @@ export default function ImportWordsToSentencesPage() {
     setLoading(false);
 
     if (!response.ok) {
-      setMessage(data.error || "Import từ thành câu thất bại");
+      setMessage(getApiErrorMessage(data, "Import từ thành câu thất bại"));
+      setMessageType("error");
       return;
     }
 
-    setMessage(`Đã tạo ${data.created} câu luyện tập.`);
-    router.push("/study-sentences");
+    setMessage(
+      `Import thành công. Đã tạo ${data.created} câu luyện tập. Đang chuyển sang trang luyện câu...`,
+    );
+    setMessageType("success");
+    window.setTimeout(() => router.push("/study-sentences"), 1500);
   }
 
   return (
@@ -91,7 +97,17 @@ export default function ImportWordsToSentencesPage() {
             </button>
           </div>
 
-          {message ? <p className="mt-4 text-sm text-zinc-700">{message}</p> : null}
+          {message ? (
+            <p
+              className={`mt-4 text-sm ${
+                messageType === "success"
+                  ? "text-teal-700"
+                  : "text-red-700"
+              }`}
+            >
+              {message}
+            </p>
+          ) : null}
         </form>
       </AppShell>
     </AuthGuard>

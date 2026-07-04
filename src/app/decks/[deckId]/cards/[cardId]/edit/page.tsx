@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
-import { fetchWithAuth } from "@/lib/fetch-auth";
+import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Card } from "@/lib/types";
 
@@ -133,7 +133,7 @@ export default function EditCardPage() {
     setSaving(false);
 
     if (!response.ok) {
-      setMessage(data.error || "Không thể tạo lại audio.");
+      setMessage(getApiErrorMessage(data, "Không thể tạo lại audio."));
       return;
     }
 

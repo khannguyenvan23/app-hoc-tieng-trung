@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell, EmptyState } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
-import { fetchWithAuth } from "@/lib/fetch-auth";
+import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
 import { getNextReview } from "@/lib/review";
 import {
@@ -197,6 +198,7 @@ export default function StudyPage() {
     useState<StudySettings>(defaultStudySettings);
   const [settingsLoaded, setSettingsLoaded] = useState(!configured);
   const [newCardsStudiedToday, setNewCardsStudiedToday] = useState(0);
+  const [creditNotice, setCreditNotice] = useState("");
 
   const cacheAudio = useCallback(
     (audioUrl: string | null | undefined) => {
@@ -269,10 +271,15 @@ export default function StudyPage() {
       })
         .then(async (response) => {
           if (!response.ok) {
+            const data = await response.json().catch(() => null);
+            setCreditNotice(
+              getApiErrorMessage(data, "Không thể tự tạo audio cho thẻ này."),
+            );
             return getCardAudioData(reviewCard);
           }
 
           const data = (await response.json()) as CardAudioData;
+          setCreditNotice("");
           const audioData = {
             wordAudioUrl: data.wordAudioUrl || reviewCard.word_audio_url,
             sentenceAudioUrl:
@@ -934,6 +941,18 @@ export default function StudyPage() {
               </p>
             </div>
           </div>
+
+          {creditNotice ? (
+            <div className="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800">
+              <div>{creditNotice}</div>
+              <Link
+                className="mt-2 inline-flex font-medium text-red-900 underline"
+                href="/pricing"
+              >
+                Xem bảng giá và nạp credit
+              </Link>
+            </div>
+          ) : null}
 
           {loading || repairingReviews ? (
             <p className="text-sm text-zinc-600">

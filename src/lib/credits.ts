@@ -57,6 +57,7 @@ export function createCreditErrorResponse(error: unknown) {
   if (error instanceof InsufficientCreditsError) {
     return NextResponse.json(
       {
+        code: "insufficient_credits",
         error: error.message,
         credits: {
           balance: error.balance,
