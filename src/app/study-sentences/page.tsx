@@ -9,6 +9,12 @@ import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
 import { getNextReview } from "@/lib/review";
 import {
+  compareChineseSentences,
+  type SentenceDiffItem,
+  type SentenceDiffResult,
+  type SentenceDiffStatus,
+} from "@/lib/sentence-diff";
+import {
   defaultStudySettings,
   formatReviewIntervalLabel,
   type StudySettings,
@@ -29,6 +35,20 @@ const ratingLabels: Record<ReviewRating, string> = {
   hard: "Khó",
   good: "Nhớ",
   easy: "Dễ",
+};
+
+const sentenceDiffLabels: Record<SentenceDiffStatus, string> = {
+  correct: "Đúng",
+  wrong: "Sai",
+  missing: "Bỏ trống",
+  extra: "Thừa",
+};
+
+const sentenceDiffStyles: Record<SentenceDiffStatus, string> = {
+  correct: "border-teal-200 bg-teal-50 text-teal-900",
+  wrong: "border-red-200 bg-red-50 text-red-900",
+  missing: "border-amber-200 bg-amber-50 text-amber-900",
+  extra: "border-zinc-300 bg-zinc-100 text-zinc-700",
 };
 
 const audioSpeeds = {
@@ -54,13 +74,6 @@ function startOfLocalDay(date: Date) {
 
 function dueReviewCutoff() {
   return new Date(Date.now() + 60_000).toISOString();
-}
-
-function normalizeSentenceHanzi(value: string) {
-  return value
-    .replace(/\s+/g, "")
-    .replace(/[。．.！？!?，,、；;：:“”"']/g, "")
-    .trim();
 }
 
 function shuffleSentenceReviews(reviews: DueSentenceReview[]) {
@@ -133,6 +146,31 @@ function getSentenceAudioUrl(card: SentenceCard | null | undefined) {
 type SentenceAudioData = {
   sentenceAudioUrl: string | null;
 };
+
+function SentenceDiffToken({ item }: { item: SentenceDiffItem }) {
+  return (
+    <div
+      className={`min-w-16 rounded-md border px-3 py-2 text-center ${sentenceDiffStyles[item.status]}`}
+    >
+      <div className="flex items-center justify-center gap-1 text-lg font-semibold">
+        {item.status === "wrong" ? (
+          <>
+            <span className="line-through opacity-70">{item.actual}</span>
+            <span aria-hidden="true">→</span>
+            <span>{item.expected}</span>
+          </>
+        ) : (
+          <span className={item.status === "extra" ? "line-through" : ""}>
+            {item.actual || item.expected}
+          </span>
+        )}
+      </div>
+      <div className="mt-1 text-xs font-medium">
+        {sentenceDiffLabels[item.status]}
+      </div>
+    </div>
+  );
+}
 
 export default function StudySentencesPage() {
   const configured = hasPublicEnv();
@@ -216,6 +254,9 @@ export default function StudySentencesPage() {
   const [sentenceAnswer, setSentenceAnswer] = useState("");
   const [writingResult, setWritingResult] = useState<"correct" | "wrong" | "">(
     "",
+  );
+  const [sentenceDiff, setSentenceDiff] = useState<SentenceDiffResult | null>(
+    null,
   );
   const [repairingReviews, setRepairingReviews] = useState(false);
   const [studySettings, setStudySettings] =
@@ -420,6 +461,7 @@ export default function StudySentencesPage() {
     setShowAnswer(false);
     setSentenceAnswer("");
     setWritingResult("");
+    setSentenceDiff(null);
     setLoading(false);
   }
 
@@ -592,6 +634,7 @@ export default function StudySentencesPage() {
             setShowAnswer(false);
             setSentenceAnswer("");
             setWritingResult("");
+            setSentenceDiff(null);
             setLoading(false);
             return;
           }
@@ -610,6 +653,7 @@ export default function StudySentencesPage() {
       setShowAnswer(false);
       setSentenceAnswer("");
       setWritingResult("");
+      setSentenceDiff(null);
       setLoading(false);
       },
     );
@@ -690,6 +734,7 @@ export default function StudySentencesPage() {
     }
     setSentenceAnswer("");
     setWritingResult("");
+    setSentenceDiff(null);
     window.localStorage.setItem("hanzi-sentence-writing-mode", String(nextValue));
   }
 
@@ -700,6 +745,7 @@ export default function StudySentencesPage() {
     setShowAnswer(false);
     setSentenceAnswer("");
     setWritingResult("");
+    setSentenceDiff(null);
 
     if (nextValue) {
       setWritingMode(false);
@@ -864,10 +910,19 @@ export default function StudySentencesPage() {
       return;
     }
 
-    const expected = normalizeSentenceHanzi(card.sentence_cn);
-    const actual = normalizeSentenceHanzi(sentenceAnswer);
+    const comparison = compareChineseSentences(
+      card.sentence_cn,
+      sentenceAnswer,
+    );
+    const hasAnswer = comparison.items.some((item) => item.actual);
+    const hasMistake =
+      comparison.counts.wrong > 0 ||
+      comparison.counts.missing > 0 ||
+      comparison.counts.extra > 0;
 
-    if (actual && actual === expected) {
+    setSentenceDiff(comparison);
+
+    if (hasAnswer && !hasMistake) {
       setWritingResult("correct");
       showAnswerAndPlayAudio();
       return;
@@ -920,6 +975,7 @@ export default function StudySentencesPage() {
     setShowAnswer(false);
     setSentenceAnswer("");
     setWritingResult("");
+    setSentenceDiff(null);
 
     if (rating === "again") {
       const requeuedReviews = [
@@ -1174,6 +1230,7 @@ export default function StudySentencesPage() {
                           onChange={(event) => {
                             setSentenceAnswer(event.target.value);
                             setWritingResult("");
+                            setSentenceDiff(null);
                           }}
                           onKeyDown={(event) => {
                             if (
@@ -1204,6 +1261,30 @@ export default function StudySentencesPage() {
                         <p className="mt-3 text-sm font-medium text-red-700">
                           Chưa đúng, thử lại hoặc hiện đáp án.
                         </p>
+                      ) : null}
+
+                      {writingResult === "wrong" && sentenceDiff ? (
+                        <div className="mt-4 rounded-md border border-zinc-200 bg-white p-4">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <h3 className="text-sm font-semibold text-zinc-900">
+                              Kết quả từng từ
+                            </h3>
+                            <p className="text-xs text-zinc-500">
+                              Đúng {sentenceDiff.counts.correct} · Sai{" "}
+                              {sentenceDiff.counts.wrong} · Bỏ trống{" "}
+                              {sentenceDiff.counts.missing} · Thừa{" "}
+                              {sentenceDiff.counts.extra}
+                            </p>
+                          </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {sentenceDiff.items.map((item, itemIndex) => (
+                              <SentenceDiffToken
+                                item={item}
+                                key={`${item.status}-${itemIndex}-${item.actual || ""}-${item.expected || ""}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       ) : null}
 
                       <div className="mt-4 grid gap-2 sm:grid-cols-2">
