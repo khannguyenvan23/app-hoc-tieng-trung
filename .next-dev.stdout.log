@@ -8,3 +8,11 @@
 - Environments: .env.local
 ✓ Ready in 476ms
 
+ GET /study-sentences 200 in 595ms (next.js: 347ms, application-code: 249ms)
+ GET /api/study-settings 200 in 1048ms (next.js: 108ms, application-code: 940ms)
+ GET /study-sentences 200 in 57ms (next.js: 5ms, application-code: 52ms)
+ GET /api/study-settings 200 in 724ms (next.js: 3ms, application-code: 721ms)
+✓ Compiled in 142ms
+ GET /study-sentences 200 in 151ms (next.js: 43ms, application-code: 108ms)
+ GET /study-sentences 200 in 73ms (next.js: 55ms, application-code: 19ms)
+ GET /api/study-settings 200 in 1063ms (next.js: 43ms, application-code: 1020ms)

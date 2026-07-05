@@ -205,6 +205,14 @@ export default function StudySentencesPage() {
     }
     return window.localStorage.getItem("hanzi-sentence-dictation-mode") === "true";
   });
+  const [showDictationMeaning, setShowDictationMeaning] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    return (
+      window.localStorage.getItem("hanzi-sentence-dictation-meaning") === "true"
+    );
+  });
   const [sentenceAnswer, setSentenceAnswer] = useState("");
   const [writingResult, setWritingResult] = useState<"correct" | "wrong" | "">(
     "",
@@ -704,6 +712,15 @@ export default function StudySentencesPage() {
     );
   }
 
+  function toggleDictationMeaning() {
+    const nextValue = !showDictationMeaning;
+    setShowDictationMeaning(nextValue);
+    window.localStorage.setItem(
+      "hanzi-sentence-dictation-meaning",
+      String(nextValue),
+    );
+  }
+
   async function playSentenceAudio() {
     let audioUrl = getSentenceAudioUrl(card);
 
@@ -738,7 +755,20 @@ export default function StudySentencesPage() {
   });
 
   useEffect(() => {
+    let controlPressedAlone = false;
+
     function handleStudyShortcut(event: KeyboardEvent) {
+      if (event.key === "Control") {
+        if (!event.repeat) {
+          controlPressedAlone = true;
+        }
+        return;
+      }
+
+      if (event.ctrlKey) {
+        controlPressedAlone = false;
+      }
+
       if (
         event.ctrlKey ||
         event.metaKey ||
@@ -778,10 +808,31 @@ export default function StudySentencesPage() {
       }
     }
 
+    function handleStudyShortcutKeyUp(event: KeyboardEvent) {
+      if (event.key !== "Control") {
+        return;
+      }
+
+      if (controlPressedAlone) {
+        event.preventDefault();
+        keyboardActionsRef.current.replayAudio();
+      }
+
+      controlPressedAlone = false;
+    }
+
+    function resetControlShortcut() {
+      controlPressedAlone = false;
+    }
+
     window.addEventListener("keydown", handleStudyShortcut);
+    window.addEventListener("keyup", handleStudyShortcutKeyUp);
+    window.addEventListener("blur", resetControlShortcut);
 
     return () => {
       window.removeEventListener("keydown", handleStudyShortcut);
+      window.removeEventListener("keyup", handleStudyShortcutKeyUp);
+      window.removeEventListener("blur", resetControlShortcut);
     };
   }, []);
 
@@ -1025,7 +1076,7 @@ export default function StudySentencesPage() {
                 {showPinyinHint ? "Tắt pinyin" : "Bật pinyin"}
               </button>
               <p className="basis-full text-left text-xs text-zinc-500 sm:text-right">
-                Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Space hiện đáp án; R audio, 1-4 đánh giá. P pinyin, W luyện viết, D chính tả.
+                Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Ctrl hoặc R phát audio; Space hiện đáp án, kể cả khi đang gõ. 1-4 đánh giá, P pinyin, W luyện viết, D chính tả.
               </p>
               {audioNotice ? (
                 <p className="basis-full text-left text-xs text-red-700 sm:text-right">
@@ -1062,16 +1113,41 @@ export default function StudySentencesPage() {
                     <div className="mt-3 text-2xl font-semibold leading-tight">
                       Nghe và chép lại câu tiếng Trung
                     </div>
-                    <button
-                      className="mt-5 min-h-10 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
-                      disabled={creatingAudioId === card.id}
-                      onClick={() => void playSentenceAudio()}
-                      type="button"
-                    >
-                      {creatingAudioId === card.id
-                        ? "Đang tạo audio..."
-                        : "Phát lại audio"}
-                    </button>
+                    <div className="mt-5 flex flex-wrap justify-center gap-2">
+                      <button
+                        className="min-h-10 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
+                        disabled={creatingAudioId === card.id}
+                        onClick={() => void playSentenceAudio()}
+                        type="button"
+                      >
+                        {creatingAudioId === card.id
+                          ? "Đang tạo audio..."
+                          : "Phát lại audio"}
+                      </button>
+                      <button
+                        className={`min-h-10 rounded-md border px-4 py-2 text-sm font-medium ${
+                          showDictationMeaning
+                            ? "border-teal-700 bg-teal-50 text-teal-800"
+                            : "border-zinc-300 hover:bg-zinc-100"
+                        }`}
+                        onClick={toggleDictationMeaning}
+                        type="button"
+                      >
+                        {showDictationMeaning
+                          ? "Tắt nghĩa Việt"
+                          : "Bật nghĩa Việt"}
+                      </button>
+                    </div>
+                    {showDictationMeaning ? (
+                      <div className="mx-auto mt-5 max-w-xl rounded-md bg-stone-50 px-4 py-3">
+                        <div className="text-xs font-medium uppercase text-zinc-500">
+                          Nghĩa tiếng Việt
+                        </div>
+                        <div className="mt-1 text-lg font-medium text-zinc-800">
+                          {card.sentence_vi}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 ) : (
                   <div>
@@ -1100,6 +1176,15 @@ export default function StudySentencesPage() {
                             setWritingResult("");
                           }}
                           onKeyDown={(event) => {
+                            if (
+                              event.key === " " &&
+                              !event.nativeEvent.isComposing
+                            ) {
+                              event.preventDefault();
+                              showAnswerAndPlayAudio();
+                              return;
+                            }
+
                             if (event.key === "Enter" && event.ctrlKey) {
                               event.preventDefault();
                               checkSentenceAnswer();
