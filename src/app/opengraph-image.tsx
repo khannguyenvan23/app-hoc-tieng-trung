@@ -61,10 +61,10 @@ export default function Image() {
               maxWidth: 920,
             }}
           >
-            Học HSK với audio, câu ví dụ và thuật toán lặp lại ngắt quãng.
+            Học HSK với audio, luyện câu, chép chính tả và lặp lại ngắt quãng.
           </div>
           <div style={{ display: "flex", gap: "18px", marginTop: "20px" }}>
-            {["HSK1/HSK2", "Audio", "SRS", "Luyện câu"].map((label) => (
+            {["HSK1/HSK2", "Audio", "SRS", "Chính tả"].map((label) => (
               <div
                 key={label}
                 style={{

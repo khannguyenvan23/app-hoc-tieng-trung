@@ -60,6 +60,7 @@ const landingJsonLd = {
         "Audio tiếng Trung",
         "Lặp lại ngắt quãng SRS",
         "Luyện câu tiếng Trung",
+        "Luyện nghe chép chính tả tiếng Trung",
         "Ẩn hiện pinyin",
       ],
     },
@@ -83,12 +84,16 @@ const features = [
     title: "Luyện câu thực tế",
     body: "Học từ trong câu, xem nghĩa tiếng Việt, pinyin khi cần và luyện viết chữ Hán.",
   },
+  {
+    title: "Nghe chép chính tả",
+    body: "Ẩn câu, nghe audio rồi chép lại tiếng Trung. Bật nghĩa Việt khi cần và kiểm tra ngay.",
+  },
 ];
 
 const steps = [
   "Chọn bộ HSK hoặc tạo bộ thẻ riêng.",
   "Import từ vựng, app tự tạo nghĩa, pinyin, câu ví dụ và audio.",
-  "Ôn mỗi ngày bằng flashcard, luyện câu và lịch SRS.",
+  "Ôn mỗi ngày bằng flashcard, luyện câu, chép chính tả và lịch SRS.",
 ];
 
 async function redirectAuthenticatedUser() {
@@ -161,8 +166,9 @@ export default async function Home() {
               Tiếng Trung Hihi
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-stone-100 sm:text-xl">
-              Học từ vựng HSK bằng flashcard, audio, câu ví dụ và thuật toán
-              lặp lại ngắt quãng. Mỗi ngày chỉ cần mở app và ôn đúng phần đến hạn.
+              Học từ vựng HSK bằng flashcard, audio, câu ví dụ, luyện chép
+              chính tả và thuật toán lặp lại ngắt quãng. Mỗi ngày chỉ cần mở
+              app và ôn đúng phần đến hạn.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -189,6 +195,7 @@ export default async function Home() {
               <span className="rounded-md bg-white/12 px-3 py-2">Audio</span>
               <span className="rounded-md bg-white/12 px-3 py-2">SRS</span>
               <span className="rounded-md bg-white/12 px-3 py-2">Luyện câu</span>
+              <span className="rounded-md bg-white/12 px-3 py-2">Chính tả</span>
             </div>
           </div>
         </div>
@@ -204,7 +211,7 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {features.map((feature) => (
               <article
                 className="rounded-lg border border-zinc-200 bg-stone-50 p-5"
@@ -245,6 +252,53 @@ export default async function Home() {
               height={535}
               src="/landing-flashcard.png"
               width={979}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-zinc-200 bg-white py-14">
+        <div className="mx-auto grid max-w-6xl gap-8 px-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-wide text-teal-700">
+              Luyện nghe chủ động
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold">
+              Nghe rồi chép, nhớ câu sâu hơn
+            </h2>
+            <p className="mt-4 text-base leading-7 text-zinc-600">
+              Chế độ chính tả ẩn câu tiếng Trung để bạn nghe audio và tự chép
+              lại. Khi bí, có thể bật nghĩa tiếng Việt mà chưa cần xem đáp án.
+            </p>
+            <ul className="mt-6 space-y-3 text-sm text-zinc-700">
+              <li className="flex gap-3">
+                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-teal-700" />
+                <span>Tự phát audio khi chuyển sang câu mới.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-teal-700" />
+                <span>Bật hoặc tắt nghĩa tiếng Việt theo mức độ cần gợi ý.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-teal-700" />
+                <span>Kiểm tra đúng sai ngay, dùng Ctrl để nghe lại và Space để xem đáp án.</span>
+              </li>
+            </ul>
+            <Link
+              className="mt-7 inline-flex rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white hover:bg-teal-800"
+              href="/login"
+            >
+              Bắt đầu luyện chính tả
+            </Link>
+          </div>
+
+          <div className="overflow-hidden rounded-lg border border-zinc-200 bg-stone-50 shadow-sm">
+            <Image
+              alt="Chế độ luyện nghe chép chính tả tiếng Trung"
+              className="h-auto w-full"
+              height={767}
+              src="/landing-dictation.png"
+              width={1228}
             />
           </div>
         </div>

@@ -16,3 +16,12 @@
  GET /study-sentences 200 in 151ms (next.js: 43ms, application-code: 108ms)
  GET /study-sentences 200 in 73ms (next.js: 55ms, application-code: 19ms)
  GET /api/study-settings 200 in 1063ms (next.js: 43ms, application-code: 1020ms)
+ GET /study-sentences 200 in 115ms (next.js: 4ms, application-code: 111ms)
+ GET /api/study-settings 200 in 715ms (next.js: 4ms, application-code: 711ms)
+✓ Compiled in 137ms
+ GET /study-sentences 200 in 174ms (next.js: 42ms, application-code: 131ms)
+ GET /study-sentences 200 in 112ms (next.js: 7ms, application-code: 105ms)
+ GET /study-sentences 200 in 73ms (next.js: 6ms, application-code: 67ms)
+ GET /study-sentences 200 in 72ms (next.js: 37ms, application-code: 36ms)
+ GET /study-sentences 200 in 73ms (next.js: 21ms, application-code: 52ms)
+ GET /study-sentences 200 in 22ms (next.js: 3ms, application-code: 18ms)
