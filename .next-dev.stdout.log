@@ -142,3 +142,8 @@
  GET /dashboard 200 in 206ms (next.js: 65ms, application-code: 141ms)
  GET /api/study-settings 200 in 1463ms (next.js: 126ms, application-code: 1337ms)
  GET /api/template-decks 200 in 1599ms (next.js: 83ms, application-code: 1516ms)
+ GET /dashboard 200 in 50ms (next.js: 6ms, application-code: 44ms)
+ GET /api/study-settings 200 in 817ms (next.js: 16ms, application-code: 801ms)
+ GET /api/template-decks 200 in 1079ms (next.js: 3ms, application-code: 1075ms)
+ GET /dashboard 200 in 104ms (next.js: 73ms, application-code: 31ms)
+ GET /pricing 200 in 1651ms (next.js: 145ms, application-code: 1506ms)

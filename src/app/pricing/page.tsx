@@ -27,6 +27,8 @@ const rawContactPhone = process.env.NEXT_PUBLIC_CONTACT_PHONE?.trim() || "";
 const contactPhone = rawContactPhone || "Cập nhật NEXT_PUBLIC_CONTACT_PHONE";
 const phoneDigits = rawContactPhone.replace(/[^\d+]/g, "");
 const zaloDigits = rawContactPhone.replace(/\D/g, "");
+const supportPhone = "0986942504";
+const supportPhoneDigits = supportPhone.replace(/\D/g, "");
 
 const creditPlans = [
   {
@@ -228,6 +230,15 @@ function PricingContent({
             <h2 className="text-lg font-semibold">Liên hệ</h2>
             <p className="mt-2 text-sm leading-6 text-zinc-600">
               Số điện thoại/Zalo: <span className="font-medium">{contactPhone}</span>
+            </p>
+            <p className="mt-1 text-sm leading-6 text-zinc-600">
+              Điện thoại liên hệ: {" "}
+              <a
+                className="font-medium text-teal-800 hover:underline"
+                href={`tel:${supportPhoneDigits}`}
+              >
+                {supportPhone}
+              </a>
             </p>
           </div>
         </div>
