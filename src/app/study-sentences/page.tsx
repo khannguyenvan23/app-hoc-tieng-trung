@@ -150,9 +150,9 @@ type SentenceAudioData = {
 function SentenceDiffToken({ item }: { item: SentenceDiffItem }) {
   return (
     <div
-      className={`min-w-16 rounded-md border px-3 py-2 text-center ${sentenceDiffStyles[item.status]}`}
+      className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border px-3 py-2 text-left sm:block sm:min-w-16 sm:text-center ${sentenceDiffStyles[item.status]}`}
     >
-      <div className="flex items-center justify-center gap-1 text-lg font-semibold">
+      <div className="flex min-w-0 items-center gap-1 text-lg font-semibold sm:justify-center">
         {item.status === "wrong" ? (
           <>
             <span className="line-through opacity-70">{item.actual}</span>
@@ -165,7 +165,7 @@ function SentenceDiffToken({ item }: { item: SentenceDiffItem }) {
           </span>
         )}
       </div>
-      <div className="mt-1 text-xs font-medium">
+      <div className="text-right text-xs font-medium sm:mt-1 sm:text-center">
         {sentenceDiffLabels[item.status]}
       </div>
     </div>
@@ -1050,7 +1050,7 @@ export default function StudySentencesPage() {
     <AuthGuard>
       <AppShell>
         <div className="mx-auto max-w-2xl">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+          <div className="mb-5">
             <div>
               <h1 className="text-2xl font-semibold">Luyện câu</h1>
               <p className="mt-1 text-sm text-zinc-600">
@@ -1061,9 +1061,9 @@ export default function StudySentencesPage() {
                 {studySettings.daily_new_sentence_limit}
               </p>
             </div>
-            <div className="flex flex-wrap justify-end gap-2">
+            <div className="mt-4 grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-start">
               <select
-                className="min-h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700"
+                className="col-span-2 min-h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700 sm:w-auto"
                 onChange={(event) => changeDeck(event.target.value)}
                 value={selectedDeckId}
               >
@@ -1074,7 +1074,7 @@ export default function StudySentencesPage() {
                   </option>
                 ))}
               </select>
-              <div className="grid grid-cols-2 rounded-md border border-zinc-300 p-1 text-sm">
+              <div className="col-span-2 grid w-full grid-cols-2 rounded-md border border-zinc-300 p-1 text-sm sm:w-auto">
                 <button
                   className={`rounded px-3 py-2 ${
                     audioSpeed === "normal"
@@ -1099,7 +1099,7 @@ export default function StudySentencesPage() {
                 </button>
               </div>
               <button
-                className={`rounded-md border px-4 py-2 text-sm font-medium ${
+                className={`min-h-10 w-full rounded-md border px-3 py-2 text-sm font-medium sm:w-auto sm:px-4 ${
                   writingMode
                     ? "border-teal-700 bg-teal-50 text-teal-800"
                     : "border-zinc-300 hover:bg-zinc-100"
@@ -1110,7 +1110,7 @@ export default function StudySentencesPage() {
                 {writingMode ? "Đang luyện viết" : "Bật luyện viết"}
               </button>
               <button
-                className={`rounded-md border px-4 py-2 text-sm font-medium ${
+                className={`min-h-10 w-full rounded-md border px-3 py-2 text-sm font-medium sm:w-auto sm:px-4 ${
                   dictationMode
                     ? "border-teal-700 bg-teal-50 text-teal-800"
                     : "border-zinc-300 hover:bg-zinc-100"
@@ -1121,7 +1121,7 @@ export default function StudySentencesPage() {
                 {dictationMode ? "Đang chính tả" : "Bật chính tả"}
               </button>
               <button
-                className={`rounded-md border px-4 py-2 text-sm font-medium ${
+                className={`col-span-2 min-h-10 w-full rounded-md border px-3 py-2 text-sm font-medium sm:w-auto sm:px-4 ${
                   showPinyinHint
                     ? "border-teal-700 bg-teal-50 text-teal-800"
                     : "border-zinc-300 hover:bg-zinc-100"
@@ -1131,8 +1131,13 @@ export default function StudySentencesPage() {
               >
                 {showPinyinHint ? "Tắt pinyin" : "Bật pinyin"}
               </button>
-              <p className="basis-full text-left text-xs text-zinc-500 sm:text-right">
-                Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Ctrl hoặc R phát audio; Space hiện đáp án, kể cả khi đang gõ. 1-4 đánh giá, P pinyin, W luyện viết, D chính tả.
+              <p className="col-span-2 text-left text-xs leading-5 text-zinc-500 sm:basis-full sm:text-right">
+                <span className="sm:hidden">
+                  Enter kiểm tra · Space đáp án · Ctrl/R audio · D chính tả.
+                </span>
+                <span className="hidden sm:inline">
+                  Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Ctrl hoặc R phát audio; Enter kiểm tra, Space hiện đáp án. 1-4 đánh giá, P pinyin, W luyện viết, D chính tả.
+                </span>
               </p>
               {audioNotice ? (
                 <p className="basis-full text-left text-xs text-red-700 sm:text-right">
@@ -1155,23 +1160,23 @@ export default function StudySentencesPage() {
               title="Bạn đã luyện xong"
             />
           ) : (
-            <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+            <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
               <div className="text-sm text-zinc-500">
                 Câu {index + 1} / {reviews.length}
               </div>
 
-              <div className="mt-8 text-center">
+              <div className="mt-6 text-center sm:mt-8">
                 {dictationMode && !showAnswer ? (
                   <div>
                     <div className="text-sm font-medium text-zinc-500">
                       Luyện chính tả
                     </div>
-                    <div className="mt-3 text-2xl font-semibold leading-tight">
+                    <div className="mt-3 text-xl font-semibold leading-tight sm:text-2xl">
                       Nghe và chép lại câu tiếng Trung
                     </div>
-                    <div className="mt-5 flex flex-wrap justify-center gap-2">
+                    <div className="mt-5 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center">
                       <button
-                        className="min-h-10 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
+                        className="min-h-10 rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60 sm:px-4"
                         disabled={creatingAudioId === card.id}
                         onClick={() => void playSentenceAudio()}
                         type="button"
@@ -1181,7 +1186,7 @@ export default function StudySentencesPage() {
                           : "Phát lại audio"}
                       </button>
                       <button
-                        className={`min-h-10 rounded-md border px-4 py-2 text-sm font-medium ${
+                        className={`min-h-10 rounded-md border px-3 py-2 text-sm font-medium sm:px-4 ${
                           showDictationMeaning
                             ? "border-teal-700 bg-teal-50 text-teal-800"
                             : "border-zinc-300 hover:bg-zinc-100"
@@ -1195,7 +1200,7 @@ export default function StudySentencesPage() {
                       </button>
                     </div>
                     {showDictationMeaning ? (
-                      <div className="mx-auto mt-5 max-w-xl rounded-md bg-stone-50 px-4 py-3">
+                      <div className="mx-auto mt-5 max-w-xl rounded-md bg-stone-50 px-3 py-3 sm:px-4">
                         <div className="text-xs font-medium uppercase text-zinc-500">
                           Nghĩa tiếng Việt
                         </div>
@@ -1210,7 +1215,7 @@ export default function StudySentencesPage() {
                     <div className="text-sm font-medium text-zinc-500">
                       Câu tiếng Việt
                     </div>
-                    <div className="mt-3 text-3xl font-semibold leading-tight">
+                    <div className="mt-3 text-2xl font-semibold leading-tight sm:text-3xl">
                       {card.sentence_vi}
                     </div>
                   </div>
@@ -1218,15 +1223,15 @@ export default function StudySentencesPage() {
               </div>
 
               {!showAnswer ? (
-                <div className="mt-10">
+                <div className="mt-7 sm:mt-10">
                   {writingMode || dictationMode ? (
-                    <div className="rounded-lg border border-zinc-200 bg-stone-50 p-4">
+                    <div className="rounded-lg border border-zinc-200 bg-stone-50 p-3 sm:p-4">
                       <label className="block text-sm font-medium text-zinc-700">
                         {dictationMode
                           ? "Gõ lại câu tiếng Trung vừa nghe"
                           : "Gõ câu tiếng Trung"}
                         <textarea
-                          className="mt-2 h-28 w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-center text-2xl leading-relaxed outline-none focus:border-teal-700"
+                          className="mt-2 h-24 w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-28 sm:text-2xl"
                           onChange={(event) => {
                             setSentenceAnswer(event.target.value);
                             setWritingResult("");
@@ -1242,7 +1247,11 @@ export default function StudySentencesPage() {
                               return;
                             }
 
-                            if (event.key === "Enter" && event.ctrlKey) {
+                            if (
+                              event.key === "Enter" &&
+                              !event.shiftKey &&
+                              !event.nativeEvent.isComposing
+                            ) {
                               event.preventDefault();
                               checkSentenceAnswer();
                             }
@@ -1264,8 +1273,8 @@ export default function StudySentencesPage() {
                       ) : null}
 
                       {writingResult === "wrong" && sentenceDiff ? (
-                        <div className="mt-4 rounded-md border border-zinc-200 bg-white p-4">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="mt-4 rounded-md border border-zinc-200 bg-white p-3 sm:p-4">
+                          <div className="flex flex-col items-start gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2">
                             <h3 className="text-sm font-semibold text-zinc-900">
                               Kết quả từng từ
                             </h3>
@@ -1276,7 +1285,7 @@ export default function StudySentencesPage() {
                               {sentenceDiff.counts.extra}
                             </p>
                           </div>
-                          <div className="mt-3 flex flex-wrap gap-2">
+                          <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
                             {sentenceDiff.items.map((item, itemIndex) => (
                               <SentenceDiffToken
                                 item={item}
@@ -1287,7 +1296,7 @@ export default function StudySentencesPage() {
                         </div>
                       ) : null}
 
-                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      <div className="mt-4 grid grid-cols-2 gap-2">
                         <button
                           className="min-h-11 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
                           onClick={checkSentenceAnswer}
@@ -1315,9 +1324,9 @@ export default function StudySentencesPage() {
                   )}
                 </div>
               ) : (
-                <div className="mt-8">
-                  <div className="rounded-lg bg-stone-50 p-5 text-center">
-                    <div className="text-3xl font-semibold leading-relaxed">
+                <div className="mt-6 sm:mt-8">
+                  <div className="rounded-lg bg-stone-50 p-4 text-center sm:p-5">
+                    <div className="text-2xl font-semibold leading-relaxed sm:text-3xl">
                       {card.sentence_cn}
                     </div>
                     {showPinyinHint && card.sentence_pinyin ? (
@@ -1329,6 +1338,7 @@ export default function StudySentencesPage() {
                     {card.sentence_audio_url ? (
                       <div className="mt-5 flex justify-center">
                         <audio
+                          className="w-full max-w-full sm:w-auto"
                           controls
                           onLoadedMetadata={(event) => {
                             event.currentTarget.playbackRate =

@@ -882,7 +882,7 @@ export default function StudyPage() {
     <AuthGuard>
       <AppShell>
         <div className="mx-auto max-w-2xl">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+          <div className="mb-5">
             <div>
               <h1 className="text-2xl font-semibold">Ôn tập</h1>
               <p className="mt-1 text-sm text-zinc-600">
@@ -893,9 +893,9 @@ export default function StudyPage() {
                 {studySettings.daily_new_card_limit}
               </p>
             </div>
-            <div className="flex flex-wrap justify-end gap-2">
+            <div className="mt-4 grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-start">
               <select
-                className="min-h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700"
+                className="col-span-2 min-h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700 sm:w-auto"
                 onChange={(event) => changeDeck(event.target.value)}
                 value={selectedDeckId}
               >
@@ -906,7 +906,7 @@ export default function StudyPage() {
                   </option>
                 ))}
               </select>
-              <div className="grid grid-cols-2 rounded-md border border-zinc-300 p-1 text-sm">
+              <div className="col-span-2 grid w-full grid-cols-2 rounded-md border border-zinc-300 p-1 text-sm sm:w-auto">
                 <button
                   className={`rounded px-3 py-2 ${
                     audioSpeed === "normal"
@@ -931,7 +931,7 @@ export default function StudyPage() {
                 </button>
               </div>
               <button
-                className={`rounded-md border px-4 py-2 text-sm font-medium ${
+                className={`min-h-10 w-full rounded-md border px-3 py-2 text-sm font-medium sm:w-auto sm:px-4 ${
                   writingMode
                     ? "border-teal-700 bg-teal-50 text-teal-800"
                     : "border-zinc-300 hover:bg-zinc-100"
@@ -942,7 +942,7 @@ export default function StudyPage() {
                 {writingMode ? "Đang luyện viết" : "Bật luyện viết"}
               </button>
               <button
-                className={`rounded-md border px-4 py-2 text-sm font-medium ${
+                className={`min-h-10 w-full rounded-md border px-3 py-2 text-sm font-medium sm:w-auto sm:px-4 ${
                   showPinyinHint
                     ? "border-teal-700 bg-teal-50 text-teal-800"
                     : "border-zinc-300 hover:bg-zinc-100"
@@ -952,8 +952,13 @@ export default function StudyPage() {
               >
                 {showPinyinHint ? "Tắt pinyin" : "Bật pinyin"}
               </button>
-              <p className="basis-full text-left text-xs text-zinc-500 sm:text-right">
-                Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Space hiện đáp án; sau khi hiện đáp án dùng R audio, 1-4 đánh giá. P pinyin, W luyện viết.
+              <p className="col-span-2 text-left text-xs leading-5 text-zinc-500 sm:basis-full sm:text-right">
+                <span className="sm:hidden">
+                  Space đáp án · R audio · P pinyin · W luyện viết · 1-4 đánh giá.
+                </span>
+                <span className="hidden sm:inline">
+                  Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Space hiện đáp án; sau khi hiện đáp án dùng R audio, 1-4 đánh giá. P pinyin, W luyện viết.
+                </span>
               </p>
             </div>
           </div>
@@ -980,34 +985,37 @@ export default function StudyPage() {
               title="Bạn đã ôn xong"
             />
           ) : (
-            <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+            <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
               <div className="text-sm text-zinc-500">
                 Thẻ {index + 1} / {reviews.length}
               </div>
 
-              <div className="mt-8 text-center">
+              <div className="mt-6 text-center sm:mt-8">
                 <div className="text-sm font-medium text-zinc-500">
                   Nghĩa tiếng Việt
                 </div>
-                <div className="mt-3 text-3xl font-semibold">
+                <div className="mt-3 text-2xl font-semibold sm:text-3xl">
                   {card.meaning_vi}
                 </div>
               </div>
 
               {!showAnswer ? (
-                <div className="mt-10">
+                <div className="mt-7 sm:mt-10">
                   {writingMode ? (
-                    <div className="rounded-lg border border-zinc-200 bg-stone-50 p-4">
+                    <div className="rounded-lg border border-zinc-200 bg-stone-50 p-3 sm:p-4">
                       <label className="block text-sm font-medium text-zinc-700">
                         Gõ chữ Hán bạn đoán
                         <input
-                          className="mt-2 w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-center text-3xl outline-none focus:border-teal-700"
+                          className="mt-2 w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-center text-2xl outline-none focus:border-teal-700 sm:text-3xl"
                           onChange={(event) => {
                             setWritingAnswer(event.target.value);
                             setWritingResult("");
                           }}
                           onKeyDown={(event) => {
-                            if (event.key === "Enter") {
+                            if (
+                              event.key === "Enter" &&
+                              !event.nativeEvent.isComposing
+                            ) {
                               event.preventDefault();
                               checkWritingAnswer();
                             }
@@ -1028,7 +1036,7 @@ export default function StudyPage() {
                         </p>
                       ) : null}
 
-                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      <div className="mt-4 grid grid-cols-2 gap-2">
                         <button
                           className="min-h-11 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
                           onClick={checkWritingAnswer}
@@ -1056,9 +1064,9 @@ export default function StudyPage() {
                   )}
                 </div>
               ) : (
-                <div className="mt-8">
-                  <div className="rounded-lg bg-stone-50 p-5 text-center">
-                    <div className="text-5xl font-semibold">{card.chinese}</div>
+                <div className="mt-6 sm:mt-8">
+                  <div className="rounded-lg bg-stone-50 p-4 text-center sm:p-5">
+                    <div className="text-4xl font-semibold sm:text-5xl">{card.chinese}</div>
                     {showPinyinHint && card?.pinyin ? (
                       <div className="mt-3 text-lg text-teal-800">
                         {card?.pinyin}
@@ -1067,7 +1075,7 @@ export default function StudyPage() {
                     <div className="mt-6 text-sm font-medium uppercase tracking-wide text-zinc-500">
                       Câu ví dụ
                     </div>
-                    <div className="mt-2 text-xl text-zinc-900">
+                    <div className="mt-2 text-lg text-zinc-900 sm:text-xl">
                       {card.example_cn}
                     </div>
                     {showPinyinHint && card.example_pinyin ? (
@@ -1081,6 +1089,7 @@ export default function StudyPage() {
                     <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
                       {card.word_audio_url ? (
                         <audio
+                          className="w-full max-w-full sm:w-auto"
                           controls
                           onLoadedMetadata={(event) => {
                             event.currentTarget.playbackRate =
@@ -1093,6 +1102,7 @@ export default function StudyPage() {
                       ) : null}
                       {card.sentence_audio_url ? (
                         <audio
+                          className="w-full max-w-full sm:w-auto"
                           controls
                           onLoadedMetadata={(event) => {
                             event.currentTarget.playbackRate =
