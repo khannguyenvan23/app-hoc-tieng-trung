@@ -32,6 +32,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
             <Link
               className="rounded-md px-3 py-2 hover:bg-zinc-100"
+              href="/statistics"
+            >
+              Thống kê
+            </Link>
+            <Link
+              className="rounded-md px-3 py-2 hover:bg-zinc-100"
               href="/dashboard"
             >
               Bộ thẻ
@@ -69,6 +75,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href="/study-sentences"
               >
                 Luyện câu
+              </Link>
+              <Link
+                className="rounded px-3 py-2 hover:bg-zinc-100"
+                href="/statistics"
+              >
+                Thống kê
               </Link>
               <Link
                 className="rounded px-3 py-2 hover:bg-zinc-100"

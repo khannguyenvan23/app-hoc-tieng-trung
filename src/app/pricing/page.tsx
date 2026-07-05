@@ -228,9 +228,12 @@ function PricingContent({
           </div>
           <div>
             <h2 className="text-lg font-semibold">Liên hệ</h2>
-            <p className="mt-2 text-sm leading-6 text-zinc-600">
-              Số điện thoại/Zalo: <span className="font-medium">{contactPhone}</span>
-            </p>
+            {rawContactPhone ? (
+              <p className="mt-2 text-sm leading-6 text-zinc-600">
+                Số điện thoại/Zalo: {" "}
+                <span className="font-medium">{contactPhone}</span>
+              </p>
+            ) : null}
             <p className="mt-1 text-sm leading-6 text-zinc-600">
               Điện thoại liên hệ: {" "}
               <a

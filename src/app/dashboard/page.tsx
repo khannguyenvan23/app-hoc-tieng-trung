@@ -380,13 +380,7 @@ export default function DashboardPage() {
   return (
     <AuthGuard>
       <AppShell>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold">Bộ thẻ</h1>
-            <p className="mt-1 text-sm text-zinc-600">
-              Sắp xếp từ vựng theo HSK, chủ đề hoặc khóa học.
-            </p>
-          </div>
+        <div className="flex justify-end">
           <PrimaryLink href="/decks/new">Tạo bộ thẻ</PrimaryLink>
         </div>
 
