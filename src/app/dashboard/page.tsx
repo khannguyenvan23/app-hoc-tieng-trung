@@ -12,21 +12,11 @@ import {
   type StudySettings,
 } from "@/lib/study-settings";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import type { Deck, ReviewRating, TemplateDeck } from "@/lib/types";
+import type { Deck, TemplateDeck } from "@/lib/types";
 
 type DashboardStats = {
   totalCards: number;
-  dueToday: number;
-  newToday: number;
   streakDays: number;
-};
-
-type ReviewStats = {
-  studiedToday: number;
-  ratingCounts: Record<ReviewRating, number>;
-  sevenDays: { key: string; label: string; count: number }[];
-  topDeckName: string;
-  topDeckCount: number;
 };
 
 type WeakReviewItem = {
@@ -41,40 +31,12 @@ type WeakReviewItem = {
 
 const emptyStats: DashboardStats = {
   totalCards: 0,
-  dueToday: 0,
-  newToday: 0,
   streakDays: 0,
-};
-
-const emptyReviewStats: ReviewStats = {
-  studiedToday: 0,
-  ratingCounts: {
-    again: 0,
-    hard: 0,
-    good: 0,
-    easy: 0,
-  },
-  sevenDays: [],
-  topDeckName: "Chưa có dữ liệu",
-  topDeckCount: 0,
-};
-
-const ratingLabels: Record<ReviewRating, string> = {
-  again: "Quên",
-  hard: "Khó",
-  good: "Nhớ",
-  easy: "Dễ",
 };
 
 function startOfLocalDay(date: Date) {
   const nextDate = new Date(date);
   nextDate.setHours(0, 0, 0, 0);
-  return nextDate;
-}
-
-function endOfLocalDay(date: Date) {
-  const nextDate = new Date(date);
-  nextDate.setHours(23, 59, 59, 999);
   return nextDate;
 }
 
@@ -90,40 +52,6 @@ function addLocalDays(date: Date, days: number) {
   const nextDate = new Date(date);
   nextDate.setDate(nextDate.getDate() + days);
   return nextDate;
-}
-
-function getLastSevenDays() {
-  const today = startOfLocalDay(new Date());
-
-  return Array.from({ length: 7 }, (_, index) => {
-    const date = addLocalDays(today, index - 6);
-    return {
-      key: toLocalDateKey(date),
-      label: date.toLocaleDateString("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-      }),
-      count: 0,
-    };
-  });
-}
-
-function getNestedDeckName(review: unknown, relationName: string) {
-  const relation = (review as Record<string, unknown>)[relationName];
-  const item = Array.isArray(relation) ? relation[0] : relation;
-
-  if (!item || typeof item !== "object") {
-    return "Không rõ deck";
-  }
-
-  const decks = (item as Record<string, unknown>).decks;
-  const deck = Array.isArray(decks) ? decks[0] : decks;
-
-  if (!deck || typeof deck !== "object") {
-    return "Không rõ deck";
-  }
-
-  return String((deck as Record<string, unknown>).name || "Không rõ deck");
 }
 
 function getRelationObject(source: unknown, relationName: string) {
@@ -203,68 +131,6 @@ function buildWeakReviewItems(
     .slice(0, 8);
 }
 
-function calculateReviewStats(
-  cardReviews: unknown[],
-  sentenceReviews: unknown[],
-) {
-  const todayKey = toLocalDateKey(new Date());
-  const sevenDays = getLastSevenDays();
-  const sevenDayMap = new Map(sevenDays.map((day) => [day.key, day]));
-  const ratingCounts: Record<ReviewRating, number> = {
-    again: 0,
-    hard: 0,
-    good: 0,
-    easy: 0,
-  };
-  const deckCounts = new Map<string, number>();
-  let studiedToday = 0;
-
-  const handleReview = (review: unknown, relationName: string) => {
-    const row = review as {
-      updated_at?: string;
-      last_rating?: ReviewRating | null;
-    };
-
-    if (!row.updated_at) {
-      return;
-    }
-
-    const dayKey = toLocalDateKey(row.updated_at);
-
-    if (dayKey === todayKey) {
-      studiedToday += 1;
-    }
-
-    const day = sevenDayMap.get(dayKey);
-
-    if (day) {
-      day.count += 1;
-    }
-
-    if (row.last_rating && row.last_rating in ratingCounts) {
-      ratingCounts[row.last_rating] += 1;
-    }
-
-    const deckName = getNestedDeckName(review, relationName);
-    deckCounts.set(deckName, (deckCounts.get(deckName) || 0) + 1);
-  };
-
-  cardReviews.forEach((review) => handleReview(review, "cards"));
-  sentenceReviews.forEach((review) => handleReview(review, "sentence_cards"));
-
-  const topDeck = Array.from(deckCounts.entries()).sort(
-    (left, right) => right[1] - left[1],
-  )[0];
-
-  return {
-    studiedToday,
-    ratingCounts,
-    sevenDays,
-    topDeckName: topDeck?.[0] || "Chưa có dữ liệu",
-    topDeckCount: topDeck?.[1] || 0,
-  };
-}
-
 function calculateStreak(reviewDates: string[]) {
   const studiedDays = new Set(reviewDates.map(toLocalDateKey));
 
@@ -296,7 +162,6 @@ export default function DashboardPage() {
   const [templateMessage, setTemplateMessage] = useState("");
   const [studySettings, setStudySettings] =
     useState<StudySettings>(defaultStudySettings);
-  const [reviewStats, setReviewStats] = useState<ReviewStats>(emptyReviewStats);
   const [weakItems, setWeakItems] = useState<WeakReviewItem[]>([]);
   const [savingSettings, setSavingSettings] = useState(false);
   const [onboardingMessage, setOnboardingMessage] = useState("");
@@ -308,10 +173,6 @@ export default function DashboardPage() {
 
     let active = true;
     const supabase = createSupabaseBrowserClient();
-    const todayStart = startOfLocalDay(new Date()).toISOString();
-    const todayEnd = endOfLocalDay(new Date()).toISOString();
-    const sevenDaysStart = addLocalDays(startOfLocalDay(new Date()), -6).toISOString();
-
     Promise.all([
       supabase.from("decks").select("*").order("created_at", {
         ascending: false,
@@ -320,22 +181,6 @@ export default function DashboardPage() {
       supabase
         .from("sentence_cards")
         .select("id", { count: "exact", head: true }),
-      supabase
-        .from("reviews")
-        .select("id", { count: "exact", head: true })
-        .lte("next_review_at", todayEnd),
-      supabase
-        .from("sentence_reviews")
-        .select("id", { count: "exact", head: true })
-        .lte("next_review_at", todayEnd),
-      supabase
-        .from("cards")
-        .select("id", { count: "exact", head: true })
-        .gte("created_at", todayStart),
-      supabase
-        .from("sentence_cards")
-        .select("id", { count: "exact", head: true })
-        .gte("created_at", todayStart),
       supabase
         .from("reviews")
         .select("updated_at")
@@ -350,20 +195,6 @@ export default function DashboardPage() {
         .limit(250),
       fetchWithAuth("/api/template-decks"),
       fetchWithAuth("/api/study-settings"),
-      supabase
-        .from("reviews")
-        .select("updated_at, last_rating, cards!inner(decks(name))")
-        .gt("review_count", 0)
-        .gte("updated_at", sevenDaysStart)
-        .order("updated_at", { ascending: false })
-        .limit(500),
-      supabase
-        .from("sentence_reviews")
-        .select("updated_at, last_rating, sentence_cards!inner(decks(name))")
-        .gt("review_count", 0)
-        .gte("updated_at", sevenDaysStart)
-        .order("updated_at", { ascending: false })
-        .limit(500),
       supabase
         .from("reviews")
         .select(
@@ -387,16 +218,10 @@ export default function DashboardPage() {
         decksResult,
         cardsCountResult,
         sentenceCardsCountResult,
-        dueCardsResult,
-        dueSentenceCardsResult,
-        newCardsResult,
-        newSentenceCardsResult,
         reviewedCardsResult,
         reviewedSentenceCardsResult,
         templatesResponse,
         settingsResponse,
-        sevenDayReviewsResult,
-        sevenDaySentenceReviewsResult,
         weakReviewsResult,
         weakSentenceReviewsResult,
       ]) => {
@@ -430,19 +255,8 @@ export default function DashboardPage() {
           totalCards:
             (cardsCountResult.count || 0) +
             (sentenceCardsCountResult.count || 0),
-          dueToday:
-            (dueCardsResult.count || 0) + (dueSentenceCardsResult.count || 0),
-          newToday:
-            (newCardsResult.count || 0) +
-            (newSentenceCardsResult.count || 0),
           streakDays: calculateStreak(reviewDates),
         });
-        setReviewStats(
-          calculateReviewStats(
-            sevenDayReviewsResult.data || [],
-            sevenDaySentenceReviewsResult.data || [],
-          ),
-        );
         setWeakItems(
           buildWeakReviewItems(
             weakReviewsResult.error ? [] : weakReviewsResult.data || [],
@@ -677,39 +491,29 @@ export default function DashboardPage() {
           </section>
         ) : null}
 
-        <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
-            <div className="text-sm text-zinc-500">Tổng số thẻ</div>
-            <div className="mt-2 text-3xl font-semibold">
-              {loading ? "..." : stats.totalCards}
-            </div>
-            <p className="mt-1 text-xs text-zinc-500">Từ vựng và câu luyện tập</p>
-          </div>
-          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
-            <div className="text-sm text-zinc-500">Cần ôn hôm nay</div>
-            <div className="mt-2 text-3xl font-semibold text-teal-800">
-              {loading ? "..." : stats.dueToday}
-            </div>
-            <p className="mt-1 text-xs text-zinc-500">Tính đến hết hôm nay</p>
-          </div>
-          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
-            <div className="text-sm text-zinc-500">Mới import hôm nay</div>
-            <div className="mt-2 text-3xl font-semibold">
-              {loading ? "..." : stats.newToday}
-            </div>
-            <p className="mt-1 text-xs text-zinc-500">Thẻ vừa thêm trong ngày</p>
-          </div>
-          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
-            <div className="text-sm text-zinc-500">Streak học</div>
-            <div className="mt-2 text-3xl font-semibold">
-              {loading ? "..." : stats.streakDays}
-            </div>
-            <p className="mt-1 text-xs text-zinc-500">Ngày học liên tiếp</p>
-          </div>
-        </section>
-
         <section className="mt-8">
-          <h2 className="text-lg font-semibold">Bộ thẻ của bạn</h2>
+          <div className="flex flex-col gap-4 border-y border-zinc-200 py-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase text-teal-800">
+                Tủ học cá nhân
+              </p>
+              <h2 className="mt-1 text-2xl font-semibold">Bộ thẻ của bạn</h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                Chọn một bộ thẻ để thêm nội dung, chỉnh sửa hoặc bắt đầu học.
+              </p>
+            </div>
+            <div className="flex min-w-40 items-center justify-between gap-4 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 sm:block sm:text-center">
+              <div className="text-sm font-medium text-teal-900">Streak học</div>
+              <div>
+                <span className="text-3xl font-semibold text-teal-800">
+                  {loading ? "..." : stats.streakDays}
+                </span>
+                <span className="ml-2 text-xs text-teal-800 sm:ml-0 sm:block">
+                  ngày liên tiếp
+                </span>
+              </div>
+            </div>
+          </div>
 
           <div className="mt-4">
             {loading ? (
@@ -737,89 +541,6 @@ export default function DashboardPage() {
                 ))}
               </div>
             )}
-          </div>
-        </section>
-
-        <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">Thống kê học</h2>
-              <p className="mt-1 text-sm text-zinc-600">
-                Dựa trên lượt ôn gần nhất của từng thẻ trong 7 ngày qua.
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-zinc-500">Đã học hôm nay</div>
-              <div className="text-3xl font-semibold text-teal-800">
-                {loading ? "..." : reviewStats.studiedToday}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1.4fr_1fr]">
-            <div>
-              <h3 className="text-sm font-semibold">Quên / Khó / Nhớ / Dễ</h3>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {(Object.keys(ratingLabels) as ReviewRating[]).map((rating) => (
-                  <div
-                    className="rounded-md border border-zinc-200 bg-zinc-50 p-3"
-                    key={rating}
-                  >
-                    <div className="text-xs text-zinc-500">
-                      {ratingLabels[rating]}
-                    </div>
-                    <div className="mt-1 text-2xl font-semibold">
-                      {loading ? "..." : reviewStats.ratingCounts[rating]}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold">7 ngày gần nhất</h3>
-              <div className="mt-3 flex h-40 items-end gap-2 rounded-md border border-zinc-200 bg-zinc-50 p-3">
-                {reviewStats.sevenDays.map((day) => {
-                  const maxCount = Math.max(
-                    1,
-                    ...reviewStats.sevenDays.map((item) => item.count),
-                  );
-                  const height = `${Math.max(8, (day.count / maxCount) * 100)}%`;
-
-                  return (
-                    <div
-                      className="flex h-full flex-1 flex-col justify-end gap-2 text-center"
-                      key={day.key}
-                    >
-                      <div className="text-xs font-medium text-zinc-600">
-                        {day.count}
-                      </div>
-                      <div
-                        className="mx-auto w-full rounded-t bg-teal-700"
-                        style={{ height }}
-                      />
-                      <div className="text-[11px] text-zinc-500">
-                        {day.label}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold">Deck học nhiều nhất</h3>
-              <div className="mt-3 rounded-md border border-zinc-200 bg-zinc-50 p-4">
-                <div className="text-lg font-semibold">
-                  {loading ? "..." : reviewStats.topDeckName}
-                </div>
-                <p className="mt-2 text-sm text-zinc-600">
-                  {loading
-                    ? "Đang tải..."
-                    : `${reviewStats.topDeckCount} lượt ôn trong 7 ngày qua`}
-                </p>
-              </div>
-            </div>
           </div>
         </section>
 
