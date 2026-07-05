@@ -155,6 +155,7 @@ export default function StudyPage() {
   const repairingReviewsRef = useRef(false);
   const pendingReviewSavesRef = useRef<Promise<void>[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
+  const [decksLoaded, setDecksLoaded] = useState(!configured);
   const [weakOnly] = useState(() => isWeakStudyRequest());
   const [selectedDeckId, setSelectedDeckId] = useState(() => {
     if (typeof window === "undefined") {
@@ -404,14 +405,28 @@ export default function StudyPage() {
 
     supabase
       .from("decks")
-      .select("*")
+      .select("*, cards!inner(id)")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         if (!active) {
           return;
         }
 
-        setDecks((data || []) as Deck[]);
+        const vocabularyDecks = (data || []) as Deck[];
+
+        setDecks(vocabularyDecks);
+        setSelectedDeckId((currentDeckId) => {
+          if (
+            currentDeckId === allDecksValue ||
+            vocabularyDecks.some((deck) => deck.id === currentDeckId)
+          ) {
+            return currentDeckId;
+          }
+
+          window.localStorage.setItem("hanzi-study-deck-id", allDecksValue);
+          return allDecksValue;
+        });
+        setDecksLoaded(true);
       });
 
     return () => {
@@ -459,7 +474,7 @@ export default function StudyPage() {
   }, [configured]);
 
   useEffect(() => {
-    if (!configured || !settingsLoaded) {
+    if (!configured || !settingsLoaded || !decksLoaded) {
       return;
     }
 
@@ -566,6 +581,7 @@ export default function StudyPage() {
     };
   }, [
     configured,
+    decksLoaded,
     getNewCardsStudiedToday,
     selectedDeckId,
     settingsLoaded,
