@@ -148,12 +148,14 @@ export default function StudySentencesPage() {
     showAnswer: () => void;
     togglePinyin: () => void;
     toggleWriting: () => void;
+    toggleDictation: () => void;
     rate: (rating: ReviewRating) => void;
   }>({
     replayAudio: () => {},
     showAnswer: () => {},
     togglePinyin: () => {},
     toggleWriting: () => {},
+    toggleDictation: () => {},
     rate: () => {},
   });
   const repairingReviewsRef = useRef(false);
@@ -196,6 +198,12 @@ export default function StudySentencesPage() {
       return false;
     }
     return window.localStorage.getItem("hanzi-sentence-writing-mode") === "true";
+  });
+  const [dictationMode, setDictationMode] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    return window.localStorage.getItem("hanzi-sentence-dictation-mode") === "true";
   });
   const [sentenceAnswer, setSentenceAnswer] = useState("");
   const [writingResult, setWritingResult] = useState<"correct" | "wrong" | "">(
@@ -668,9 +676,32 @@ export default function StudySentencesPage() {
   function toggleWritingMode() {
     const nextValue = !writingMode;
     setWritingMode(nextValue);
+    if (nextValue) {
+      setDictationMode(false);
+      window.localStorage.setItem("hanzi-sentence-dictation-mode", "false");
+    }
     setSentenceAnswer("");
     setWritingResult("");
     window.localStorage.setItem("hanzi-sentence-writing-mode", String(nextValue));
+  }
+
+  function toggleDictationMode() {
+    const nextValue = !dictationMode;
+    stopSentenceAudio();
+    setDictationMode(nextValue);
+    setShowAnswer(false);
+    setSentenceAnswer("");
+    setWritingResult("");
+
+    if (nextValue) {
+      setWritingMode(false);
+      window.localStorage.setItem("hanzi-sentence-writing-mode", "false");
+    }
+
+    window.localStorage.setItem(
+      "hanzi-sentence-dictation-mode",
+      String(nextValue),
+    );
   }
 
   async function playSentenceAudio() {
@@ -738,6 +769,9 @@ export default function StudySentencesPage() {
       } else if (key === "w") {
         event.preventDefault();
         keyboardActionsRef.current.toggleWriting();
+      } else if (key === "d") {
+        event.preventDefault();
+        keyboardActionsRef.current.toggleDictation();
       } else if (rating) {
         event.preventDefault();
         keyboardActionsRef.current.rate(rating);
@@ -865,13 +899,14 @@ export default function StudySentencesPage() {
   useEffect(() => {
     keyboardActionsRef.current = {
       replayAudio: () => {
-        if (showAnswer) {
+        if (showAnswer || dictationMode) {
           void playSentenceAudio();
         }
       },
       showAnswer: showAnswerAndPlayAudio,
       togglePinyin: togglePinyinHint,
       toggleWriting: toggleWritingMode,
+      toggleDictation: toggleDictationMode,
       rate: (rating) => {
         if (showAnswer) {
           rate(rating);
@@ -882,6 +917,22 @@ export default function StudySentencesPage() {
 
   const current = reviews[index];
   const card = current?.sentence_cards;
+  const currentCardId = card?.id;
+
+  useEffect(() => {
+    if (!dictationMode || showAnswer || !currentCardId) {
+      return;
+    }
+
+    const playTimer = window.setTimeout(() => {
+      replaySentenceAudioRef.current();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(playTimer);
+    };
+  }, [currentCardId, dictationMode, showAnswer]);
+
   const vocabItems = Array.isArray(card?.vocab_json) ? card.vocab_json : [];
   const selectedDeckName =
     selectedDeckId === allDecksValue
@@ -953,6 +1004,17 @@ export default function StudySentencesPage() {
               </button>
               <button
                 className={`rounded-md border px-4 py-2 text-sm font-medium ${
+                  dictationMode
+                    ? "border-teal-700 bg-teal-50 text-teal-800"
+                    : "border-zinc-300 hover:bg-zinc-100"
+                }`}
+                onClick={toggleDictationMode}
+                type="button"
+              >
+                {dictationMode ? "Đang chính tả" : "Bật chính tả"}
+              </button>
+              <button
+                className={`rounded-md border px-4 py-2 text-sm font-medium ${
                   showPinyinHint
                     ? "border-teal-700 bg-teal-50 text-teal-800"
                     : "border-zinc-300 hover:bg-zinc-100"
@@ -963,7 +1025,7 @@ export default function StudySentencesPage() {
                 {showPinyinHint ? "Tắt pinyin" : "Bật pinyin"}
               </button>
               <p className="basis-full text-left text-xs text-zinc-500 sm:text-right">
-                Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Space hiện đáp án; sau khi hiện đáp án dùng R audio, 1-4 đánh giá. P pinyin, W luyện viết.
+                Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Space hiện đáp án; R audio, 1-4 đánh giá. P pinyin, W luyện viết, D chính tả.
               </p>
               {audioNotice ? (
                 <p className="basis-full text-left text-xs text-red-700 sm:text-right">
@@ -992,20 +1054,45 @@ export default function StudySentencesPage() {
               </div>
 
               <div className="mt-8 text-center">
-                <div className="text-sm font-medium text-zinc-500">
-                  Câu tiếng Việt
-                </div>
-                <div className="mt-3 text-3xl font-semibold leading-tight">
-                  {card.sentence_vi}
-                </div>
+                {dictationMode && !showAnswer ? (
+                  <div>
+                    <div className="text-sm font-medium text-zinc-500">
+                      Luyện chính tả
+                    </div>
+                    <div className="mt-3 text-2xl font-semibold leading-tight">
+                      Nghe và chép lại câu tiếng Trung
+                    </div>
+                    <button
+                      className="mt-5 min-h-10 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
+                      disabled={creatingAudioId === card.id}
+                      onClick={() => void playSentenceAudio()}
+                      type="button"
+                    >
+                      {creatingAudioId === card.id
+                        ? "Đang tạo audio..."
+                        : "Phát lại audio"}
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="text-sm font-medium text-zinc-500">
+                      Câu tiếng Việt
+                    </div>
+                    <div className="mt-3 text-3xl font-semibold leading-tight">
+                      {card.sentence_vi}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {!showAnswer ? (
                 <div className="mt-10">
-                  {writingMode ? (
+                  {writingMode || dictationMode ? (
                     <div className="rounded-lg border border-zinc-200 bg-stone-50 p-4">
                       <label className="block text-sm font-medium text-zinc-700">
-                        Gõ câu tiếng Trung
+                        {dictationMode
+                          ? "Gõ lại câu tiếng Trung vừa nghe"
+                          : "Gõ câu tiếng Trung"}
                         <textarea
                           className="mt-2 h-28 w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-center text-2xl leading-relaxed outline-none focus:border-teal-700"
                           onChange={(event) => {
