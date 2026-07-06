@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { trackPublicAnalyticsEvent } from "@/lib/analytics-client";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type AuthMode = "login" | "signup" | "forgot";
@@ -90,6 +91,10 @@ export default function LoginPage() {
       setIsError(true);
       setMessage(result.error.message);
       return;
+    }
+
+    if (mode === "signup") {
+      trackPublicAnalyticsEvent("signup_submitted", "/login");
     }
 
     if (mode === "signup" && !result.data.session) {

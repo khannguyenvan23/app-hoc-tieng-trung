@@ -39,6 +39,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 OPENAI_API_KEY=
 NEXT_PUBLIC_CONTACT_PHONE=
+ANALYTICS_ADMIN_EMAILS=
 ```
 
 `OPENAI_API_KEY` is optional for local UI testing. Without it, import still creates cards with fallback data but no audio.
@@ -68,6 +69,7 @@ OPENAI_MODEL=gpt-4.1-mini
 OPENAI_TTS_MODEL=gpt-4o-mini-tts
 OPENAI_TTS_VOICE=alloy
 NEXT_PUBLIC_CONTACT_PHONE=
+ANALYTICS_ADMIN_EMAILS=admin@example.com
 ```
 
 4. Use the default build settings:
@@ -86,7 +88,13 @@ Before production use, make sure Supabase has all SQL migrations applied:
 supabase/migrations/001_initial_schema.sql
 supabase/migrations/002_add_example_pinyin.sql
 supabase/migrations/003_sentence_cards.sql
+supabase/migrations/020_analytics_funnel.sql
 ```
+
+`ANALYTICS_ADMIN_EMAILS` accepts one or more comma-separated email addresses.
+Only these accounts can see the website funnel in `/statistics`. Vercel Web
+Analytics must also be enabled once in **Project > Analytics** to view anonymous
+traffic sources, countries, devices, and page views in Vercel.
 
 For Supabase Auth, add the deployed site URL to **Authentication > URL Configuration**:
 

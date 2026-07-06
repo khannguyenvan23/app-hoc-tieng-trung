@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ActiveDayTracker } from "@/components/active-day-tracker";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -15,6 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-stone-50 text-zinc-950">
+      <ActiveDayTracker />
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:py-4">
           <Link href="/dashboard" className="font-semibold">

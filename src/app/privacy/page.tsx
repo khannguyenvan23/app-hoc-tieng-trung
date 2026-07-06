@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { absoluteSiteUrl, siteConfig } from "@/lib/site";
 
-const lastUpdated = "03/07/2026";
+const lastUpdated = "06/07/2026";
 const contactEmail = "support@khanweb.vn";
 
 export const metadata: Metadata = {
@@ -91,8 +91,9 @@ export default function PrivacyPage() {
             <p className="mt-3">
               Tiếng Trung Hihi sử dụng Supabase để quản lý đăng nhập, cơ sở dữ liệu
               và lưu phiên người dùng. App có thể sử dụng OpenAI để tạo nội dung
-              học tập và audio. Các dịch vụ này xử lý dữ liệu theo chính sách và
-              điều khoản riêng của họ.
+              học tập và audio, đồng thời sử dụng Vercel Web Analytics để đo lượt
+              truy cập ẩn danh và hiệu suất website. Các dịch vụ này xử lý dữ liệu
+              theo chính sách và điều khoản riêng của họ.
             </p>
           </section>
 
@@ -103,7 +104,9 @@ export default function PrivacyPage() {
             <p className="mt-3">
               App có thể dùng cookie hoặc localStorage để giữ phiên đăng nhập,
               lưu lựa chọn học như deck đang chọn, tốc độ audio, luyện viết và
-              trạng thái bật/tắt pinyin.
+              trạng thái bật/tắt pinyin. App cũng lưu một mã khách truy cập ngẫu
+              nhiên trong trình duyệt để đếm lượt truy cập và đo các bước sử dụng;
+              mã này không chứa email hay nội dung học tập.
             </p>
           </section>
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function getSafeNextPath(next: string | null) {
@@ -29,6 +30,18 @@ export async function GET(request: Request) {
     redirectUrl.searchParams.set("auth_error", "callback_failed");
     return NextResponse.redirect(redirectUrl, {
       headers: { "Cache-Control": "no-store" },
+    });
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    await recordAnalyticsEvent({
+      dedupeKey: `email_verified:${user.id}`,
+      eventName: "email_verified",
+      userId: user.id,
     });
   }
 

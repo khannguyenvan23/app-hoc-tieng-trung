@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 import { getRequestUser } from "@/lib/auth";
 import { getNextReview } from "@/lib/review";
 import {
@@ -158,6 +159,14 @@ export async function POST(request: Request) {
   if (error) {
     console.error(error);
     return NextResponse.json({ error: "Review update failed" }, { status: 500 });
+  }
+
+  if (Number(review.review_count || 0) === 0) {
+    await recordAnalyticsEvent({
+      dedupeKey: `first_study:${user.id}`,
+      eventName: "first_study",
+      userId: user.id,
+    });
   }
 
   return NextResponse.json({ success: true, ...nextReview });

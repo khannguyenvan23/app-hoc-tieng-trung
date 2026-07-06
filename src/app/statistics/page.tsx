@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { AdminAnalytics } from "@/components/admin-analytics";
 import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
@@ -234,6 +235,7 @@ export default function StatisticsPage() {
   return (
     <AuthGuard>
       <AppShell>
+        <AdminAnalytics />
         <div>
           <h1 className="text-2xl font-semibold">Thống kê học từ vựng</h1>
           <p className="mt-1 text-sm text-zinc-600">
