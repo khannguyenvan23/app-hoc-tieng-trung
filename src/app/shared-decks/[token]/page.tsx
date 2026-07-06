@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "@/lib/fetch-auth";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type SharedDeckPreview = {
   deck: { id: string; name: string };
@@ -28,6 +29,31 @@ export default function SharedDeckPage() {
   const [loading, setLoading] = useState(true);
   const [copying, setCopying] = useState(false);
   const [message, setMessage] = useState("");
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const supabase = createSupabaseBrowserClient();
+
+    supabase.auth.getUser().then(({ data }) => {
+      if (active) {
+        setSignedIn(Boolean(data.user));
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) {
+        setSignedIn(Boolean(session?.user));
+      }
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -96,9 +122,23 @@ export default function SharedDeckPage() {
           <Link className="font-semibold" href="/">
             Tiếng Trung Hihi
           </Link>
-          <Link className="text-sm font-medium text-teal-800 hover:underline" href="/login">
-            Đăng nhập
-          </Link>
+          {signedIn ? (
+            <Link
+              className="text-sm font-medium text-teal-800 hover:underline"
+              href="/dashboard"
+            >
+              Về dashboard
+            </Link>
+          ) : signedIn === false ? (
+            <Link
+              className="text-sm font-medium text-teal-800 hover:underline"
+              href={`/login?next=${encodeURIComponent(`/shared-decks/${params.token}`)}`}
+            >
+              Đăng nhập
+            </Link>
+          ) : (
+            <span className="text-sm text-zinc-400">Đang kiểm tra...</span>
+          )}
         </div>
       </header>
 
@@ -126,7 +166,11 @@ export default function SharedDeckPage() {
                 onClick={copyDeck}
                 type="button"
               >
-                {copying ? "Đang thêm..." : "Thêm vào tài khoản"}
+                {copying
+                  ? "Đang thêm..."
+                  : signedIn === false
+                    ? "Đăng nhập để thêm"
+                    : "Thêm vào tài khoản"}
               </button>
               {message ? <p className="mt-3 text-sm text-red-700">{message}</p> : null}
             </section>

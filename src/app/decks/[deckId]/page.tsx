@@ -26,6 +26,10 @@ export default function DeckPage() {
   const [loading, setLoading] = useState(configured);
   const [actionLoading, setActionLoading] = useState<DeckAction | "">("");
   const [actionMessage, setActionMessage] = useState("");
+  const [editingName, setEditingName] = useState(false);
+  const [deckName, setDeckName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [nameMessage, setNameMessage] = useState("");
   const [shareLoading, setShareLoading] = useState(false);
   const [shareToken, setShareToken] = useState("");
   const [shareMessage, setShareMessage] = useState("");
@@ -50,7 +54,9 @@ export default function DeckPage() {
         .eq("deck_id", params.deckId)
         .order("created_at", { ascending: false }),
     ]).then(([deckResult, cardsResult, sentenceCardsResult]) => {
-      setDeck((deckResult.data as Deck) || null);
+      const loadedDeck = (deckResult.data as Deck) || null;
+      setDeck(loadedDeck);
+      setDeckName(loadedDeck?.name || "");
       setCards((cardsResult.data || []) as Card[]);
       setSentenceCards((sentenceCardsResult.data || []) as SentenceCard[]);
       setLoading(false);
@@ -110,6 +116,48 @@ export default function DeckPage() {
     }
 
     setActionMessage("Đã reset tiến độ học của bộ thẻ.");
+  }
+
+  async function saveDeckName() {
+    const nextName = deckName.trim();
+
+    if (!deck || !nextName) {
+      setNameMessage("Tên bộ thẻ không được để trống.");
+      return;
+    }
+
+    if (nextName === deck.name) {
+      setEditingName(false);
+      setNameMessage("");
+      return;
+    }
+
+    setSavingName(true);
+    setNameMessage("");
+    const supabase = createSupabaseBrowserClient();
+    const { data, error } = await supabase
+      .from("decks")
+      .update({ name: nextName })
+      .eq("id", deck.id)
+      .select("*")
+      .single();
+    setSavingName(false);
+
+    if (error || !data) {
+      setNameMessage("Không thể đổi tên bộ thẻ.");
+      return;
+    }
+
+    setDeck(data as Deck);
+    setDeckName(data.name);
+    setEditingName(false);
+    setNameMessage("Đã đổi tên bộ thẻ.");
+  }
+
+  function cancelEditingName() {
+    setDeckName(deck?.name || "");
+    setEditingName(false);
+    setNameMessage("");
   }
 
   async function createShareLink() {
@@ -187,10 +235,73 @@ export default function DeckPage() {
           <>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h1 className="text-2xl font-semibold">{deck.name}</h1>
+                {editingName ? (
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <input
+                      autoFocus
+                      className="min-h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-lg font-semibold outline-none focus:border-teal-700 sm:w-72"
+                      maxLength={100}
+                      onChange={(event) => setDeckName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          void saveDeckName();
+                        }
+                        if (event.key === "Escape") {
+                          cancelEditingName();
+                        }
+                      }}
+                      value={deckName}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        className="min-h-10 rounded-md bg-teal-700 px-3 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+                        disabled={savingName}
+                        onClick={() => void saveDeckName()}
+                        type="button"
+                      >
+                        {savingName ? "Đang lưu..." : "Lưu"}
+                      </button>
+                      <button
+                        className="min-h-10 rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100"
+                        disabled={savingName}
+                        onClick={cancelEditingName}
+                        type="button"
+                      >
+                        Hủy
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-2xl font-semibold">{deck.name}</h1>
+                    <button
+                      className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium hover:bg-zinc-100"
+                      onClick={() => {
+                        setDeckName(deck.name);
+                        setEditingName(true);
+                        setNameMessage("");
+                      }}
+                      type="button"
+                    >
+                      Đổi tên
+                    </button>
+                  </div>
+                )}
                 <p className="mt-1 text-sm text-zinc-600">
                   {cards.length} thẻ từ vựng · {sentenceCards.length} câu luyện tập
                 </p>
+                {nameMessage ? (
+                  <p
+                    className={`mt-2 text-sm ${
+                      nameMessage.startsWith("Đã")
+                        ? "text-teal-700"
+                        : "text-red-700"
+                    }`}
+                  >
+                    {nameMessage}
+                  </p>
+                ) : null}
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link
