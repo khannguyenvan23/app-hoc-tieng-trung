@@ -898,84 +898,14 @@ export default function StudyPage() {
       <AppShell>
         <div className="mx-auto max-w-2xl">
           <div className="mb-5">
-            <div>
-              <h1 className="text-2xl font-semibold">Ôn tập</h1>
-              <p className="mt-1 text-sm text-zinc-600">
-                {reviews.length} thẻ cần ôn ngay trong {selectedDeckName}
-              </p>
-              <p className="mt-1 text-xs text-zinc-500">
-                Từ mới hôm nay: {newCardsStudiedToday} /{" "}
-                {studySettings.daily_new_card_limit}
-              </p>
-            </div>
-            <div className="mt-4 grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-start">
-              <select
-                className="col-span-2 min-h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700 sm:w-auto"
-                onChange={(event) => changeDeck(event.target.value)}
-                value={selectedDeckId}
-              >
-                <option value={allDecksValue}>Tất cả bộ thẻ</option>
-                {decks.map((deck) => (
-                  <option key={deck.id} value={deck.id}>
-                    {deck.name}
-                  </option>
-                ))}
-              </select>
-              <div className="col-span-2 grid w-full grid-cols-2 rounded-md border border-zinc-300 p-1 text-sm sm:w-auto">
-                <button
-                  className={`rounded px-3 py-2 ${
-                    audioSpeed === "normal"
-                      ? "bg-teal-700 text-white"
-                      : "hover:bg-zinc-100"
-                  }`}
-                  onClick={() => changeAudioSpeed("normal")}
-                  type="button"
-                >
-                  Bình thường
-                </button>
-                <button
-                  className={`rounded px-3 py-2 ${
-                    audioSpeed === "slow"
-                      ? "bg-teal-700 text-white"
-                      : "hover:bg-zinc-100"
-                  }`}
-                  onClick={() => changeAudioSpeed("slow")}
-                  type="button"
-                >
-                  Chậm
-                </button>
-              </div>
-              <button
-                className={`min-h-10 w-full rounded-md border px-3 py-2 text-sm font-medium sm:w-auto sm:px-4 ${
-                  writingMode
-                    ? "border-teal-700 bg-teal-50 text-teal-800"
-                    : "border-zinc-300 hover:bg-zinc-100"
-                }`}
-                onClick={toggleWritingMode}
-                type="button"
-              >
-                {writingMode ? "Đang luyện viết" : "Bật luyện viết"}
-              </button>
-              <button
-                className={`min-h-10 w-full rounded-md border px-3 py-2 text-sm font-medium sm:w-auto sm:px-4 ${
-                  showPinyinHint
-                    ? "border-teal-700 bg-teal-50 text-teal-800"
-                    : "border-zinc-300 hover:bg-zinc-100"
-                }`}
-                onClick={togglePinyinHint}
-                type="button"
-              >
-                {showPinyinHint ? "Tắt pinyin" : "Bật pinyin"}
-              </button>
-              <p className="col-span-2 text-left text-xs leading-5 text-zinc-500 sm:basis-full sm:text-right">
-                <span className="sm:hidden">
-                  Space đáp án · R audio · P pinyin · W luyện viết · 1-4 đánh giá.
-                </span>
-                <span className="hidden sm:inline">
-                  Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Space hiện đáp án; sau khi hiện đáp án dùng R audio, 1-4 đánh giá. P pinyin, W luyện viết.
-                </span>
-              </p>
-            </div>
+            <h1 className="text-2xl font-semibold">Ôn tập</h1>
+            <p className="mt-1 text-sm text-zinc-600">
+              {reviews.length} thẻ cần ôn ngay trong {selectedDeckName}
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Từ mới hôm nay: {newCardsStudiedToday} /{" "}
+              {studySettings.daily_new_card_limit}
+            </p>
           </div>
 
           {creditNotice ? (
@@ -1159,6 +1089,84 @@ export default function StudyPage() {
               )}
             </section>
           )}
+
+          <div className="mt-8 grid w-full grid-cols-2 gap-2 border-t border-zinc-200 pt-4 sm:flex sm:flex-wrap sm:items-center">
+            <select
+              aria-label="Chọn bộ thẻ ôn từ"
+              className="col-span-2 min-h-9 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700 sm:w-36 sm:shrink-0"
+              onChange={(event) => changeDeck(event.target.value)}
+              value={selectedDeckId}
+            >
+              <option value={allDecksValue}>Tất cả bộ thẻ</option>
+              {decks.map((deck) => (
+                <option key={deck.id} value={deck.id}>
+                  {deck.name}
+                </option>
+              ))}
+            </select>
+            <div className="col-span-2 grid min-h-9 w-full grid-cols-2 rounded-md border border-zinc-300 p-1 text-sm sm:w-40 sm:shrink-0">
+              <button
+                className={`rounded px-2 py-1 ${
+                  audioSpeed === "normal"
+                    ? "bg-teal-700 text-white"
+                    : "hover:bg-zinc-100"
+                }`}
+                onClick={() => changeAudioSpeed("normal")}
+                type="button"
+              >
+                Bình thường
+              </button>
+              <button
+                className={`rounded px-2 py-1 ${
+                  audioSpeed === "slow"
+                    ? "bg-teal-700 text-white"
+                    : "hover:bg-zinc-100"
+                }`}
+                onClick={() => changeAudioSpeed("slow")}
+                type="button"
+              >
+                Chậm
+              </button>
+            </div>
+            <button
+              aria-pressed={writingMode}
+              className={`min-h-9 w-full rounded-md border px-2 py-1.5 text-sm font-medium sm:w-auto sm:shrink-0 sm:px-3 ${
+                writingMode
+                  ? "border-teal-700 bg-teal-50 text-teal-800"
+                  : "border-zinc-300 hover:bg-zinc-100"
+              }`}
+              onClick={toggleWritingMode}
+              type="button"
+            >
+              Viết
+            </button>
+            <button
+              aria-pressed={showPinyinHint}
+              className={`min-h-9 w-full rounded-md border px-2 py-1.5 text-sm font-medium sm:w-auto sm:shrink-0 sm:px-3 ${
+                showPinyinHint
+                  ? "border-teal-700 bg-teal-50 text-teal-800"
+                  : "border-zinc-300 hover:bg-zinc-100"
+              }`}
+              onClick={togglePinyinHint}
+              type="button"
+            >
+              Pinyin
+            </button>
+            <span className="sr-only">
+              Chọn Bình thường để nghe tự nhiên hoặc Chậm để nghe rõ từng âm.
+              Phím P bật tắt pinyin và W bật tắt luyện viết.
+            </span>
+          </div>
+
+          <div className="mt-3 flex flex-col gap-2 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
+            <span>Space đáp án · R audio · 1-4 đánh giá · P/W chế độ</span>
+            <Link
+              className="font-medium text-teal-800 hover:underline"
+              href="/shortcuts"
+            >
+              Hướng dẫn phím tắt
+            </Link>
+          </div>
         </div>
       </AppShell>
     </AuthGuard>
