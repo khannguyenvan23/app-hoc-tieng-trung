@@ -29,6 +29,15 @@ type WeakReviewItem = {
   lapseCount: number;
 };
 
+type SharedDeckSummary = {
+  token: string;
+  name: string;
+  cardCount: number;
+  sentenceCount: number;
+  isOwner: boolean;
+  updatedAt: string;
+};
+
 const emptyStats: DashboardStats = {
   totalCards: 0,
   streakDays: 0,
@@ -156,6 +165,7 @@ export default function DashboardPage() {
   const configured = hasPublicEnv();
   const [decks, setDecks] = useState<Deck[]>([]);
   const [templates, setTemplates] = useState<TemplateDeck[]>([]);
+  const [sharedDecks, setSharedDecks] = useState<SharedDeckSummary[]>([]);
   const [stats, setStats] = useState<DashboardStats>(emptyStats);
   const [loading, setLoading] = useState(configured);
   const [copyingTemplateId, setCopyingTemplateId] = useState("");
@@ -194,6 +204,7 @@ export default function DashboardPage() {
         .order("updated_at", { ascending: false })
         .limit(250),
       fetchWithAuth("/api/template-decks"),
+      fetchWithAuth("/api/deck-shares"),
       fetchWithAuth("/api/study-settings"),
       supabase
         .from("reviews")
@@ -221,6 +232,7 @@ export default function DashboardPage() {
         reviewedCardsResult,
         reviewedSentenceCardsResult,
         templatesResponse,
+        sharedDecksResponse,
         settingsResponse,
         weakReviewsResult,
         weakSentenceReviewsResult,
@@ -241,6 +253,15 @@ export default function DashboardPage() {
           setTemplates((templateData.templates || []) as TemplateDeck[]);
         } else {
           setTemplates([]);
+        }
+
+        if (sharedDecksResponse.ok) {
+          const sharedDecksData = await sharedDecksResponse.json();
+          setSharedDecks(
+            (sharedDecksData.shares || []) as SharedDeckSummary[],
+          );
+        } else {
+          setSharedDecks([]);
         }
 
         if (settingsResponse.ok) {
@@ -536,6 +557,55 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+        </section>
+
+        <section className="mt-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium uppercase text-teal-800">
+                Chia sẻ từ học viên
+              </p>
+              <h2 className="mt-1 text-xl font-semibold">Bộ thẻ cộng đồng</h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                Xem trước và thêm bản sao riêng từ các bộ thẻ đang được chia sẻ.
+              </p>
+            </div>
+          </div>
+
+          {loading ? (
+            <p className="mt-4 text-sm text-zinc-600">Đang tải bộ thẻ chia sẻ...</p>
+          ) : sharedDecks.length === 0 ? (
+            <p className="mt-4 text-sm text-zinc-600">
+              Chưa có học viên nào chia sẻ bộ thẻ.
+            </p>
+          ) : (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {sharedDecks.map((sharedDeck) => (
+                <article
+                  className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm"
+                  key={sharedDeck.token}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="font-semibold">{sharedDeck.name}</h3>
+                    {sharedDeck.isOwner ? (
+                      <span className="shrink-0 rounded-full bg-teal-50 px-2 py-1 text-xs font-medium text-teal-800">
+                        Bạn chia sẻ
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-3 text-sm text-zinc-600">
+                    {sharedDeck.cardCount} từ vựng · {sharedDeck.sentenceCount} câu
+                  </p>
+                  <Link
+                    className="mt-4 inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                    href={`/shared-decks/${sharedDeck.token}`}
+                  >
+                    Xem bộ thẻ
+                  </Link>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">

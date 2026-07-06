@@ -24,9 +24,73 @@ function getErrorMessage(error: unknown) {
   return "Lỗi không xác định";
 }
 
+async function listActiveShares(request: Request) {
+  const { user, error: authError } = await getRequestUser(request);
+
+  if (!user) {
+    return NextResponse.json({ error: authError }, { status: 401 });
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { data: shares, error } = await supabase
+    .from("deck_shares")
+    .select("id, token, deck_id, owner_id, updated_at")
+    .eq("is_active", true)
+    .order("updated_at", { ascending: false })
+    .limit(9);
+
+  if (error) {
+    return NextResponse.json(
+      { error: "Không thể tải các bộ thẻ được chia sẻ" },
+      { status: 500 },
+    );
+  }
+
+  const activeShares = shares || [];
+  const summaries = await Promise.all(
+    activeShares.map(async (share) => {
+      const [deckResult, cardsResult, sentencesResult] = await Promise.all([
+        supabase.from("decks").select("name").eq("id", share.deck_id).maybeSingle(),
+        supabase
+          .from("cards")
+          .select("id", { count: "exact", head: true })
+          .eq("deck_id", share.deck_id),
+        supabase
+          .from("sentence_cards")
+          .select("id", { count: "exact", head: true })
+          .eq("deck_id", share.deck_id),
+      ]);
+
+      if (!deckResult.data) {
+        return null;
+      }
+
+      return {
+        token: share.token,
+        name: deckResult.data.name,
+        cardCount: cardsResult.count || 0,
+        sentenceCount: sentencesResult.count || 0,
+        isOwner: share.owner_id === user.id,
+        updatedAt: share.updated_at,
+      };
+    }),
+  );
+
+  return NextResponse.json(
+    { shares: summaries.filter(Boolean) },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
-  const parsedToken = tokenSchema.safeParse(requestUrl.searchParams.get("token"));
+  const token = requestUrl.searchParams.get("token");
+
+  if (!token) {
+    return listActiveShares(request);
+  }
+
+  const parsedToken = tokenSchema.safeParse(token);
 
   if (!parsedToken.success) {
     return NextResponse.json({ error: "Liên kết chia sẻ không hợp lệ" }, { status: 400 });
