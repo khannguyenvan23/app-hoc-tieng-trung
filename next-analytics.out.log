@@ -1,0 +1,15 @@
+
+> app-hoc-tiengtrung@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://26.247.99.63:3000
+- Environments: .env.local
+✓ Ready in 757ms
+
+ GET /statistics 200 in 432ms (next.js: 237ms, application-code: 196ms)
+ POST /api/analytics 202 in 1283ms (next.js: 321ms, application-code: 961ms)
+ GET /api/statistics 401 in 33ms (next.js: 29ms, application-code: 5ms)
+ GET /login 200 in 105ms (next.js: 82ms, application-code: 23ms)
+ POST /api/analytics 202 in 150ms (next.js: 3ms, application-code: 146ms)
