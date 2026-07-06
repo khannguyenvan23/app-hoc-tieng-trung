@@ -1,13 +1,30 @@
 import OpenAI from "openai";
+import { createHash } from "node:crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const AUDIO_BUCKET = "card-audio";
 
-export async function createAndUploadSpeech(
-  userId: string,
-  cardId: string,
-  kind: "word" | "sentence",
+function getPublicAudioUrl(path: string) {
+  const supabase = createSupabaseAdminClient();
+  return supabase.storage.from(AUDIO_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+async function audioObjectExists(path: string) {
+  const separatorIndex = path.lastIndexOf("/");
+  const folder = path.slice(0, separatorIndex);
+  const fileName = path.slice(separatorIndex + 1);
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase.storage
+    .from(AUDIO_BUCKET)
+    .list(folder, { limit: 1, search: fileName });
+
+  return !error && Boolean(data?.some((item) => item.name === fileName));
+}
+
+async function createAndUploadSpeechAtPath(
+  path: string,
   text: string | null,
+  cacheControl = "3600",
 ) {
   if (!text || !process.env.OPENAI_API_KEY) {
     return null;
@@ -22,12 +39,11 @@ export async function createAndUploadSpeech(
   });
 
   const arrayBuffer = await response.arrayBuffer();
-  const path = `${userId}/${cardId}/${kind}.mp3`;
   const supabase = createSupabaseAdminClient();
-
   const { error } = await supabase.storage
     .from(AUDIO_BUCKET)
     .upload(path, arrayBuffer, {
+      cacheControl,
       contentType: "audio/mpeg",
       upsert: true,
     });
@@ -36,6 +52,35 @@ export async function createAndUploadSpeech(
     throw error;
   }
 
-  const { data } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(path);
-  return data.publicUrl;
+  return getPublicAudioUrl(path);
+}
+
+export async function getOrCreateTemplateSpeech(
+  templateSlug: string,
+  kind: "word" | "sentence",
+  text: string | null,
+) {
+  if (!text) {
+    return null;
+  }
+
+  const textHash = createHash("sha256").update(text).digest("hex").slice(0, 24);
+  const safeSlug = templateSlug.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
+  const path = `templates/${safeSlug}/${kind}-${textHash}.mp3`;
+
+  if (await audioObjectExists(path)) {
+    return getPublicAudioUrl(path);
+  }
+
+  return createAndUploadSpeechAtPath(path, text, "31536000");
+}
+
+export async function createAndUploadSpeech(
+  userId: string,
+  cardId: string,
+  kind: "word" | "sentence",
+  text: string | null,
+) {
+  const path = `${userId}/${cardId}/${kind}.mp3`;
+  return createAndUploadSpeechAtPath(path, text);
 }

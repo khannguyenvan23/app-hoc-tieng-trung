@@ -604,13 +604,28 @@ export default function StudyPage() {
   }, [audioSpeed, showAnswer, index]);
 
   useEffect(() => {
-    reviews.slice(index, index + 3).forEach((review) => {
+    const templateDeckIds = new Set(
+      decks
+        .filter((deck) => Boolean(deck.source_template_slug))
+        .map((deck) => deck.id),
+    );
+
+    reviews.slice(index, index + 2).forEach((review) => {
       const audioData = getCardAudioData(review.cards);
 
       cacheAudio(audioData?.wordAudioUrl);
       cacheAudio(audioData?.sentenceAudioUrl);
+
+      if (
+        review.cards &&
+        templateDeckIds.has(review.cards.deck_id) &&
+        (!review.cards.word_audio_url ||
+          (review.cards.example_cn && !review.cards.sentence_audio_url))
+      ) {
+        void ensureCardAudioForReview(review);
+      }
     });
-  }, [cacheAudio, index, reviews]);
+  }, [cacheAudio, decks, ensureCardAudioForReview, index, reviews]);
 
   useEffect(() => {
     const audioCache = audioCacheRef.current;
