@@ -68,7 +68,7 @@ export default function LoginPage() {
             email,
             password,
             options: {
-              emailRedirectTo: `${window.location.origin}/login`,
+              emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
             },
           });
 
@@ -101,7 +101,7 @@ export default function LoginPage() {
       type: "signup",
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/login`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
     });
 

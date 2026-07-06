@@ -123,12 +123,12 @@ export default async function Home({ searchParams }: HomeProps) {
   const query = await searchParams;
   const code = getFirstSearchParam(query.code);
 
-  // Recovery links fall back to Site URL when their redirect URL is not allow-listed.
-  // Preserve those already-sent links instead of leaving users on the landing page.
+  // Auth links fall back to Site URL when their redirect URL is not allow-listed.
+  // A bare code cannot identify the flow, so treat it as account confirmation.
   if (code) {
     const callbackParams = new URLSearchParams({
       code,
-      next: "/reset-password",
+      next: "/dashboard",
     });
     redirect(`/auth/callback?${callbackParams.toString()}`);
   }
