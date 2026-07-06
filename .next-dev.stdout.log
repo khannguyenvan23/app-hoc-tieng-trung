@@ -399,3 +399,8 @@
  GET /statistics 200 in 100ms (next.js: 6ms, application-code: 94ms)
  GET /statistics 200 in 70ms (next.js: 6ms, application-code: 64ms)
  GET /statistics 200 in 42ms (next.js: 10ms, application-code: 32ms)
+ GET /dashboard 200 in 159ms (next.js: 10ms, application-code: 149ms)
+ GET /statistics 200 in 53ms (next.js: 3ms, application-code: 50ms)
+ GET /api/template-decks 200 in 129ms (next.js: 38ms, application-code: 91ms)
+ GET /api/study-settings 200 in 129ms (next.js: 64ms, application-code: 66ms)
+ GET /api/statistics 200 in 703ms (next.js: 3ms, application-code: 700ms)

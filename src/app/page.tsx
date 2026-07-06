@@ -111,7 +111,36 @@ async function redirectAuthenticatedUser() {
   }
 }
 
-export default async function Home() {
+type HomeProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function getFirstSearchParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const query = await searchParams;
+  const code = getFirstSearchParam(query.code);
+
+  // Recovery links fall back to Site URL when their redirect URL is not allow-listed.
+  // Preserve those already-sent links instead of leaving users on the landing page.
+  if (code) {
+    const callbackParams = new URLSearchParams({
+      code,
+      next: "/reset-password",
+    });
+    redirect(`/auth/callback?${callbackParams.toString()}`);
+  }
+
+  const tokenHash = getFirstSearchParam(query.token_hash);
+  const type = getFirstSearchParam(query.type);
+
+  if (tokenHash && type === "recovery") {
+    const recoveryParams = new URLSearchParams({ token_hash: tokenHash, type });
+    redirect(`/reset-password?${recoveryParams.toString()}`);
+  }
+
   await redirectAuthenticatedUser();
 
   return (
