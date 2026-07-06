@@ -175,6 +175,7 @@ function SentenceDiffToken({ item }: { item: SentenceDiffItem }) {
 export default function StudySentencesPage() {
   const configured = hasPublicEnv();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const sentenceAnswerRef = useRef<HTMLTextAreaElement | null>(null);
   const transientAudioRef = useRef<HTMLAudioElement | null>(null);
   const audioCacheRef = useRef<Map<string, HTMLAudioElement>>(new Map());
   const replaySentenceAudioRef = useRef<() => void>(() => {});
@@ -1027,6 +1028,20 @@ export default function StudySentencesPage() {
   const currentCardId = card?.id;
 
   useEffect(() => {
+    if (!(writingMode || dictationMode) || showAnswer || !currentCardId) {
+      return;
+    }
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      sentenceAnswerRef.current?.focus({ preventScroll: true });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+    };
+  }, [currentCardId, dictationMode, showAnswer, writingMode]);
+
+  useEffect(() => {
     if (!dictationMode || showAnswer || !currentCardId) {
       return;
     }
@@ -1143,6 +1158,7 @@ export default function StudySentencesPage() {
                           : "Gõ câu tiếng Trung"}
                         <textarea
                           className="mt-2 h-24 w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-28 sm:text-2xl"
+                          ref={sentenceAnswerRef}
                           onChange={(event) => {
                             setSentenceAnswer(event.target.value);
                             setWritingResult("");
