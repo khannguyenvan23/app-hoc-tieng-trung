@@ -17,7 +17,9 @@ export async function GET(request: Request) {
   const redirectUrl = new URL(next, requestUrl.origin);
 
   if (!code) {
-    redirectUrl.searchParams.set("auth_error", "missing_code");
+    // Supabase can return an implicit-flow session in the URL fragment.
+    // Fragments are invisible to the server but survive this clean redirect
+    // and are consumed by the browser client on the destination page.
     return NextResponse.redirect(redirectUrl, {
       headers: { "Cache-Control": "no-store" },
     });
