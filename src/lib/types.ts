@@ -3,6 +3,7 @@ export type Deck = {
   user_id: string;
   name: string;
   source_template_slug?: string | null;
+  source_share_id?: string | null;
   created_at: string;
 };
 

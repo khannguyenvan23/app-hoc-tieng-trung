@@ -26,6 +26,9 @@ export default function DeckPage() {
   const [loading, setLoading] = useState(configured);
   const [actionLoading, setActionLoading] = useState<DeckAction | "">("");
   const [actionMessage, setActionMessage] = useState("");
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareToken, setShareToken] = useState("");
+  const [shareMessage, setShareMessage] = useState("");
 
   useEffect(() => {
     if (!configured) {
@@ -109,6 +112,67 @@ export default function DeckPage() {
     setActionMessage("Đã reset tiến độ học của bộ thẻ.");
   }
 
+  async function createShareLink() {
+    if (!deck) {
+      return;
+    }
+
+    setShareLoading(true);
+    setShareMessage("");
+    const response = await fetchWithAuth("/api/deck-shares", {
+      method: "POST",
+      body: JSON.stringify({ action: "create", deckId: deck.id }),
+    });
+    const data = await response.json().catch(() => null);
+    setShareLoading(false);
+
+    if (!response.ok || !data?.token) {
+      setShareMessage(data?.error || "Không thể tạo liên kết chia sẻ.");
+      return;
+    }
+
+    setShareToken(data.token);
+    setShareMessage("Liên kết đã sẵn sàng.");
+  }
+
+  async function copyShareLink() {
+    if (!shareToken) {
+      return;
+    }
+
+    const shareUrl = `${window.location.origin}/shared-decks/${shareToken}`;
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareMessage("Đã sao chép liên kết.");
+    } catch {
+      setShareMessage("Không thể tự sao chép. Hãy chọn và sao chép liên kết bên dưới.");
+    }
+  }
+
+  async function disableShareLink() {
+    if (!deck) {
+      return;
+    }
+
+    setShareLoading(true);
+    setShareMessage("");
+    const response = await fetchWithAuth("/api/deck-shares", {
+      method: "POST",
+      body: JSON.stringify({ action: "disable", deckId: deck.id }),
+    });
+    const data = await response.json().catch(() => null);
+    setShareLoading(false);
+
+    if (!response.ok) {
+      setShareMessage(data?.error || "Không thể tắt liên kết chia sẻ.");
+      return;
+    }
+
+    setShareToken("");
+    setShareMessage("Đã tắt liên kết chia sẻ.");
+  }
+
   return (
     <AuthGuard>
       <AppShell>
@@ -141,6 +205,14 @@ export default function DeckPage() {
                 >
                   Luyện câu
                 </Link>
+                <button
+                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
+                  disabled={shareLoading}
+                  onClick={createShareLink}
+                  type="button"
+                >
+                  {shareLoading ? "Đang tạo..." : "Chia sẻ"}
+                </button>
                 <Link
                   className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
                   href={`/decks/${deck.id}/cards/new`}
@@ -170,6 +242,52 @@ export default function DeckPage() {
                 </PrimaryLink>
               </div>
             </div>
+
+            {shareToken || shareMessage ? (
+              <section className="mt-5 rounded-lg border border-teal-200 bg-teal-50 p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="font-semibold text-teal-950">Chia sẻ bộ thẻ</h2>
+                    <p className="mt-1 text-sm leading-6 text-teal-900">
+                      Người nhận sẽ có bản sao và tiến độ học riêng.
+                    </p>
+                  </div>
+                  {shareToken ? (
+                    <button
+                      className="text-sm font-medium text-red-700 hover:underline disabled:opacity-60"
+                      disabled={shareLoading}
+                      onClick={disableShareLink}
+                      type="button"
+                    >
+                      Tắt chia sẻ
+                    </button>
+                  ) : null}
+                </div>
+
+                {shareToken ? (
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                    <input
+                      aria-label="Liên kết chia sẻ bộ thẻ"
+                      className="min-h-10 min-w-0 flex-1 rounded-md border border-teal-300 bg-white px-3 text-sm"
+                      onFocus={(event) => event.currentTarget.select()}
+                      readOnly
+                      value={`${window.location.origin}/shared-decks/${shareToken}`}
+                    />
+                    <button
+                      className="min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                      onClick={copyShareLink}
+                      type="button"
+                    >
+                      Sao chép liên kết
+                    </button>
+                  </div>
+                ) : null}
+
+                {shareMessage ? (
+                  <p className="mt-3 text-sm text-teal-900">{shareMessage}</p>
+                ) : null}
+              </section>
+            ) : null}
 
             <section className="mt-6">
               {cards.length === 0 && sentenceCards.length === 0 ? (
