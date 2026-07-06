@@ -1128,7 +1128,7 @@ export default function StudySentencesPage() {
   return (
     <AuthGuard>
       <AppShell>
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto min-w-0 w-full max-w-2xl">
           <div className="mb-4">
             <h1 className="text-2xl font-semibold">Luyện câu</h1>
             <p className="mt-1 text-sm text-zinc-600">
@@ -1180,7 +1180,7 @@ export default function StudySentencesPage() {
               }
             />
           ) : (
-            <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
+            <section className="min-w-0 overflow-hidden rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
               <div className="text-sm text-zinc-500">
                 Câu {index + 1} / {reviews.length}
               </div>
@@ -1235,7 +1235,7 @@ export default function StudySentencesPage() {
                     <div className="text-sm font-medium text-zinc-500">
                       Câu tiếng Việt
                     </div>
-                    <div className="mt-3 text-2xl font-semibold leading-tight sm:text-3xl">
+                    <div className="mt-3 break-words text-2xl font-semibold leading-tight sm:text-3xl">
                       {card.sentence_vi}
                     </div>
                   </div>
@@ -1436,7 +1436,7 @@ export default function StudySentencesPage() {
             <p className="mt-3 text-sm text-red-700">{dailyLimitError}</p>
           ) : null}
 
-          <div className="mt-8 grid w-full grid-cols-3 gap-2 border-t border-zinc-200 pt-4 sm:flex sm:flex-wrap sm:items-center">
+          <div className="mt-8 grid min-w-0 w-full grid-cols-3 gap-2 border-t border-zinc-200 pt-4 sm:flex sm:flex-wrap sm:items-center">
             <select
               aria-label="Chọn bộ thẻ luyện câu"
               className="col-span-3 min-h-9 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700 sm:w-36 sm:shrink-0"

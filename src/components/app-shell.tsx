@@ -15,7 +15,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 text-zinc-950">
+    <div className="min-h-screen overflow-x-clip bg-stone-50 text-zinc-950">
       <ActiveDayTracker />
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:py-4">
@@ -113,7 +113,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </details>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-6xl px-3 py-5 sm:px-4 sm:py-8">
+      <main className="mx-auto min-w-0 w-full max-w-6xl px-3 py-5 sm:px-4 sm:py-8">
         {children}
       </main>
     </div>
