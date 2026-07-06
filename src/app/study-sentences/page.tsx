@@ -124,6 +124,17 @@ function applyNewSentenceLimit(
   );
 }
 
+function countWaitingNewSentences(
+  reviews: DueSentenceReview[],
+  remainingNewSentences: number,
+) {
+  const newSentenceCount = reviews.filter(
+    (review) => Number(review.review_count) === 0,
+  ).length;
+
+  return Math.max(0, newSentenceCount - remainingNewSentences);
+}
+
 function getRatingIntervalLabel(
   rating: ReviewRating,
   review: DueSentenceReview,
@@ -264,6 +275,9 @@ export default function StudySentencesPage() {
     useState<StudySettings>(defaultStudySettings);
   const [settingsLoaded, setSettingsLoaded] = useState(!configured);
   const [newSentencesStudiedToday, setNewSentencesStudiedToday] = useState(0);
+  const [newSentencesWaiting, setNewSentencesWaiting] = useState(0);
+  const [updatingDailyLimit, setUpdatingDailyLimit] = useState(false);
+  const [dailyLimitError, setDailyLimitError] = useState("");
   const [audioNotice, setAudioNotice] = useState("");
   const [creatingAudioId, setCreatingAudioId] = useState<string | null>(null);
 
@@ -450,10 +464,14 @@ export default function StudySentencesPage() {
 
     const { data } = await query;
 
+    const reviewRows = (data || []) as DueSentenceReview[];
     setNewSentencesStudiedToday(studiedToday);
+    setNewSentencesWaiting(
+      countWaitingNewSentences(reviewRows, remainingNewSentences),
+    );
     setReviews(
       applyNewSentenceLimit(
-        (data || []) as DueSentenceReview[],
+        reviewRows,
         remainingNewSentences,
         studySettings,
       ),
@@ -623,10 +641,14 @@ export default function StudySentencesPage() {
               return;
             }
 
+            const retryRows = (retryResult.data || []) as DueSentenceReview[];
             setNewSentencesStudiedToday(studiedToday);
+            setNewSentencesWaiting(
+              countWaitingNewSentences(retryRows, remainingNewSentences),
+            );
             setReviews(
               applyNewSentenceLimit(
-                (retryResult.data || []) as DueSentenceReview[],
+                retryRows,
                 remainingNewSentences,
                 studySettings,
               ),
@@ -642,10 +664,14 @@ export default function StudySentencesPage() {
         }
       }
 
+      const reviewRows = (data || []) as DueSentenceReview[];
       setNewSentencesStudiedToday(studiedToday);
+      setNewSentencesWaiting(
+        countWaitingNewSentences(reviewRows, remainingNewSentences),
+      );
       setReviews(
         applyNewSentenceLimit(
-          (data || []) as DueSentenceReview[],
+          reviewRows,
           remainingNewSentences,
           studySettings,
         ),
@@ -718,6 +744,36 @@ export default function StudySentencesPage() {
     audioCacheRef.current.forEach((audio) => {
       audio.playbackRate = audioSpeeds[nextSpeed];
     });
+  }
+
+  async function increaseDailySentenceLimit() {
+    const nextLimit = Math.min(
+      100,
+      Math.max(30, studySettings.daily_new_sentence_limit + 10),
+    );
+    const nextSettings = {
+      ...studySettings,
+      daily_new_sentence_limit: nextLimit,
+    };
+
+    setUpdatingDailyLimit(true);
+    setDailyLimitError("");
+    setLoading(true);
+
+    const response = await fetchWithAuth("/api/study-settings", {
+      body: JSON.stringify(nextSettings),
+      method: "PUT",
+    });
+    const data = await response.json().catch(() => null);
+    setUpdatingDailyLimit(false);
+
+    if (!response.ok) {
+      setDailyLimitError(data?.error || "Không thể tăng giới hạn câu mới.");
+      setLoading(false);
+      return;
+    }
+
+    setStudySettings((data?.settings || nextSettings) as StudySettings);
   }
 
   function togglePinyinHint() {
@@ -1060,6 +1116,14 @@ export default function StudySentencesPage() {
     selectedDeckId === allDecksValue
       ? "Tất cả"
       : decks.find((deck) => deck.id === selectedDeckId)?.name || "Deck đã chọn";
+  const dailyLimitReached =
+    !weakOnly &&
+    newSentencesWaiting > 0 &&
+    newSentencesStudiedToday >= studySettings.daily_new_sentence_limit;
+  const suggestedDailyLimit = Math.min(
+    100,
+    Math.max(30, studySettings.daily_new_sentence_limit + 10),
+  );
 
   return (
     <AuthGuard>
@@ -1082,8 +1146,38 @@ export default function StudySentencesPage() {
             </p>
           ) : !card ? (
             <EmptyState
-              body="Hiện chưa có câu nào cần ôn trong bộ đã chọn."
-              title="Bạn đã luyện xong"
+              action={
+                dailyLimitReached ? (
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <button
+                      className="min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+                      disabled={updatingDailyLimit}
+                      onClick={increaseDailySentenceLimit}
+                      type="button"
+                    >
+                      {updatingDailyLimit
+                        ? "Đang cập nhật..."
+                        : `Tăng lên ${suggestedDailyLimit} câu/ngày`}
+                    </button>
+                    <Link
+                      className="inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                      href="/options"
+                    >
+                      Mở cài đặt
+                    </Link>
+                  </div>
+                ) : undefined
+              }
+              body={
+                dailyLimitReached
+                  ? `Bạn đã học đủ ${studySettings.daily_new_sentence_limit} câu mới hôm nay. Còn ít nhất ${newSentencesWaiting} câu mới đang chờ trong bộ đã chọn.`
+                  : "Hiện chưa có câu nào cần ôn trong bộ đã chọn."
+              }
+              title={
+                dailyLimitReached
+                  ? "Đã đạt giới hạn câu mới hôm nay"
+                  : "Bạn đã luyện xong"
+              }
             />
           ) : (
             <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
@@ -1337,6 +1431,10 @@ export default function StudySentencesPage() {
               )}
             </section>
           )}
+
+          {dailyLimitError ? (
+            <p className="mt-3 text-sm text-red-700">{dailyLimitError}</p>
+          ) : null}
 
           <div className="mt-8 grid w-full grid-cols-3 gap-2 border-t border-zinc-200 pt-4 sm:flex sm:flex-wrap sm:items-center">
             <select
