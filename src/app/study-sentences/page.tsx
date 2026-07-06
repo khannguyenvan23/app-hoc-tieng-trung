@@ -1180,12 +1180,12 @@ export default function StudySentencesPage() {
               }
             />
           ) : (
-            <section className="min-w-0 overflow-hidden rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
+            <section className="min-w-0 overflow-hidden rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
               <div className="text-sm text-zinc-500">
                 Câu {index + 1} / {reviews.length}
               </div>
 
-              <div className="mt-6 text-center sm:mt-8">
+              <div className="mt-4 text-center sm:mt-5">
                 {dictationMode && !showAnswer ? (
                   <div>
                     <div className="text-sm font-medium text-zinc-500">
@@ -1345,8 +1345,8 @@ export default function StudySentencesPage() {
                   )}
                 </div>
               ) : (
-                <div className="mt-6 sm:mt-8">
-                  <div className="rounded-lg bg-stone-50 p-4 text-center sm:p-5">
+                <div className="mt-4 sm:mt-5">
+                  <div className="rounded-lg bg-stone-50 p-3 text-center sm:p-4">
                     <div className="text-2xl font-semibold leading-relaxed sm:text-3xl">
                       {card.sentence_cn}
                     </div>
@@ -1357,10 +1357,16 @@ export default function StudySentencesPage() {
                     ) : null}
 
                     {card.sentence_audio_url ? (
-                      <div className="mt-5 flex justify-center">
+                      <div className="mt-3 flex justify-center">
+                        <button
+                          className="min-h-9 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium hover:bg-zinc-100"
+                          onClick={() => void playSentenceAudio()}
+                          type="button"
+                        >
+                          Phát lại audio
+                        </button>
                         <audio
-                          className="w-full max-w-full sm:w-auto"
-                          controls
+                          className="hidden"
                           onLoadedMetadata={(event) => {
                             event.currentTarget.playbackRate =
                               audioSpeeds[audioSpeed];
@@ -1378,7 +1384,7 @@ export default function StudySentencesPage() {
                   </div>
 
                   {vocabItems.length > 0 ? (
-                    <div className="mt-5 rounded-lg border border-zinc-200 bg-white">
+                    <div className="mt-3 rounded-lg border border-zinc-200 bg-white">
                       <div className="border-b border-zinc-100 px-4 py-3 text-sm font-semibold">
                         Từ vựng trong câu
                       </div>
@@ -1403,7 +1409,7 @@ export default function StudySentencesPage() {
                     </div>
                   ) : null}
 
-                  <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {(Object.keys(ratingLabels) as ReviewRating[]).map(
                       (rating) => (
                         <button
@@ -1436,7 +1442,7 @@ export default function StudySentencesPage() {
             <p className="mt-3 text-sm text-red-700">{dailyLimitError}</p>
           ) : null}
 
-          <div className="mt-8 grid min-w-0 w-full grid-cols-3 gap-2 border-t border-zinc-200 pt-4 sm:flex sm:flex-wrap sm:items-center">
+          <div className="mt-5 grid min-w-0 w-full grid-cols-3 gap-2 border-t border-zinc-200 pt-4 sm:flex sm:flex-wrap sm:items-center">
             <select
               aria-label="Chọn bộ thẻ luyện câu"
               className="col-span-3 min-h-9 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700 sm:w-36 sm:shrink-0"
