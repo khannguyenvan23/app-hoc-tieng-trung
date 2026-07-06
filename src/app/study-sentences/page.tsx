@@ -1050,7 +1050,7 @@ export default function StudySentencesPage() {
     <AuthGuard>
       <AppShell>
         <div className="mx-auto max-w-2xl">
-          <div className="mb-5">
+          <div className="mb-4">
             <div>
               <h1 className="text-2xl font-semibold">Luyện câu</h1>
               <p className="mt-1 text-sm text-zinc-600">
@@ -1061,9 +1061,10 @@ export default function StudySentencesPage() {
                 {studySettings.daily_new_sentence_limit}
               </p>
             </div>
-            <div className="mt-4 grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-start">
+            <div className="mt-3 grid w-full grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <select
-                className="col-span-2 min-h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700 sm:w-auto"
+                aria-label="Chọn bộ thẻ luyện câu"
+                className="col-span-3 min-h-9 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700 sm:w-36 sm:shrink-0"
                 onChange={(event) => changeDeck(event.target.value)}
                 value={selectedDeckId}
               >
@@ -1074,9 +1075,9 @@ export default function StudySentencesPage() {
                   </option>
                 ))}
               </select>
-              <div className="col-span-2 grid w-full grid-cols-2 rounded-md border border-zinc-300 p-1 text-sm sm:w-auto">
+              <div className="col-span-3 grid min-h-9 w-full grid-cols-2 rounded-md border border-zinc-300 p-1 text-sm sm:w-40 sm:shrink-0">
                 <button
-                  className={`rounded px-3 py-2 ${
+                  className={`rounded px-2 py-1 ${
                     audioSpeed === "normal"
                       ? "bg-teal-700 text-white"
                       : "hover:bg-zinc-100"
@@ -1087,7 +1088,7 @@ export default function StudySentencesPage() {
                   Bình thường
                 </button>
                 <button
-                  className={`rounded px-3 py-2 ${
+                  className={`rounded px-2 py-1 ${
                     audioSpeed === "slow"
                       ? "bg-teal-700 text-white"
                       : "hover:bg-zinc-100"
@@ -1099,7 +1100,8 @@ export default function StudySentencesPage() {
                 </button>
               </div>
               <button
-                className={`min-h-10 w-full rounded-md border px-3 py-2 text-sm font-medium sm:w-auto sm:px-4 ${
+                aria-pressed={writingMode}
+                className={`min-h-9 w-full rounded-md border px-2 py-1.5 text-sm font-medium sm:w-auto sm:shrink-0 sm:px-3 ${
                   writingMode
                     ? "border-teal-700 bg-teal-50 text-teal-800"
                     : "border-zinc-300 hover:bg-zinc-100"
@@ -1107,10 +1109,11 @@ export default function StudySentencesPage() {
                 onClick={toggleWritingMode}
                 type="button"
               >
-                {writingMode ? "Đang luyện viết" : "Bật luyện viết"}
+                Viết
               </button>
               <button
-                className={`min-h-10 w-full rounded-md border px-3 py-2 text-sm font-medium sm:w-auto sm:px-4 ${
+                aria-pressed={dictationMode}
+                className={`min-h-9 w-full rounded-md border px-2 py-1.5 text-sm font-medium sm:w-auto sm:shrink-0 sm:px-3 ${
                   dictationMode
                     ? "border-teal-700 bg-teal-50 text-teal-800"
                     : "border-zinc-300 hover:bg-zinc-100"
@@ -1118,10 +1121,11 @@ export default function StudySentencesPage() {
                 onClick={toggleDictationMode}
                 type="button"
               >
-                {dictationMode ? "Đang chính tả" : "Bật chính tả"}
+                Chính tả
               </button>
               <button
-                className={`col-span-2 min-h-10 w-full rounded-md border px-3 py-2 text-sm font-medium sm:w-auto sm:px-4 ${
+                aria-pressed={showPinyinHint}
+                className={`min-h-9 w-full rounded-md border px-2 py-1.5 text-sm font-medium sm:w-auto sm:shrink-0 sm:px-3 ${
                   showPinyinHint
                     ? "border-teal-700 bg-teal-50 text-teal-800"
                     : "border-zinc-300 hover:bg-zinc-100"
@@ -1129,24 +1133,26 @@ export default function StudySentencesPage() {
                 onClick={togglePinyinHint}
                 type="button"
               >
-                {showPinyinHint ? "Tắt pinyin" : "Bật pinyin"}
+                Pinyin
               </button>
-              <p className="col-span-2 text-left text-xs leading-5 text-zinc-500 sm:basis-full sm:text-right">
-                <span className="sm:hidden">
-                  Enter kiểm tra · Space đáp án · Ctrl/R audio · D chính tả.
-                </span>
-                <span className="hidden sm:inline">
-                  Tốc độ audio: chọn Bình thường để nghe tự nhiên, Chậm để nghe rõ từng âm. Ctrl hoặc R phát audio; Enter kiểm tra, Space hiện đáp án. 1-4 đánh giá, P pinyin, W luyện viết, D chính tả.
-                </span>
+              <p className="col-span-3 text-center text-xs leading-5 text-zinc-500 sm:hidden">
+                Space đáp án · R audio · 1-4 đánh giá
+              </p>
+              <p className="hidden text-xs text-zinc-500 sm:block sm:basis-full sm:text-right">
+                Space đáp án · R audio · 1-4 đánh giá · P/W/D chế độ
               </p>
               {audioNotice ? (
-                <p className="basis-full text-left text-xs text-red-700 sm:text-right">
+                <p className="col-span-3 text-left text-xs text-red-700 sm:basis-full sm:text-right">
                   {audioNotice}{" "}
                   <Link className="font-medium underline" href="/pricing">
                     Nạp credit
                   </Link>
                 </p>
               ) : null}
+              <span className="sr-only">
+                Chọn Bình thường để nghe tự nhiên hoặc Chậm để nghe rõ từng âm.
+                Phím P bật tắt pinyin, W bật tắt luyện viết và D bật tắt chính tả.
+              </span>
             </div>
           </div>
 
