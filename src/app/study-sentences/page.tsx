@@ -1135,12 +1135,6 @@ export default function StudySentencesPage() {
               >
                 Pinyin
               </button>
-              <p className="col-span-3 text-center text-xs leading-5 text-zinc-500 sm:hidden">
-                Space đáp án · R audio · 1-4 đánh giá
-              </p>
-              <p className="hidden text-xs text-zinc-500 sm:block sm:basis-full sm:text-right">
-                Space đáp án · R audio · 1-4 đánh giá · P/W/D chế độ
-              </p>
               {audioNotice ? (
                 <p className="col-span-3 text-left text-xs text-red-700 sm:basis-full sm:text-right">
                   {audioNotice}{" "}
@@ -1416,6 +1410,16 @@ export default function StudySentencesPage() {
               )}
             </section>
           )}
+
+          <div className="mt-8 flex flex-col gap-2 border-t border-zinc-200 pt-4 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
+            <span>Space đáp án · R audio · 1-4 đánh giá · P/W/D chế độ</span>
+            <Link
+              className="font-medium text-teal-800 hover:underline"
+              href="/shortcuts"
+            >
+              Hướng dẫn phím tắt
+            </Link>
+          </div>
         </div>
       </AppShell>
     </AuthGuard>
