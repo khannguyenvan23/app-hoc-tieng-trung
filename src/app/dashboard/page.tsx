@@ -175,6 +175,7 @@ export default function DashboardPage() {
   const [weakItems, setWeakItems] = useState<WeakReviewItem[]>([]);
   const [savingSettings, setSavingSettings] = useState(false);
   const [onboardingMessage, setOnboardingMessage] = useState("");
+  const [accountName, setAccountName] = useState("");
 
   useEffect(() => {
     if (!configured) {
@@ -183,6 +184,20 @@ export default function DashboardPage() {
 
     let active = true;
     const supabase = createSupabaseBrowserClient();
+
+    supabase.auth.getUser().then(({ data }) => {
+      if (!active || !data.user) {
+        return;
+      }
+
+      const metadata = data.user.user_metadata as Record<string, unknown>;
+      const profileName = String(
+        metadata.full_name || metadata.display_name || metadata.name || "",
+      ).trim();
+      const emailName = data.user.email?.split("@")[0] || "bạn";
+      setAccountName(profileName || emailName);
+    });
+
     Promise.all([
       supabase.from("decks").select("*").order("created_at", {
         ascending: false,
@@ -401,7 +416,13 @@ export default function DashboardPage() {
   return (
     <AuthGuard>
       <AppShell>
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm text-zinc-500">Xin chào,</p>
+            <h1 className="mt-1 text-2xl font-semibold">
+              {accountName || "bạn"}
+            </h1>
+          </div>
           <PrimaryLink href="/decks/new">Tạo bộ thẻ</PrimaryLink>
         </div>
 
