@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { ZaloFloatingContact } from "@/components/zalo-floating-contact";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
@@ -63,6 +64,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <AnalyticsTracker />
         {children}
+        <ZaloFloatingContact />
         <Analytics />
         <SpeedInsights />
       </body>
