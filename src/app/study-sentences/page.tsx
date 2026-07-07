@@ -7,6 +7,7 @@ import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
+import { sortDecksByRecentContent } from "@/lib/deck-activity";
 import { getNextReview } from "@/lib/review";
 import {
   compareChineseSentences,
@@ -501,7 +502,10 @@ export default function StudySentencesPage() {
           return;
         }
 
-        const sentenceDecks = (data || []) as Deck[];
+        const sentenceDecks = sortDecksByRecentContent(
+          (data || []) as Deck[],
+          "last_sentence_added_at",
+        );
 
         setDecks(sentenceDecks);
         setSelectedDeckId((currentDeckId) => {

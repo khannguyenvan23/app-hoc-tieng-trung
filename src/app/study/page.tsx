@@ -8,6 +8,7 @@ import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
 import { getNextReview } from "@/lib/review";
+import { sortDecksByRecentContent } from "@/lib/deck-activity";
 import {
   defaultStudySettings,
   formatReviewIntervalLabel,
@@ -412,7 +413,10 @@ export default function StudyPage() {
           return;
         }
 
-        const vocabularyDecks = (data || []) as Deck[];
+        const vocabularyDecks = sortDecksByRecentContent(
+          (data || []) as Deck[],
+          "last_card_added_at",
+        );
 
         setDecks(vocabularyDecks);
         setSelectedDeckId((currentDeckId) => {

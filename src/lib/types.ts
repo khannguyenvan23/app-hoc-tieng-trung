@@ -4,6 +4,8 @@ export type Deck = {
   name: string;
   source_template_slug?: string | null;
   source_share_id?: string | null;
+  last_card_added_at?: string | null;
+  last_sentence_added_at?: string | null;
   created_at: string;
 };
 
