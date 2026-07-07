@@ -710,6 +710,26 @@ export default function StudyPage() {
     });
   }
 
+  function playVisibleAudio(audio: HTMLAudioElement | null) {
+    if (!audio) {
+      return;
+    }
+
+    stopCardAudio();
+    transientAudioRef.current = audio;
+    audio.playbackRate = audioSpeeds[audioSpeed];
+    try {
+      if (audio.readyState > 0) {
+        audio.currentTime = 0;
+      }
+    } catch (error) {
+      console.warn("Could not rewind card audio", error);
+    }
+    audio.play().catch(() => {
+      // The click itself normally grants playback permission.
+    });
+  }
+
   useEffect(() => {
     replayCardAudioRef.current = () => {
       void playCardAudio();
@@ -896,8 +916,8 @@ export default function StudyPage() {
   return (
     <AuthGuard>
       <AppShell>
-        <div className="mx-auto max-w-2xl">
-          <div className="mb-5">
+        <div className="mx-auto min-w-0 w-full max-w-2xl">
+          <div className="mb-4">
             <h1 className="text-2xl font-semibold">Ôn tập</h1>
             <p className="mt-1 text-sm text-zinc-600">
               {reviews.length} thẻ cần ôn ngay trong {selectedDeckName}
@@ -930,12 +950,12 @@ export default function StudyPage() {
               title="Bạn đã ôn xong"
             />
           ) : (
-            <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
+            <section className="min-w-0 overflow-hidden rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
               <div className="text-sm text-zinc-500">
                 Thẻ {index + 1} / {reviews.length}
               </div>
 
-              <div className="mt-6 text-center sm:mt-8">
+              <div className="mt-4 text-center sm:mt-5">
                 <div className="text-sm font-medium text-zinc-500">
                   Nghĩa tiếng Việt
                 </div>
@@ -1009,59 +1029,89 @@ export default function StudyPage() {
                   )}
                 </div>
               ) : (
-                <div className="mt-6 sm:mt-8">
-                  <div className="rounded-lg bg-stone-50 p-4 text-center sm:p-5">
+                <div className="mt-4 sm:mt-5">
+                  <div className="rounded-lg bg-stone-50 p-3 text-center sm:p-4">
                     <div className="text-4xl font-semibold sm:text-5xl">{card.chinese}</div>
                     {showPinyinHint && card?.pinyin ? (
                       <div className="mt-3 text-lg text-teal-800">
                         {card?.pinyin}
                       </div>
                     ) : null}
-                    <div className="mt-6 text-sm font-medium uppercase tracking-wide text-zinc-500">
-                      Câu ví dụ
-                    </div>
-                    <div className="mt-2 text-lg text-zinc-900 sm:text-xl">
-                      {card.example_cn}
-                    </div>
-                    {showPinyinHint && card.example_pinyin ? (
-                      <div className="mt-1 text-sm text-teal-800">
-                        {card.example_pinyin}
+                    {card.example_cn || card.example_pinyin || card.example_vi ? (
+                      <div className="mt-4">
+                        <div className="text-sm font-medium uppercase tracking-wide text-zinc-500">
+                          Câu ví dụ
+                        </div>
+                        {card.example_cn ? (
+                          <div className="mt-2 text-lg text-zinc-900 sm:text-xl">
+                            {card.example_cn}
+                          </div>
+                        ) : null}
+                        {showPinyinHint && card.example_pinyin ? (
+                          <div className="mt-1 text-sm text-teal-800">
+                            {card.example_pinyin}
+                          </div>
+                        ) : null}
+                        {card.example_vi ? (
+                          <div className="mt-1 text-sm text-zinc-600">
+                            {card.example_vi}
+                          </div>
+                        ) : null}
                       </div>
                     ) : null}
-                    <div className="mt-1 text-sm text-zinc-600">
-                      {card.example_vi}
-                    </div>
-                    <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
-                      {card.word_audio_url ? (
-                        <audio
-                          className="w-full max-w-full sm:w-auto"
-                          controls
-                          onLoadedMetadata={(event) => {
-                            event.currentTarget.playbackRate =
-                              audioSpeeds[audioSpeed];
-                          }}
-                          preload="auto"
-                          ref={wordAudioRef}
-                          src={card.word_audio_url}
-                        />
-                      ) : null}
-                      {card.sentence_audio_url ? (
-                        <audio
-                          className="w-full max-w-full sm:w-auto"
-                          controls
-                          onLoadedMetadata={(event) => {
-                            event.currentTarget.playbackRate =
-                              audioSpeeds[audioSpeed];
-                          }}
-                          preload="auto"
-                          ref={sentenceAudioRef}
-                          src={card.sentence_audio_url}
-                        />
-                      ) : null}
-                    </div>
+                    {card.word_audio_url || card.sentence_audio_url ? (
+                      <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                        {card.word_audio_url ? (
+                          <>
+                            <button
+                              className="min-h-9 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium hover:bg-zinc-100"
+                              onClick={() =>
+                                playVisibleAudio(wordAudioRef.current)
+                              }
+                              type="button"
+                            >
+                              Phát âm từ
+                            </button>
+                            <audio
+                              className="hidden"
+                              onLoadedMetadata={(event) => {
+                                event.currentTarget.playbackRate =
+                                  audioSpeeds[audioSpeed];
+                              }}
+                              preload="auto"
+                              ref={wordAudioRef}
+                              src={card.word_audio_url}
+                            />
+                          </>
+                        ) : null}
+                        {card.sentence_audio_url ? (
+                          <>
+                            <button
+                              className="min-h-9 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium hover:bg-zinc-100"
+                              onClick={() =>
+                                playVisibleAudio(sentenceAudioRef.current)
+                              }
+                              type="button"
+                            >
+                              Phát câu ví dụ
+                            </button>
+                            <audio
+                              className="hidden"
+                              onLoadedMetadata={(event) => {
+                                event.currentTarget.playbackRate =
+                                  audioSpeeds[audioSpeed];
+                              }}
+                              preload="auto"
+                              ref={sentenceAudioRef}
+                              src={card.sentence_audio_url}
+                            />
+                          </>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
 
-                  <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {(Object.keys(ratingLabels) as ReviewRating[]).map(
                       (rating) => (
                         <button
@@ -1090,7 +1140,7 @@ export default function StudyPage() {
             </section>
           )}
 
-          <div className="mt-8 grid w-full grid-cols-2 gap-2 border-t border-zinc-200 pt-4 sm:flex sm:flex-wrap sm:items-center">
+          <div className="mt-5 grid w-full grid-cols-2 gap-2 border-t border-zinc-200 pt-4 sm:flex sm:flex-wrap sm:items-center">
             <select
               aria-label="Chọn bộ thẻ ôn từ"
               className="col-span-2 min-h-9 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700 sm:w-36 sm:shrink-0"
