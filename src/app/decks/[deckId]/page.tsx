@@ -327,28 +327,37 @@ export default function DeckPage() {
                 <Link
                   className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
                   href={`/decks/${deck.id}/cards/new`}
+                  prefetch={false}
                 >
                   Thêm thẻ
                 </Link>
                 <Link
                   className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
                   href={`/decks/${deck.id}/sentences/new`}
+                  prefetch={false}
                 >
                   Tạo câu từ từ vựng
                 </Link>
                 <Link
                   className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
                   href={`/decks/${deck.id}/sentences/manual/new`}
+                  prefetch={false}
                 >
                   Thêm câu thủ công
                 </Link>
-                <PrimaryLink href={`/decks/${deck.id}/import`}>
+                <PrimaryLink href={`/decks/${deck.id}/import`} prefetch={false}>
                   Import từ vựng
                 </PrimaryLink>
-                <PrimaryLink href={`/decks/${deck.id}/import-words-to-sentences`}>
+                <PrimaryLink
+                  href={`/decks/${deck.id}/import-words-to-sentences`}
+                  prefetch={false}
+                >
                   Import từ thành câu
                 </PrimaryLink>
-                <PrimaryLink href={`/decks/${deck.id}/import-sentences`}>
+                <PrimaryLink
+                  href={`/decks/${deck.id}/import-sentences`}
+                  prefetch={false}
+                >
                   Import câu
                 </PrimaryLink>
               </div>
@@ -405,24 +414,30 @@ export default function DeckPage() {
                 <EmptyState
                   action={
                     <div className="flex flex-wrap justify-center gap-2">
-                      <PrimaryLink href={`/decks/${deck.id}/cards/new`}>
+                      <PrimaryLink
+                        href={`/decks/${deck.id}/cards/new`}
+                        prefetch={false}
+                      >
                         Thêm thẻ thủ công
                       </PrimaryLink>
                       <Link
                         className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
                         href={`/decks/${deck.id}/sentences/new`}
+                        prefetch={false}
                       >
                         Tạo câu từ từ vựng
                       </Link>
                       <Link
                         className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
                         href={`/decks/${deck.id}/sentences/manual/new`}
+                        prefetch={false}
                       >
                         Thêm câu thủ công
                       </Link>
                       <Link
                         className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
                         href={`/decks/${deck.id}/import-words-to-sentences`}
+                        prefetch={false}
                       >
                         Import từ thành câu
                       </Link>
@@ -463,6 +478,7 @@ export default function DeckPage() {
                             <Link
                               className="inline-flex min-h-9 items-center justify-center rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100"
                               href={`/decks/${deck.id}/cards/${card.id}/edit`}
+                              prefetch={false}
                             >
                               Sửa
                             </Link>
@@ -510,6 +526,7 @@ export default function DeckPage() {
                             <Link
                               className="inline-flex min-h-9 items-center justify-center rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100"
                               href={`/decks/${deck.id}/sentences/${sentenceCard.id}/edit`}
+                              prefetch={false}
                             >
                               Sửa
                             </Link>
