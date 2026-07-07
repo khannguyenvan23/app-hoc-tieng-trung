@@ -17,7 +17,7 @@ export function ZaloFloatingContact() {
         className="flex min-h-14 cursor-pointer list-none flex-col items-center justify-center rounded-full bg-blue-600 px-5 text-center text-sm font-semibold leading-tight text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 [&::-webkit-details-marker]:hidden"
       >
         <span>Zalo CSKH</span>
-        <span className="text-xs font-medium opacity-95">0986942504</span>
+        
       </summary>
       <div className="absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-zinc-200 bg-white p-2 text-sm shadow-xl">
         <div className="px-2 pb-2 pt-1 font-semibold text-zinc-900">
