@@ -10,6 +10,8 @@ type TemplateCardRow = {
   example_cn: string | null;
   example_pinyin?: string | null;
   example_vi: string | null;
+  word_audio_url?: string | null;
+  sentence_audio_url?: string | null;
 };
 
 type TemplateSentenceCardRow = {
@@ -17,6 +19,7 @@ type TemplateSentenceCardRow = {
   sentence_pinyin: string | null;
   sentence_vi: string | null;
   vocab_json: unknown;
+  sentence_audio_url?: string | null;
 };
 
 type TemplateDeckRow = {
@@ -107,6 +110,8 @@ function mapTemplateCards(
     example_cn: card.example_cn,
     ...(includeExamplePinyin ? { example_pinyin: card.example_pinyin } : {}),
     example_vi: card.example_vi,
+    word_audio_url: card.word_audio_url || null,
+    sentence_audio_url: card.sentence_audio_url || null,
   }));
 }
 
@@ -389,6 +394,7 @@ export async function POST(request: Request) {
             sentence_pinyin: card.sentence_pinyin,
             sentence_vi: card.sentence_vi,
             vocab_json: card.vocab_json,
+            sentence_audio_url: card.sentence_audio_url || null,
           })),
         )
         .select("id");
