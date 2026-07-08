@@ -1204,10 +1204,6 @@ export default function StudySentencesPage() {
   }, [currentCardId, dictationMode, showAnswer]);
 
   const vocabItems = Array.isArray(card?.vocab_json) ? card.vocab_json : [];
-  const selectedDeckName =
-    selectedDeckId === allDecksValue
-      ? "Tất cả"
-      : decks.find((deck) => deck.id === selectedDeckId)?.name || "Deck đã chọn";
   const dailyLimitReached =
     !weakOnly &&
     newSentencesWaiting > 0 &&
@@ -1223,13 +1219,6 @@ export default function StudySentencesPage() {
         <div className="mx-auto min-w-0 w-full max-w-2xl">
           <div className="mb-4">
             <h1 className="text-2xl font-semibold">Luyện câu</h1>
-            <p className="mt-1 text-sm text-zinc-600">
-              {reviews.length} câu cần ôn ngay trong {selectedDeckName}
-            </p>
-            <p className="mt-1 text-xs text-zinc-500">
-              Câu mới hôm nay: {newSentencesStudiedToday} /{" "}
-              {studySettings.daily_new_sentence_limit}
-            </p>
           </div>
 
           {loading || repairingReviews ? (
