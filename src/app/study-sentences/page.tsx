@@ -1356,6 +1356,11 @@ export default function StudySentencesPage() {
                 </div>
               ) : (
                 <div className="mt-4 sm:mt-5">
+                  {writingResult === "correct" ? (
+                    <div className="mb-3 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm font-medium text-teal-800">
+                      Đúng rồi. Đây là câu chính xác:
+                    </div>
+                  ) : null}
                   <div className="rounded-lg bg-stone-50 p-3 text-center sm:p-4">
                     <div className="text-2xl font-semibold leading-relaxed sm:text-3xl">
                       {card.sentence_cn}
