@@ -43,9 +43,15 @@ type CreatedCardRow = {
   id: string;
 };
 
+type SupabaseAdminClient = ReturnType<typeof createSupabaseAdminClient>;
+type UserCardInsert = ReturnType<typeof mapTemplateCards>[number];
+
 const copySchema = z.object({
   templateDeckId: z.string().uuid(),
 });
+
+const selectPageSize = 1000;
+const insertBatchSize = 500;
 
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) {
@@ -115,6 +121,80 @@ function mapTemplateCards(
   }));
 }
 
+async function fetchAllTemplateCards(
+  supabase: SupabaseAdminClient,
+  templateDeckId: string,
+) {
+  const rows: TemplateCardRow[] = [];
+
+  for (let from = 0; ; from += selectPageSize) {
+    const { data, error } = await supabase
+      .from("template_cards")
+      .select("*")
+      .eq("template_deck_id", templateDeckId)
+      .order("position", { ascending: true })
+      .range(from, from + selectPageSize - 1);
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    rows.push(...((data || []) as TemplateCardRow[]));
+
+    if (!data || data.length < selectPageSize) {
+      return { data: rows, error: null };
+    }
+  }
+}
+
+async function fetchAllTemplateSentenceCards(
+  supabase: SupabaseAdminClient,
+  templateDeckId: string,
+) {
+  const rows: TemplateSentenceCardRow[] = [];
+
+  for (let from = 0; ; from += selectPageSize) {
+    const { data, error } = await supabase
+      .from("template_sentence_cards")
+      .select("*")
+      .eq("template_deck_id", templateDeckId)
+      .order("position", { ascending: true })
+      .range(from, from + selectPageSize - 1);
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    rows.push(...((data || []) as TemplateSentenceCardRow[]));
+
+    if (!data || data.length < selectPageSize) {
+      return { data: rows, error: null };
+    }
+  }
+}
+
+async function insertCardsInBatches(
+  supabase: SupabaseAdminClient,
+  cards: UserCardInsert[],
+) {
+  const insertedCards: CreatedCardRow[] = [];
+
+  for (let index = 0; index < cards.length; index += insertBatchSize) {
+    const { data, error } = await supabase
+      .from("cards")
+      .insert(cards.slice(index, index + insertBatchSize))
+      .select("id");
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    insertedCards.push(...((data || []) as CreatedCardRow[]));
+  }
+
+  return { data: insertedCards, error: null };
+}
+
 export async function GET(request: Request) {
   const { user, error: authError } = await getRequestUser(request);
 
@@ -125,7 +205,7 @@ export async function GET(request: Request) {
   const supabase = createSupabaseAdminClient();
   const { data: templates, error } = await supabase
     .from("template_decks")
-    .select("*, template_cards(id), template_sentence_cards(id)")
+    .select("*")
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -149,30 +229,46 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json({
-    templates: ((templates || []) as TemplateDeckRow[]).map((template) => {
+  const templatesWithCounts = await Promise.all(
+    ((templates || []) as TemplateDeckRow[]).map(async (template) => {
       const existingDeck = findExistingTemplateDeck(
         template,
         (userDecks || []) as UserDeckRow[],
       );
+      const [
+        { count: templateCardCount, error: templateCardCountError },
+        { count: templateSentenceCardCount, error: templateSentenceCardCountError },
+      ] = await Promise.all([
+        supabase
+          .from("template_cards")
+          .select("id", { count: "exact", head: true })
+          .eq("template_deck_id", template.id),
+        supabase
+          .from("template_sentence_cards")
+          .select("id", { count: "exact", head: true })
+          .eq("template_deck_id", template.id),
+      ]);
+
+      if (templateCardCountError || templateSentenceCardCountError) {
+        console.error(templateCardCountError || templateSentenceCardCountError);
+      }
 
       return {
-      id: template.id,
-      slug: template.slug,
-      name: template.name,
-      description: template.description,
-      level: template.level,
-      created_at: template.created_at,
+        id: template.id,
+        slug: template.slug,
+        name: template.name,
+        description: template.description,
+        level: template.level,
+        created_at: template.created_at,
         already_added: Boolean(existingDeck),
         user_deck_id: existingDeck?.id || null,
-      card_count: Array.isArray(template.template_cards)
-        ? template.template_cards.length +
-          (Array.isArray(template.template_sentence_cards)
-            ? template.template_sentence_cards.length
-            : 0)
-        : 0,
+        card_count: (templateCardCount || 0) + (templateSentenceCardCount || 0),
       };
     }),
+  );
+
+  return NextResponse.json({
+    templates: templatesWithCounts,
   });
 }
 
@@ -232,11 +328,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: templateCards, error: cardsError } = await supabase
-    .from("template_cards")
-    .select("*")
-    .eq("template_deck_id", template.id)
-    .order("position", { ascending: true });
+  const { data: templateCards, error: cardsError } =
+    await fetchAllTemplateCards(supabase, template.id);
 
   if (cardsError) {
     console.error(cardsError);
@@ -247,11 +340,7 @@ export async function POST(request: Request) {
   }
 
   const { data: templateSentenceCards, error: sentenceCardsError } =
-    await supabase
-      .from("template_sentence_cards")
-      .select("*")
-      .eq("template_deck_id", template.id)
-      .order("position", { ascending: true });
+    await fetchAllTemplateSentenceCards(supabase, template.id);
 
   const hasTemplateSentenceTable = !sentenceCardsError;
   const hasTemplateCards = Boolean(templateCards?.length);
@@ -326,26 +415,22 @@ export async function POST(request: Request) {
     true,
   );
 
-    let { data: insertedCards, error: insertCardsError } = await supabase
-    .from("cards")
-    .insert(mappedCards)
-    .select("id");
+    let { data: insertedCards, error: insertCardsError } =
+      await insertCardsInBatches(supabase, mappedCards);
 
   if (
     insertCardsError &&
     getErrorMessage(insertCardsError).includes("example_pinyin")
   ) {
-    const retryResult = await supabase
-      .from("cards")
-      .insert(
+    const retryResult = await insertCardsInBatches(
+      supabase,
         mapTemplateCards(
           user.id,
           deck.id,
           templateCards as TemplateCardRow[],
           false,
         ),
-      )
-      .select("id");
+      );
 
       insertedCards = retryResult.data;
     insertCardsError = retryResult.error;

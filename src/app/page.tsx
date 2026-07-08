@@ -70,7 +70,7 @@ const landingJsonLd = {
 const features = [
   {
     title: "Bộ HSK sẵn sàng",
-    body: "Bắt đầu nhanh với HSK1, HSK2 và các bộ chủ đề. Mỗi tài khoản có tiến độ riêng.",
+    body: "Bắt đầu nhanh với HSK1 đến HSK5 và các bộ chủ đề. Mỗi tài khoản có tiến độ riêng.",
   },
   {
     title: "Audio tiếng Trung",
@@ -220,7 +220,7 @@ export default async function Home({ searchParams }: HomeProps) {
               </Link>
             </div>
             <div className="mt-8 flex flex-wrap gap-2 text-sm text-stone-100">
-              <span className="rounded-md bg-white/12 px-3 py-2">HSK1/HSK2</span>
+              <span className="rounded-md bg-white/12 px-3 py-2">HSK1-HSK5</span>
               <span className="rounded-md bg-white/12 px-3 py-2">Audio</span>
               <span className="rounded-md bg-white/12 px-3 py-2">SRS</span>
               <span className="rounded-md bg-white/12 px-3 py-2">Luyện câu</span>
@@ -337,9 +337,9 @@ export default async function Home({ searchParams }: HomeProps) {
         <div className="mx-auto max-w-6xl px-5">
           <div className="grid gap-6 md:grid-cols-3">
             <div>
-              <div className="text-4xl font-semibold text-teal-700">150+</div>
+              <div className="text-4xl font-semibold text-teal-700">2.500+</div>
               <p className="mt-2 text-sm text-zinc-600">
-                Từ vựng HSK1 có sẵn để bắt đầu ngay.
+                Từ vựng HSK1-HSK5 có sẵn để bắt đầu ngay.
               </p>
             </div>
             <div>
