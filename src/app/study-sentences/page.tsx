@@ -1575,7 +1575,7 @@ export default function StudySentencesPage() {
                   onClick={() => changeAudioSpeed("slow")}
                   type="button"
                 >
-                  Chậm
+                  Nghe chậm
                 </button>
               </div>
               <button
