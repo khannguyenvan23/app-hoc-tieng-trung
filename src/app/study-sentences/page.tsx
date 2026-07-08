@@ -159,11 +159,91 @@ type SentenceAudioData = {
   sentenceAudioUrl: string | null;
 };
 
-function SentenceDiffToken({ item }: { item: SentenceDiffItem }) {
+function normalizePinyinSyllable(value: string) {
+  return value
+    .replace(/^[\s,.;:!?'"“”‘’()[\]{}，。！？；：、]+/u, "")
+    .replace(/[\s,.;:!?'"“”‘’()[\]{}，。！？；：、]+$/u, "")
+    .trim();
+}
+
+function getTokenPinyinMap(
+  sentence: string | null | undefined,
+  sentencePinyin: string | null | undefined,
+) {
+  const map = new Map<string, string[]>();
+
+  if (!sentence || !sentencePinyin) {
+    return map;
+  }
+
+  const pinyinSyllables = sentencePinyin
+    .split(/\s+/)
+    .map(normalizePinyinSyllable)
+    .filter(Boolean);
+  let syllableIndex = 0;
+
+  Array.from(sentence.normalize("NFKC")).forEach((character) => {
+    if (/^[\p{P}\p{S}\s]+$/u.test(character)) {
+      return;
+    }
+
+    const syllable = pinyinSyllables[syllableIndex];
+    syllableIndex += 1;
+
+    if (!syllable) {
+      return;
+    }
+
+    const values = map.get(character) || [];
+    values.push(syllable);
+    map.set(character, values);
+  });
+
+  return map;
+}
+
+function takeTokenPinyin(
+  token: string | null | undefined,
+  pinyinMap: Map<string, string[]>,
+) {
+  if (!token) {
+    return "";
+  }
+
+  const syllables: string[] = [];
+
+  Array.from(token.normalize("NFKC")).forEach((character) => {
+    if (/^[\p{P}\p{S}\s]+$/u.test(character)) {
+      return;
+    }
+
+    const values = pinyinMap.get(character);
+    const syllable = values?.shift();
+
+    if (syllable) {
+      syllables.push(syllable);
+    }
+  });
+
+  return syllables.join(" ");
+}
+
+function SentenceDiffToken({
+  item,
+  pinyin,
+}: {
+  item: SentenceDiffItem;
+  pinyin?: string;
+}) {
   return (
     <div
       className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border px-3 py-2 text-left sm:block sm:min-w-16 sm:text-center ${sentenceDiffStyles[item.status]}`}
     >
+      {pinyin ? (
+        <div className="mb-1 text-xs font-medium leading-tight text-teal-800">
+          {pinyin}
+        </div>
+      ) : null}
       <div className="flex min-w-0 items-center gap-1 text-lg font-semibold sm:justify-center">
         {item.status === "wrong" ? (
           <>
@@ -1317,12 +1397,23 @@ export default function StudySentencesPage() {
                             </p>
                           </div>
                           <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
-                            {sentenceDiff.items.map((item, itemIndex) => (
-                              <SentenceDiffToken
-                                item={item}
-                                key={`${item.status}-${itemIndex}-${item.actual || ""}-${item.expected || ""}`}
-                              />
-                            ))}
+                            {(() => {
+                              const tokenPinyinMap = getTokenPinyinMap(
+                                card.sentence_cn,
+                                card.sentence_pinyin,
+                              );
+
+                              return sentenceDiff.items.map((item, itemIndex) => (
+                                <SentenceDiffToken
+                                  item={item}
+                                  key={`${item.status}-${itemIndex}-${item.actual || ""}-${item.expected || ""}`}
+                                  pinyin={takeTokenPinyin(
+                                    item.expected || item.actual,
+                                    tokenPinyinMap,
+                                  )}
+                                />
+                              ));
+                            })()}
                           </div>
                         </div>
                       ) : null}
