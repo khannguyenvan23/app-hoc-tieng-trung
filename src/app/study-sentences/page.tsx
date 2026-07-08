@@ -1539,88 +1539,90 @@ export default function StudySentencesPage() {
             <p className="mt-3 text-sm text-red-700">{dailyLimitError}</p>
           ) : null}
 
-          <div className="mt-5 grid min-w-0 w-full grid-cols-3 gap-2 border-t border-zinc-200 pt-4 sm:flex sm:flex-wrap sm:items-center">
-            <select
-              aria-label="Chọn bộ thẻ luyện câu"
-              className="col-span-3 min-h-9 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700 sm:w-36 sm:shrink-0"
-              onChange={(event) => changeDeck(event.target.value)}
-              value={selectedDeckId}
-            >
-              <option value={allDecksValue}>Tất cả bộ thẻ</option>
-              {decks.map((deck) => (
-                <option key={deck.id} value={deck.id}>
-                  {deck.name}
-                </option>
-              ))}
-            </select>
-            <div className="col-span-3 grid min-h-9 w-full grid-cols-2 rounded-md border border-zinc-300 p-1 text-sm sm:w-40 sm:shrink-0">
+          <div className="mt-5 rounded-lg border border-zinc-200 bg-white p-2 shadow-sm">
+            <div className="grid min-w-0 w-full grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
+              <select
+                aria-label="Chọn bộ thẻ luyện câu"
+                className="col-span-3 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700 sm:w-44 sm:shrink-0"
+                onChange={(event) => changeDeck(event.target.value)}
+                value={selectedDeckId}
+              >
+                <option value={allDecksValue}>Tất cả bộ thẻ</option>
+                {decks.map((deck) => (
+                  <option key={deck.id} value={deck.id}>
+                    {deck.name}
+                  </option>
+                ))}
+              </select>
+              <div className="col-span-3 grid h-10 w-full grid-cols-2 rounded-md border border-zinc-300 bg-stone-50 p-1 text-sm sm:w-40 sm:shrink-0">
+                <button
+                  className={`rounded px-2 py-1 ${
+                    audioSpeed === "normal"
+                      ? "bg-teal-700 text-white shadow-sm"
+                      : "hover:bg-white"
+                  }`}
+                  onClick={() => changeAudioSpeed("normal")}
+                  type="button"
+                >
+                  Bình thường
+                </button>
+                <button
+                  className={`rounded px-2 py-1 ${
+                    audioSpeed === "slow"
+                      ? "bg-teal-700 text-white shadow-sm"
+                      : "hover:bg-white"
+                  }`}
+                  onClick={() => changeAudioSpeed("slow")}
+                  type="button"
+                >
+                  Chậm
+                </button>
+              </div>
               <button
-                className={`rounded px-2 py-1 ${
-                  audioSpeed === "normal"
-                    ? "bg-teal-700 text-white"
-                    : "hover:bg-zinc-100"
+                aria-pressed={writingMode}
+                className={`h-10 w-full rounded-md border px-3 text-sm font-medium sm:w-auto sm:shrink-0 ${
+                  writingMode
+                    ? "border-teal-700 bg-teal-50 text-teal-800"
+                    : "border-zinc-300 hover:bg-zinc-100"
                 }`}
-                onClick={() => changeAudioSpeed("normal")}
+                onClick={toggleWritingMode}
                 type="button"
               >
-                Bình thường
+                Viết
               </button>
               <button
-                className={`rounded px-2 py-1 ${
-                  audioSpeed === "slow"
-                    ? "bg-teal-700 text-white"
-                    : "hover:bg-zinc-100"
+                aria-pressed={dictationMode}
+                className={`h-10 w-full rounded-md border px-3 text-sm font-medium sm:w-auto sm:shrink-0 ${
+                  dictationMode
+                    ? "border-teal-700 bg-teal-50 text-teal-800"
+                    : "border-zinc-300 hover:bg-zinc-100"
                 }`}
-                onClick={() => changeAudioSpeed("slow")}
+                onClick={toggleDictationMode}
                 type="button"
               >
-                Chậm
+                Chính tả
               </button>
+              <button
+                aria-pressed={showPinyinHint}
+                className={`h-10 w-full rounded-md border px-3 text-sm font-medium sm:w-auto sm:shrink-0 ${
+                  showPinyinHint
+                    ? "border-teal-700 bg-teal-50 text-teal-800"
+                    : "border-zinc-300 hover:bg-zinc-100"
+                }`}
+                onClick={togglePinyinHint}
+                type="button"
+              >
+                Pinyin
+              </button>
+              {audioNotice ? (
+                <p className="col-span-3 text-left text-xs text-red-700 sm:basis-full sm:text-right">
+                  {audioNotice}{" "}
+                  <Link className="font-medium underline" href="/pricing">
+                    Nạp credit
+                  </Link>
+                </p>
+              ) : null}
             </div>
-            <button
-              aria-pressed={writingMode}
-              className={`min-h-9 w-full rounded-md border px-2 py-1.5 text-sm font-medium sm:w-auto sm:shrink-0 sm:px-3 ${
-                writingMode
-                  ? "border-teal-700 bg-teal-50 text-teal-800"
-                  : "border-zinc-300 hover:bg-zinc-100"
-              }`}
-              onClick={toggleWritingMode}
-              type="button"
-            >
-              Viết
-            </button>
-            <button
-              aria-pressed={dictationMode}
-              className={`min-h-9 w-full rounded-md border px-2 py-1.5 text-sm font-medium sm:w-auto sm:shrink-0 sm:px-3 ${
-                dictationMode
-                  ? "border-teal-700 bg-teal-50 text-teal-800"
-                  : "border-zinc-300 hover:bg-zinc-100"
-              }`}
-              onClick={toggleDictationMode}
-              type="button"
-            >
-              Chính tả
-            </button>
-            <button
-              aria-pressed={showPinyinHint}
-              className={`min-h-9 w-full rounded-md border px-2 py-1.5 text-sm font-medium sm:w-auto sm:shrink-0 sm:px-3 ${
-                showPinyinHint
-                  ? "border-teal-700 bg-teal-50 text-teal-800"
-                  : "border-zinc-300 hover:bg-zinc-100"
-              }`}
-              onClick={togglePinyinHint}
-              type="button"
-            >
-              Pinyin
-            </button>
-            {audioNotice ? (
-              <p className="col-span-3 text-left text-xs text-red-700 sm:basis-full sm:text-right">
-                {audioNotice}{" "}
-                <Link className="font-medium underline" href="/pricing">
-                  Nạp credit
-                </Link>
-              </p>
-            ) : null}
             <span className="sr-only">
               Chọn Bình thường để nghe tự nhiên hoặc Chậm để nghe rõ từng âm.
               Phím P bật tắt pinyin, W bật tắt luyện viết và D bật tắt chính tả.
