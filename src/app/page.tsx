@@ -179,7 +179,7 @@ export default async function Home({ searchParams }: HomeProps) {
             </Link>
             <Link
               className="rounded-md bg-white px-4 py-2 font-medium text-zinc-950 hover:bg-stone-100"
-              href="/login"
+              href="/trial"
             >
               Bắt đầu
             </Link>
@@ -202,7 +202,7 @@ export default async function Home({ searchParams }: HomeProps) {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 className="rounded-md bg-teal-600 px-5 py-3 text-sm font-semibold text-white hover:bg-teal-500"
-                href="/login"
+                href="/trial"
               >
                 Bắt đầu học miễn phí
               </Link>
@@ -315,7 +315,7 @@ export default async function Home({ searchParams }: HomeProps) {
             </ul>
             <Link
               className="mt-7 inline-flex rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white hover:bg-teal-800"
-              href="/login"
+              href="/trial"
             >
               Bắt đầu luyện chính tả
             </Link>
@@ -367,7 +367,7 @@ export default async function Home({ searchParams }: HomeProps) {
           </p>
           <Link
             className="mt-7 inline-flex rounded-md bg-teal-700 px-6 py-3 text-sm font-semibold text-white hover:bg-teal-800"
-            href="/login"
+            href="/trial"
           >
             Bắt đầu học miễn phí
           </Link>
