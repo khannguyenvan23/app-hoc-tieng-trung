@@ -257,9 +257,11 @@ function SentenceDiffToken({
           </span>
         )}
       </div>
-      <div className="text-right text-xs font-medium sm:mt-1 sm:text-center">
-        {sentenceDiffLabels[item.status]}
-      </div>
+      {item.status !== "missing" ? (
+        <div className="text-right text-xs font-medium sm:mt-1 sm:text-center">
+          {sentenceDiffLabels[item.status]}
+        </div>
+      ) : null}
     </div>
   );
 }
