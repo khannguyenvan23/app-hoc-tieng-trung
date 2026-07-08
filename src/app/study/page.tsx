@@ -1133,11 +1133,11 @@ export default function StudyPage() {
             </section>
           )}
 
-          <div className="mt-5 rounded-lg border border-zinc-200 bg-white p-2 shadow-sm">
+          <div className="mt-5 border-t border-zinc-200 pt-4">
             <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <select
                 aria-label="Chọn bộ thẻ ôn từ"
-                className="col-span-2 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700 sm:w-44 sm:shrink-0"
+                className="col-span-2 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
                 onChange={(event) => changeDeck(event.target.value)}
                 value={selectedDeckId}
               >
@@ -1148,12 +1148,12 @@ export default function StudyPage() {
                   </option>
                 ))}
               </select>
-              <div className="col-span-2 grid h-10 w-full grid-cols-2 rounded-md border border-zinc-300 bg-stone-50 p-1 text-sm sm:w-40 sm:shrink-0">
+              <div className="col-span-2 grid h-10 w-full grid-cols-2 rounded-md border border-zinc-200 bg-zinc-50 p-1 text-sm sm:w-40 sm:shrink-0">
                 <button
-                  className={`rounded px-2 py-1 ${
+                  className={`rounded px-2 py-1 font-medium transition ${
                     audioSpeed === "normal"
                       ? "bg-teal-700 text-white shadow-sm"
-                      : "hover:bg-white"
+                      : "text-zinc-700 hover:bg-white"
                   }`}
                   onClick={() => changeAudioSpeed("normal")}
                   type="button"
@@ -1161,10 +1161,10 @@ export default function StudyPage() {
                   Bình thường
                 </button>
                 <button
-                  className={`rounded px-2 py-1 ${
+                  className={`rounded px-2 py-1 font-medium transition ${
                     audioSpeed === "slow"
                       ? "bg-teal-700 text-white shadow-sm"
-                      : "hover:bg-white"
+                      : "text-zinc-700 hover:bg-white"
                   }`}
                   onClick={() => changeAudioSpeed("slow")}
                   type="button"
@@ -1174,7 +1174,7 @@ export default function StudyPage() {
               </div>
               <button
                 aria-pressed={writingMode}
-                className={`h-10 w-full rounded-md border px-3 text-sm font-medium sm:w-auto sm:shrink-0 ${
+                className={`h-10 w-full rounded-md border bg-white px-3 text-sm font-medium transition sm:w-auto sm:shrink-0 ${
                   writingMode
                     ? "border-teal-700 bg-teal-50 text-teal-800"
                     : "border-zinc-300 hover:bg-zinc-100"
@@ -1186,7 +1186,7 @@ export default function StudyPage() {
               </button>
               <button
                 aria-pressed={showPinyinHint}
-                className={`h-10 w-full rounded-md border px-3 text-sm font-medium sm:w-auto sm:shrink-0 ${
+                className={`h-10 w-full rounded-md border bg-white px-3 text-sm font-medium transition sm:w-auto sm:shrink-0 ${
                   showPinyinHint
                     ? "border-teal-700 bg-teal-50 text-teal-800"
                     : "border-zinc-300 hover:bg-zinc-100"
