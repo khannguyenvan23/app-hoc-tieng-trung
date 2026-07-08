@@ -16,6 +16,62 @@ type DeckAction =
   | "delete-sentences"
   | "delete-deck";
 
+type SupabaseBrowserClient = ReturnType<typeof createSupabaseBrowserClient>;
+
+const selectPageSize = 1000;
+
+async function fetchAllDeckCards(
+  supabase: SupabaseBrowserClient,
+  deckId: string,
+) {
+  const rows: Card[] = [];
+
+  for (let from = 0; ; from += selectPageSize) {
+    const { data, error } = await supabase
+      .from("cards")
+      .select("*")
+      .eq("deck_id", deckId)
+      .order("created_at", { ascending: false })
+      .range(from, from + selectPageSize - 1);
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    rows.push(...((data || []) as Card[]));
+
+    if (!data || data.length < selectPageSize) {
+      return { data: rows, error: null };
+    }
+  }
+}
+
+async function fetchAllDeckSentenceCards(
+  supabase: SupabaseBrowserClient,
+  deckId: string,
+) {
+  const rows: SentenceCard[] = [];
+
+  for (let from = 0; ; from += selectPageSize) {
+    const { data, error } = await supabase
+      .from("sentence_cards")
+      .select("*")
+      .eq("deck_id", deckId)
+      .order("created_at", { ascending: false })
+      .range(from, from + selectPageSize - 1);
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    rows.push(...((data || []) as SentenceCard[]));
+
+    if (!data || data.length < selectPageSize) {
+      return { data: rows, error: null };
+    }
+  }
+}
+
 export default function DeckPage() {
   const params = useParams<{ deckId: string }>();
   const router = useRouter();
@@ -43,16 +99,8 @@ export default function DeckPage() {
 
     Promise.all([
       supabase.from("decks").select("*").eq("id", params.deckId).single(),
-      supabase
-        .from("cards")
-        .select("*")
-        .eq("deck_id", params.deckId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("sentence_cards")
-        .select("*")
-        .eq("deck_id", params.deckId)
-        .order("created_at", { ascending: false }),
+      fetchAllDeckCards(supabase, params.deckId),
+      fetchAllDeckSentenceCards(supabase, params.deckId),
     ]).then(([deckResult, cardsResult, sentenceCardsResult]) => {
       const loadedDeck = (deckResult.data as Deck) || null;
       setDeck(loadedDeck);
