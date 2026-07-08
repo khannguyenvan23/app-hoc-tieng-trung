@@ -67,8 +67,8 @@ export default function ImportSentencesPage() {
             </div>
 
             <div className="mt-4 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-950">
-              Nên import 10-20 câu/lần để tạo AI và audio nhanh hơn. Tối đa
-              50 câu/lần. Mỗi câu đặt trên một dòng.
+              Nên import 10-20 câu/lần để AI xử lý nhanh hơn. Audio sẽ tự
+              tạo khi bạn vào luyện câu hoặc bấm phát âm. Tối đa 50 câu/lần.
             </div>
 
           <textarea
@@ -79,7 +79,7 @@ export default function ImportSentencesPage() {
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-zinc-600">
-              {items.length} câu sẵn sàng gửi AI · dự kiến cần {items.length * 3}{" "}
+              {items.length} câu sẵn sàng gửi AI · dự kiến cần {items.length * 2}{" "}
               credit
             </p>
             <button

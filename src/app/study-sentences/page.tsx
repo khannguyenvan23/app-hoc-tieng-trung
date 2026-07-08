@@ -716,7 +716,13 @@ export default function StudySentencesPage() {
     reviews.slice(index, index + 3).forEach((review) => {
       cacheSentenceAudio(getSentenceAudioUrl(review.sentence_cards));
     });
-  }, [cacheSentenceAudio, index, reviews]);
+
+    const currentCard = reviews[index]?.sentence_cards;
+
+    if (currentCard && !currentCard.sentence_audio_url) {
+      void ensureSentenceAudioForCard(currentCard);
+    }
+  }, [cacheSentenceAudio, ensureSentenceAudioForCard, index, reviews]);
 
   useEffect(() => {
     const audioCache = audioCacheRef.current;
