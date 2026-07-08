@@ -199,7 +199,7 @@ export default function StudyPage() {
   const [studySettings, setStudySettings] =
     useState<StudySettings>(defaultStudySettings);
   const [settingsLoaded, setSettingsLoaded] = useState(!configured);
-  const [newCardsStudiedToday, setNewCardsStudiedToday] = useState(0);
+  const [, setNewCardsStudiedToday] = useState(0);
   const [creditNotice, setCreditNotice] = useState("");
 
   const cacheAudio = useCallback(
@@ -912,10 +912,6 @@ export default function StudyPage() {
 
   const current = reviews[index];
   const card = current?.cards;
-  const selectedDeckName =
-    selectedDeckId === allDecksValue
-      ? "Tất cả"
-      : decks.find((deck) => deck.id === selectedDeckId)?.name || "Deck đã chọn";
 
   return (
     <AuthGuard>
@@ -923,13 +919,6 @@ export default function StudyPage() {
         <div className="mx-auto min-w-0 w-full max-w-2xl">
           <div className="mb-4">
             <h1 className="text-2xl font-semibold">Ôn tập</h1>
-            <p className="mt-1 text-sm text-zinc-600">
-              {reviews.length} thẻ cần ôn ngay trong {selectedDeckName}
-            </p>
-            <p className="mt-1 text-xs text-zinc-500">
-              Từ mới hôm nay: {newCardsStudiedToday} /{" "}
-              {studySettings.daily_new_card_limit}
-            </p>
           </div>
 
           {creditNotice ? (
