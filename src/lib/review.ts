@@ -99,15 +99,23 @@ export function getNextReview(
     nextReviewAt = addDays(now, nextInterval);
   } else if (rating === "good") {
     nextEase = clampEase(currentEase, settings);
+    const hardInterval = clampInterval(
+      Math.round(currentInterval * settings.hard_interval_multiplier),
+      settings,
+    );
     nextInterval = clampInterval(
-      Math.round(currentInterval * currentEase),
+      Math.max(hardInterval + 1, Math.round(currentInterval * currentEase)),
       settings,
     );
     nextReviewAt = addDays(now, nextInterval);
   } else {
     nextEase = clampEase(currentEase + 0.15, settings);
+    const hardInterval = clampInterval(
+      Math.round(currentInterval * settings.hard_interval_multiplier),
+      settings,
+    );
     const goodInterval = clampInterval(
-      Math.round(currentInterval * currentEase),
+      Math.max(hardInterval + 1, Math.round(currentInterval * currentEase)),
       settings,
     );
     nextInterval = clampInterval(

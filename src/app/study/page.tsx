@@ -108,6 +108,14 @@ function buildStudyQueue(
   return applyNewCardLimit(reviews, remainingNewCards, settings);
 }
 
+function countWaitingNewCards(reviews: DueReview[], remainingNewCards: number) {
+  const newCardCount = reviews.filter(
+    (review) => Number(review.review_count) === 0,
+  ).length;
+
+  return Math.max(0, newCardCount - remainingNewCards);
+}
+
 function getRatingIntervalLabel(
   rating: ReviewRating,
   review: DueReview,
@@ -207,7 +215,8 @@ export default function StudyPage() {
   const [studySettings, setStudySettings] =
     useState<StudySettings>(defaultStudySettings);
   const [settingsLoaded, setSettingsLoaded] = useState(!configured);
-  const [, setNewCardsStudiedToday] = useState(0);
+  const [newCardsStudiedToday, setNewCardsStudiedToday] = useState(0);
+  const [newCardsWaiting, setNewCardsWaiting] = useState(0);
   const [creditNotice, setCreditNotice] = useState("");
 
   const cacheAudio = useCallback(
@@ -328,16 +337,12 @@ export default function StudyPage() {
     [cacheAudio],
   );
 
-  const getNewCardsStudiedToday = useCallback(async (deckId = selectedDeckId) => {
+  const getNewCardsStudiedToday = useCallback(async () => {
     const supabase = createSupabaseBrowserClient();
-    let query = supabase
+    const query = supabase
       .from("reviews")
       .select("id, cards!inner(id)", { count: "exact", head: true })
       .gte("first_reviewed_at", startOfLocalDay(new Date()).toISOString());
-
-    if (deckId !== allDecksValue) {
-      query = query.eq("cards.deck_id", deckId);
-    }
 
     const { count, error } = await query;
 
@@ -345,19 +350,15 @@ export default function StudyPage() {
       return count || 0;
     }
 
-    let fallbackQuery = supabase
+    const fallbackQuery = supabase
       .from("reviews")
       .select("id, cards!inner(id)", { count: "exact", head: true })
       .eq("review_count", 1)
       .gte("updated_at", startOfLocalDay(new Date()).toISOString());
 
-    if (deckId !== allDecksValue) {
-      fallbackQuery = fallbackQuery.eq("cards.deck_id", deckId);
-    }
-
     const { count: fallbackCount } = await fallbackQuery;
     return fallbackCount || 0;
-  }, [selectedDeckId]);
+  }, []);
 
   async function loadReviews(deckId = selectedDeckId) {
     if (!configured) {
@@ -365,7 +366,7 @@ export default function StudyPage() {
     }
 
     const supabase = createSupabaseBrowserClient();
-    const studiedToday = await getNewCardsStudiedToday(deckId);
+    const studiedToday = await getNewCardsStudiedToday();
     const remainingNewCards = Math.max(
       0,
       studySettings.daily_new_card_limit - studiedToday,
@@ -398,11 +399,13 @@ export default function StudyPage() {
     }
 
     const { data } = await query;
+    const reviewRows = (data || []) as DueReview[];
 
     setNewCardsStudiedToday(studiedToday);
+    setNewCardsWaiting(countWaitingNewCards(reviewRows, remainingNewCards));
     setReviews(
       buildStudyQueue(
-        (data || []) as DueReview[],
+        reviewRows,
         remainingNewCards,
         studySettings,
       ),
@@ -530,7 +533,7 @@ export default function StudyPage() {
         : Promise.resolve();
 
     repairSelectedDeck.then(() =>
-      Promise.all([query, getNewCardsStudiedToday(selectedDeckId)]).then(async ([{ data }, studiedToday]) => {
+      Promise.all([query, getNewCardsStudiedToday()]).then(async ([{ data }, studiedToday]) => {
       if (!active) {
         return;
       }
@@ -576,10 +579,14 @@ export default function StudyPage() {
               return;
             }
 
+            const retryRows = (retryResult.data || []) as DueReview[];
             setNewCardsStudiedToday(studiedToday);
+            setNewCardsWaiting(
+              countWaitingNewCards(retryRows, remainingNewCards),
+            );
             setReviews(
               buildStudyQueue(
-                (retryResult.data || []) as DueReview[],
+                retryRows,
                 remainingNewCards,
                 studySettings,
               ),
@@ -594,10 +601,12 @@ export default function StudyPage() {
         }
       }
 
+      const reviewRows = (data || []) as DueReview[];
       setNewCardsStudiedToday(studiedToday);
+      setNewCardsWaiting(countWaitingNewCards(reviewRows, remainingNewCards));
       setReviews(
         buildStudyQueue(
-          (data || []) as DueReview[],
+          reviewRows,
           remainingNewCards,
           studySettings,
         ),
@@ -886,10 +895,28 @@ export default function StudyPage() {
     }
 
     stopCardAudio();
+    const wasNewCard = Number(current.review_count || 0) === 0;
+    const optimisticNextReview = getNextReview(
+      rating,
+      current,
+      new Date(),
+      studySettings,
+    );
+    const reviewedCurrent: DueReview = {
+      ...current,
+      ...optimisticNextReview,
+      last_rating: rating,
+      review_count: Number(current.review_count || 0) + 1,
+      updated_at: new Date().toISOString(),
+    };
     const savePromise = queueReviewSave(fetchWithAuth("/api/review", {
       method: "POST",
       body: JSON.stringify({ cardId: current.cards.id, rating }),
     }), "Khong the luu ket qua on tap.");
+
+    if (wasNewCard) {
+      setNewCardsStudiedToday((currentCount) => currentCount + 1);
+    }
 
     const nextIndex = index + 1;
     setShowAnswer(false);
@@ -900,7 +927,7 @@ export default function StudyPage() {
       const requeuedReviews = [
         ...reviews.slice(0, index),
         ...reviews.slice(index + 1),
-        current,
+        reviewedCurrent,
       ];
       setReviews(requeuedReviews);
       setIndex(Math.min(index, Math.max(0, requeuedReviews.length - 1)));
@@ -951,6 +978,10 @@ export default function StudyPage() {
 
   const current = reviews[index];
   const card = current?.cards;
+  const dailyLimitReached =
+    !weakOnly &&
+    newCardsWaiting > 0 &&
+    newCardsStudiedToday >= studySettings.daily_new_card_limit;
 
   return (
     <AuthGuard>
@@ -978,8 +1009,26 @@ export default function StudyPage() {
             </p>
           ) : !card ? (
             <EmptyState
-              body="Hiện chưa có thẻ nào cần ôn trong bộ đã chọn."
-              title="Bạn đã ôn xong"
+              action={
+                dailyLimitReached ? (
+                  <Link
+                    className="inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                    href="/options"
+                  >
+                    Mở cài đặt
+                  </Link>
+                ) : undefined
+              }
+              body={
+                dailyLimitReached
+                  ? `Bạn đã học đủ ${studySettings.daily_new_card_limit} thẻ mới hôm nay. Còn ít nhất ${newCardsWaiting} thẻ mới đang chờ trong bộ đã chọn.`
+                  : "Hiện chưa có thẻ nào cần ôn trong bộ đã chọn."
+              }
+              title={
+                dailyLimitReached
+                  ? "Đã đạt giới hạn thẻ mới hôm nay"
+                  : "Bạn đã ôn xong"
+              }
             />
           ) : (
             <section className="min-w-0 overflow-hidden rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">

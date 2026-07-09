@@ -491,16 +491,12 @@ export default function StudySentencesPage() {
     [cacheSentenceAudio],
   );
 
-  const getNewSentencesStudiedToday = useCallback(async (deckId = selectedDeckId) => {
+  const getNewSentencesStudiedToday = useCallback(async () => {
     const supabase = createSupabaseBrowserClient();
-    let query = supabase
+    const query = supabase
       .from("sentence_reviews")
       .select("id, sentence_cards!inner(id)", { count: "exact", head: true })
       .gte("first_reviewed_at", startOfLocalDay(new Date()).toISOString());
-
-    if (deckId !== allDecksValue) {
-      query = query.eq("sentence_cards.deck_id", deckId);
-    }
 
     const { count, error } = await query;
 
@@ -508,19 +504,15 @@ export default function StudySentencesPage() {
       return count || 0;
     }
 
-    let fallbackQuery = supabase
+    const fallbackQuery = supabase
       .from("sentence_reviews")
       .select("id, sentence_cards!inner(id)", { count: "exact", head: true })
       .eq("review_count", 1)
       .gte("updated_at", startOfLocalDay(new Date()).toISOString());
 
-    if (deckId !== allDecksValue) {
-      fallbackQuery = fallbackQuery.eq("sentence_cards.deck_id", deckId);
-    }
-
     const { count: fallbackCount } = await fallbackQuery;
     return fallbackCount || 0;
-  }, [selectedDeckId]);
+  }, []);
 
   async function loadReviews(deckId = selectedDeckId) {
     if (!configured) {
@@ -528,7 +520,7 @@ export default function StudySentencesPage() {
     }
 
     const supabase = createSupabaseBrowserClient();
-    const studiedToday = await getNewSentencesStudiedToday(deckId);
+    const studiedToday = await getNewSentencesStudiedToday();
     const remainingNewSentences = Math.max(
       0,
       studySettings.daily_new_sentence_limit - studiedToday,
@@ -707,7 +699,7 @@ export default function StudySentencesPage() {
         : Promise.resolve();
 
     repairSelectedDeck.then(() =>
-      Promise.all([query, getNewSentencesStudiedToday(selectedDeckId)]).then(
+      Promise.all([query, getNewSentencesStudiedToday()]).then(
         async ([{ data }, studiedToday]) => {
       if (!active) {
         return;
@@ -1139,6 +1131,20 @@ export default function StudySentencesPage() {
     }
 
     stopSentenceAudio();
+    const wasNewSentence = Number(current.review_count || 0) === 0;
+    const optimisticNextReview = getNextReview(
+      rating,
+      current,
+      new Date(),
+      studySettings,
+    );
+    const reviewedCurrent: DueSentenceReview = {
+      ...current,
+      ...optimisticNextReview,
+      last_rating: rating,
+      review_count: Number(current.review_count || 0) + 1,
+      updated_at: new Date().toISOString(),
+    };
     const savePromise = queueReviewSave(
       fetchWithAuth("/api/review-sentence", {
         method: "POST",
@@ -1150,6 +1156,10 @@ export default function StudySentencesPage() {
       "Khong the luu ket qua luyen cau.",
     );
 
+    if (wasNewSentence) {
+      setNewSentencesStudiedToday((currentCount) => currentCount + 1);
+    }
+
     const nextIndex = index + 1;
     setShowAnswer(false);
     setSentenceAnswer("");
@@ -1160,7 +1170,7 @@ export default function StudySentencesPage() {
       const requeuedReviews = [
         ...reviews.slice(0, index),
         ...reviews.slice(index + 1),
-        current,
+        reviewedCurrent,
       ];
       setReviews(requeuedReviews);
       setIndex(Math.min(index, Math.max(0, requeuedReviews.length - 1)));

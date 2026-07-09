@@ -54,14 +54,6 @@ export async function POST(request: Request) {
       !Array.isArray(card.sentence_reviews) ||
       card.sentence_reviews.length === 0,
   );
-  const newReviewIds = (sentenceCards || []).flatMap((card) =>
-    Array.isArray(card.sentence_reviews)
-      ? card.sentence_reviews
-          .filter((review) => Number(review.review_count || 0) === 0)
-          .map((review) => review.id)
-      : [],
-  );
-  const now = new Date().toISOString();
   const dueNow = new Date(Date.now() - 60_000).toISOString();
 
   if (cardsWithoutReviews.length > 0) {
@@ -82,29 +74,9 @@ export async function POST(request: Request) {
     }
   }
 
-  if (newReviewIds.length > 0) {
-    const { error: dueError } = await supabase
-      .from("sentence_reviews")
-      .update({
-        interval_days: 0,
-        next_review_at: dueNow,
-        updated_at: now,
-      })
-      .eq("user_id", user.id)
-      .in("id", newReviewIds);
-
-    if (dueError) {
-      console.error(dueError);
-      return NextResponse.json(
-        { error: `Khong the cap nhat lich on cau: ${dueError.message}` },
-        { status: 500 },
-      );
-    }
-  }
-
   return NextResponse.json({
     success: true,
     created: cardsWithoutReviews.length,
-    updated: newReviewIds.length,
+    updated: 0,
   });
 }
