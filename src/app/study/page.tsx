@@ -382,10 +382,12 @@ export default function StudyPage() {
         .gte("weak_score", 2)
         .order("weak_score", { ascending: false })
         .order("next_review_at", { ascending: true });
-    } else {
+    } else if (deckId === allDecksValue) {
       query = query
         .lte("next_review_at", dueReviewCutoff())
         .order("next_review_at", { ascending: true });
+    } else {
+      query = query.order("next_review_at", { ascending: true });
     }
 
     if (deckId !== allDecksValue) {
@@ -504,10 +506,12 @@ export default function StudyPage() {
         .gte("weak_score", 2)
         .order("weak_score", { ascending: false })
         .order("next_review_at", { ascending: true });
-    } else {
+    } else if (selectedDeckId === allDecksValue) {
       query = query
         .lte("next_review_at", dueReviewCutoff())
         .order("next_review_at", { ascending: true });
+    } else {
+      query = query.order("next_review_at", { ascending: true });
     }
 
     if (selectedDeckId !== allDecksValue) {
@@ -564,7 +568,6 @@ export default function StudyPage() {
             const retryQuery = supabase
               .from("reviews")
               .select("*, cards!inner(*)")
-              .lte("next_review_at", dueReviewCutoff())
               .eq("cards.deck_id", selectedDeckId)
               .order("next_review_at", { ascending: true })
               .limit(200);
@@ -908,6 +911,15 @@ export default function StudyPage() {
     if (nextIndex >= reviews.length) {
       setReviews([]);
       setIndex(0);
+
+      if (!weakOnly && selectedDeckId !== allDecksValue) {
+        void Promise.allSettled([
+          ...pendingReviewSavesRef.current,
+          savePromise,
+        ]);
+        return;
+      }
+
       setLoading(true);
       void Promise.allSettled([
         ...pendingReviewSavesRef.current,
