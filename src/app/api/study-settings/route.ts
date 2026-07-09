@@ -23,6 +23,16 @@ const updateSchema = z.object({
   insertion_order: z.enum(insertionOrders),
   review_again_interval_minutes: z.number().int().min(1).max(1440),
   hard_interval_multiplier: z.number().min(1).max(5),
+  easy_bonus: z.number().min(1).max(5),
+  interval_modifier: z.number().min(0.1).max(5),
+  relearning_steps: z
+    .string()
+    .trim()
+    .min(1)
+    .max(80)
+    .refine(isValidLearningSteps, "Invalid relearning steps"),
+  new_interval_percentage: z.number().min(0).max(100),
+  minimum_lapse_interval_days: z.number().int().min(1).max(365),
   starting_ease_factor: z.number().min(1.3).max(5),
   minimum_ease_factor: z.number().min(1.1).max(5),
   maximum_interval_days: z.number().int().min(1).max(3650),

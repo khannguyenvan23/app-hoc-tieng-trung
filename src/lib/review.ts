@@ -4,6 +4,7 @@ import {
   addMinutes,
   defaultStudySettings,
   getFirstLearningStepMinutes,
+  getFirstRelearningStepMinutes,
   getHardLearningStepMinutes,
   type StudySettings,
 } from "@/lib/study-settings";
@@ -23,6 +24,10 @@ function clampEase(easeFactor: number, settings: StudySettings) {
 
 function clampInterval(days: number, settings: StudySettings) {
   return Math.min(settings.maximum_interval_days, Math.max(1, days));
+}
+
+function applyIntervalModifier(days: number, settings: StudySettings) {
+  return Math.round(days * settings.interval_modifier);
 }
 
 function getLearningInterval(
@@ -87,39 +92,77 @@ export function getNextReview(
     nextEase = learningStep.nextEase;
     nextReviewAt = learningStep.nextReviewAt;
   } else if (rating === "again") {
-    nextEase = clampEase(currentEase - 0.25, settings);
-    nextInterval = 0;
-    nextReviewAt = addMinutes(now, settings.review_again_interval_minutes);
+    nextEase = clampEase(currentEase - 0.2, settings);
+    nextInterval = clampInterval(
+      Math.max(
+        settings.minimum_lapse_interval_days,
+        Math.round(
+          currentInterval * (settings.new_interval_percentage / 100),
+        ),
+      ),
+      settings,
+    );
+    nextReviewAt = addMinutes(now, getFirstRelearningStepMinutes(settings));
   } else if (rating === "hard") {
     nextEase = clampEase(currentEase - 0.15, settings);
     nextInterval = clampInterval(
-      Math.round(currentInterval * settings.hard_interval_multiplier),
+      Math.max(
+        currentInterval + 1,
+        applyIntervalModifier(
+          currentInterval * settings.hard_interval_multiplier,
+          settings,
+        ),
+      ),
       settings,
     );
     nextReviewAt = addDays(now, nextInterval);
   } else if (rating === "good") {
     nextEase = clampEase(currentEase, settings);
     const hardInterval = clampInterval(
-      Math.round(currentInterval * settings.hard_interval_multiplier),
+      Math.max(
+        currentInterval + 1,
+        applyIntervalModifier(
+          currentInterval * settings.hard_interval_multiplier,
+          settings,
+        ),
+      ),
       settings,
     );
     nextInterval = clampInterval(
-      Math.max(hardInterval + 1, Math.round(currentInterval * currentEase)),
+      Math.max(
+        hardInterval + 1,
+        applyIntervalModifier(currentInterval * currentEase, settings),
+      ),
       settings,
     );
     nextReviewAt = addDays(now, nextInterval);
   } else {
     nextEase = clampEase(currentEase + 0.15, settings);
     const hardInterval = clampInterval(
-      Math.round(currentInterval * settings.hard_interval_multiplier),
+      Math.max(
+        currentInterval + 1,
+        applyIntervalModifier(
+          currentInterval * settings.hard_interval_multiplier,
+          settings,
+        ),
+      ),
       settings,
     );
     const goodInterval = clampInterval(
-      Math.max(hardInterval + 1, Math.round(currentInterval * currentEase)),
+      Math.max(
+        hardInterval + 1,
+        applyIntervalModifier(currentInterval * currentEase, settings),
+      ),
       settings,
     );
     nextInterval = clampInterval(
-      Math.max(goodInterval + 1, Math.round(currentInterval * currentEase * 1.3)),
+      Math.max(
+        goodInterval + 1,
+        applyIntervalModifier(
+          currentInterval * currentEase * settings.easy_bonus,
+          settings,
+        ),
+      ),
       settings,
     );
     nextReviewAt = addDays(now, nextInterval);

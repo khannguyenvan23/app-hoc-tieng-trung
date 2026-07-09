@@ -11,6 +11,11 @@ export type StudySettings = {
   insertion_order: InsertionOrder;
   review_again_interval_minutes: number;
   hard_interval_multiplier: number;
+  easy_bonus: number;
+  interval_modifier: number;
+  relearning_steps: string;
+  new_interval_percentage: number;
+  minimum_lapse_interval_days: number;
   starting_ease_factor: number;
   minimum_ease_factor: number;
   maximum_interval_days: number;
@@ -25,6 +30,11 @@ export const defaultStudySettings: StudySettings = {
   insertion_order: "sequential",
   review_again_interval_minutes: 10,
   hard_interval_multiplier: 1.2,
+  easy_bonus: 1.3,
+  interval_modifier: 1,
+  relearning_steps: "10m",
+  new_interval_percentage: 0,
+  minimum_lapse_interval_days: 1,
   starting_ease_factor: 2.5,
   minimum_ease_factor: 1.3,
   maximum_interval_days: 365,
@@ -149,6 +159,37 @@ export function normalizeStudySettings(value: unknown): StudySettings {
         defaultStudySettings.hard_interval_multiplier,
       ).toFixed(2),
     ),
+    easy_bonus: Number(
+      clampNumber(
+        source.easy_bonus,
+        1,
+        5,
+        defaultStudySettings.easy_bonus,
+      ).toFixed(2),
+    ),
+    interval_modifier: Number(
+      clampNumber(
+        source.interval_modifier,
+        0.1,
+        5,
+        defaultStudySettings.interval_modifier,
+      ).toFixed(2),
+    ),
+    relearning_steps: normalizeLearningSteps(source.relearning_steps),
+    new_interval_percentage: Number(
+      clampNumber(
+        source.new_interval_percentage,
+        0,
+        100,
+        defaultStudySettings.new_interval_percentage,
+      ).toFixed(2),
+    ),
+    minimum_lapse_interval_days: clampInteger(
+      source.minimum_lapse_interval_days,
+      1,
+      365,
+      defaultStudySettings.minimum_lapse_interval_days,
+    ),
     starting_ease_factor: Number(
       clampNumber(
         source.starting_ease_factor,
@@ -192,6 +233,14 @@ export function getHardLearningStepMinutes(settings: StudySettings) {
   );
 }
 
+export function getFirstRelearningStepMinutes(settings: StudySettings) {
+  return (
+    parseLearningSteps(settings.relearning_steps)[0] ||
+    settings.review_again_interval_minutes ||
+    getFirstLearningStepMinutes(settings)
+  );
+}
+
 export function addMinutes(date: Date, minutes: number) {
   const nextDate = new Date(date);
   nextDate.setMinutes(nextDate.getMinutes() + minutes);
@@ -227,14 +276,14 @@ export function formatReviewIntervalLabel(
   intervalDays: number,
   now = new Date(),
 ) {
-  if (intervalDays > 0) {
-    return intervalDays === 1 ? "1 ngày" : `${intervalDays} ngày`;
-  }
-
   const minutes = Math.max(
     1,
     Math.round((new Date(nextReviewAt).getTime() - now.getTime()) / 60_000),
   );
+
+  if (intervalDays > 0 && minutes >= 23 * 60) {
+    return intervalDays === 1 ? "1 ngày" : `${intervalDays} ngày`;
+  }
 
   return formatMinutesAsViDuration(minutes);
 }

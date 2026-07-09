@@ -1143,7 +1143,11 @@ export default function StudySentencesPage() {
   }
 
   function scheduleLearningStepReload(nextReviewAt: string, intervalDays: number) {
-    if (intervalDays > 0) {
+    const minutesUntilDue = Math.round(
+      (new Date(nextReviewAt).getTime() - Date.now()) / 60_000,
+    );
+
+    if (intervalDays > 0 && minutesUntilDue >= 23 * 60) {
       return;
     }
 

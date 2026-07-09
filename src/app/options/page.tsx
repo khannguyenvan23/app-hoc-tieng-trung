@@ -21,6 +21,10 @@ type NumberSetting = {
     | "easy_interval_days"
     | "review_again_interval_minutes"
     | "hard_interval_multiplier"
+    | "easy_bonus"
+    | "interval_modifier"
+    | "new_interval_percentage"
+    | "minimum_lapse_interval_days"
     | "starting_ease_factor"
     | "minimum_ease_factor"
     | "maximum_interval_days"
@@ -72,17 +76,25 @@ const newCardSettings: NumberSetting[] = [
 
 const reviewSettings: NumberSetting[] = [
   {
-    key: "review_again_interval_minutes",
-    label: "Again interval",
-    min: 1,
-    max: 1440,
-    step: 1,
-    suffix: "phút",
-  },
-  {
     key: "hard_interval_multiplier",
     label: "Hard multiplier",
     min: 1,
+    max: 5,
+    step: 0.05,
+    suffix: "x",
+  },
+  {
+    key: "easy_bonus",
+    label: "Easy bonus",
+    min: 1,
+    max: 5,
+    step: 0.05,
+    suffix: "x",
+  },
+  {
+    key: "interval_modifier",
+    label: "Interval modifier",
+    min: 0.1,
     max: 5,
     step: 0.05,
     suffix: "x",
@@ -110,6 +122,33 @@ const reviewSettings: NumberSetting[] = [
     max: 3650,
     step: 1,
     suffix: "ngày",
+  },
+];
+
+const lapseSettings: NumberSetting[] = [
+  {
+    key: "new_interval_percentage",
+    label: "New interval",
+    min: 0,
+    max: 100,
+    step: 1,
+    suffix: "%",
+  },
+  {
+    key: "minimum_lapse_interval_days",
+    label: "Minimum interval",
+    min: 1,
+    max: 365,
+    step: 1,
+    suffix: "ngày",
+  },
+  {
+    key: "review_again_interval_minutes",
+    label: "Again fallback",
+    min: 1,
+    max: 1440,
+    step: 1,
+    suffix: "phút",
   },
 ];
 
@@ -171,6 +210,11 @@ export default function OptionsPage() {
     setMessage("");
   }
 
+  function updateRelearningSteps(value: string) {
+    setSettings((current) => ({ ...current, relearning_steps: value }));
+    setMessage("");
+  }
+
   function resetDefaults() {
     setSettings(defaultStudySettings);
     setMessage("");
@@ -179,6 +223,11 @@ export default function OptionsPage() {
   async function saveSettings() {
     if (!isValidLearningSteps(settings.learning_steps)) {
       setMessage("Learning steps phải có dạng như 10m hoặc 3m 8m.");
+      return;
+    }
+
+    if (!isValidLearningSteps(settings.relearning_steps)) {
+      setMessage("Relearning steps phải có dạng như 10m hoặc 3m 8m.");
       return;
     }
 
@@ -370,6 +419,53 @@ export default function OptionsPage() {
                   </div>
                 </label>
               ))}
+            </div>
+          </section>
+
+          <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+            <h2 className="text-xl font-semibold">Lapses</h2>
+            <div className="mt-4 grid gap-4">
+              <label className="block text-sm font-medium">
+                Relearning steps
+                <input
+                  className={`mt-2 w-full rounded-md border px-3 py-2 outline-none focus:border-teal-700 ${
+                    isValidLearningSteps(settings.relearning_steps)
+                      ? "border-zinc-300"
+                      : "border-red-400"
+                  }`}
+                  disabled={loading}
+                  onChange={(event) =>
+                    updateRelearningSteps(event.target.value)
+                  }
+                  placeholder="10m hoặc 3m 10m"
+                  value={settings.relearning_steps}
+                />
+              </label>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {lapseSettings.map((setting) => (
+                  <label className="block text-sm font-medium" key={setting.key}>
+                    {setting.label}
+                    <div className="mt-2 flex overflow-hidden rounded-md border border-zinc-300 bg-white focus-within:border-teal-700">
+                      <input
+                        className="min-h-10 w-full px-3 py-2 outline-none"
+                        disabled={loading}
+                        max={setting.max}
+                        min={setting.min}
+                        onChange={(event) =>
+                          updateNumberSetting(setting, event.target.value)
+                        }
+                        step={setting.step}
+                        type="number"
+                        value={settings[setting.key]}
+                      />
+                      <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-500">
+                        {setting.suffix}
+                      </span>
+                    </div>
+                  </label>
+                ))}
+              </div>
             </div>
           </section>
         </div>
