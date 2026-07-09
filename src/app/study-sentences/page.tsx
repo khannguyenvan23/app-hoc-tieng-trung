@@ -367,10 +367,14 @@ export default function StudySentencesPage() {
   const [settingsLoaded, setSettingsLoaded] = useState(!configured);
   const [newSentencesStudiedToday, setNewSentencesStudiedToday] = useState(0);
   const [newSentencesWaiting, setNewSentencesWaiting] = useState(0);
+  const [scheduledReloadAt, setScheduledReloadAt] = useState<string | null>(
+    null,
+  );
   const [updatingDailyLimit, setUpdatingDailyLimit] = useState(false);
   const [dailyLimitError, setDailyLimitError] = useState("");
   const [audioNotice, setAudioNotice] = useState("");
   const [creatingAudioId, setCreatingAudioId] = useState<string | null>(null);
+  const reloadReviewsRef = useRef<() => void>(() => {});
 
   const cacheSentenceAudio = useCallback(
     (audioUrl: string | null | undefined) => {
@@ -576,6 +580,12 @@ export default function StudySentencesPage() {
     setSentenceDiff(null);
     setLoading(false);
   }
+
+  useEffect(() => {
+    reloadReviewsRef.current = () => {
+      void loadReviews();
+    };
+  });
 
   useEffect(() => {
     if (!configured) {
@@ -1124,6 +1134,23 @@ export default function StudySentencesPage() {
     return trackedPromise;
   }
 
+  function scheduleLearningStepReload(nextReviewAt: string, intervalDays: number) {
+    if (intervalDays > 0) {
+      return;
+    }
+
+    setScheduledReloadAt((currentReloadAt) => {
+      if (!currentReloadAt) {
+        return nextReviewAt;
+      }
+
+      return new Date(nextReviewAt).getTime() <
+        new Date(currentReloadAt).getTime()
+        ? nextReviewAt
+        : currentReloadAt;
+    });
+  }
+
   function rate(rating: ReviewRating) {
     const current = reviews[index];
     if (!current?.sentence_cards) {
@@ -1141,6 +1168,9 @@ export default function StudySentencesPage() {
     const reviewedCurrent: DueSentenceReview = {
       ...current,
       ...optimisticNextReview,
+      first_reviewed_at:
+        current.first_reviewed_at ||
+        (wasNewSentence ? new Date().toISOString() : current.first_reviewed_at),
       last_rating: rating,
       review_count: Number(current.review_count || 0) + 1,
       updated_at: new Date().toISOString(),
@@ -1159,6 +1189,10 @@ export default function StudySentencesPage() {
     if (wasNewSentence) {
       setNewSentencesStudiedToday((currentCount) => currentCount + 1);
     }
+    scheduleLearningStepReload(
+      optimisticNextReview.next_review_at,
+      optimisticNextReview.interval_days,
+    );
 
     const nextIndex = index + 1;
     setShowAnswer(false);
@@ -1167,14 +1201,17 @@ export default function StudySentencesPage() {
     setSentenceDiff(null);
 
     if (rating === "again") {
-      const requeuedReviews = [
+      const remainingReviews = [
         ...reviews.slice(0, index),
         ...reviews.slice(index + 1),
-        reviewedCurrent,
       ];
-      setReviews(requeuedReviews);
-      setIndex(Math.min(index, Math.max(0, requeuedReviews.length - 1)));
-      return;
+
+      if (remainingReviews.length > 0) {
+        const requeuedReviews = [...remainingReviews, reviewedCurrent];
+        setReviews(requeuedReviews);
+        setIndex(Math.min(index, requeuedReviews.length - 1));
+        return;
+      }
     }
 
     if (nextIndex >= reviews.length) {
@@ -1200,6 +1237,30 @@ export default function StudySentencesPage() {
       setIndex(nextIndex);
     }
   }
+
+  useEffect(() => {
+    if (!scheduledReloadAt) {
+      return;
+    }
+
+    const delayMs = Math.max(
+      0,
+      new Date(scheduledReloadAt).getTime() - Date.now() + 500,
+    );
+    const timer = window.setTimeout(() => {
+      if (reviews.length > 0 || loading || repairingReviews) {
+        return;
+      }
+
+      setScheduledReloadAt(null);
+      setLoading(true);
+      reloadReviewsRef.current();
+    }, delayMs);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [loading, repairingReviews, reviews.length, scheduledReloadAt]);
 
   useEffect(() => {
     keyboardActionsRef.current = {
@@ -1253,6 +1314,12 @@ export default function StudySentencesPage() {
   }, [currentCardId, dictationMode, showAnswer]);
 
   const vocabItems = Array.isArray(card?.vocab_json) ? card.vocab_json : [];
+  const scheduledLearningStepLabel = scheduledReloadAt
+    ? formatReviewIntervalLabel(scheduledReloadAt, 0)
+    : "";
+  const waitingForLearningStep =
+    Boolean(scheduledReloadAt) &&
+    new Date(scheduledReloadAt || 0).getTime() > Date.now();
   const dailyLimitReached =
     !weakOnly &&
     newSentencesWaiting > 0 &&
@@ -1277,7 +1344,7 @@ export default function StudySentencesPage() {
           ) : !card ? (
             <EmptyState
               action={
-                dailyLimitReached ? (
+                !waitingForLearningStep && dailyLimitReached ? (
                   <div className="flex flex-wrap justify-center gap-2">
                     <button
                       className="min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
@@ -1299,12 +1366,16 @@ export default function StudySentencesPage() {
                 ) : undefined
               }
               body={
-                dailyLimitReached
+                waitingForLearningStep
+                  ? `Câu vừa bấm Quên/Khó sẽ quay lại sau ${scheduledLearningStepLabel} theo cài đặt Learning steps/Again interval.`
+                  : dailyLimitReached
                   ? `Bạn đã học đủ ${studySettings.daily_new_sentence_limit} câu mới hôm nay. Còn ít nhất ${newSentencesWaiting} câu mới đang chờ trong bộ đã chọn.`
                   : "Hiện chưa có câu nào cần ôn trong bộ đã chọn."
               }
               title={
-                dailyLimitReached
+                waitingForLearningStep
+                  ? "Đang chờ bước lặp lại"
+                  : dailyLimitReached
                   ? "Đã đạt giới hạn câu mới hôm nay"
                   : "Bạn đã luyện xong"
               }

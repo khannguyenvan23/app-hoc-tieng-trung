@@ -217,7 +217,11 @@ export default function StudyPage() {
   const [settingsLoaded, setSettingsLoaded] = useState(!configured);
   const [newCardsStudiedToday, setNewCardsStudiedToday] = useState(0);
   const [newCardsWaiting, setNewCardsWaiting] = useState(0);
+  const [scheduledReloadAt, setScheduledReloadAt] = useState<string | null>(
+    null,
+  );
   const [creditNotice, setCreditNotice] = useState("");
+  const reloadReviewsRef = useRef<() => void>(() => {});
 
   const cacheAudio = useCallback(
     (audioUrl: string | null | undefined) => {
@@ -416,6 +420,12 @@ export default function StudyPage() {
     setWritingResult("");
     setLoading(false);
   }
+
+  useEffect(() => {
+    reloadReviewsRef.current = () => {
+      void loadReviews();
+    };
+  });
 
   useEffect(() => {
     if (!configured) {
@@ -888,6 +898,23 @@ export default function StudyPage() {
     return trackedPromise;
   }
 
+  function scheduleLearningStepReload(nextReviewAt: string, intervalDays: number) {
+    if (intervalDays > 0) {
+      return;
+    }
+
+    setScheduledReloadAt((currentReloadAt) => {
+      if (!currentReloadAt) {
+        return nextReviewAt;
+      }
+
+      return new Date(nextReviewAt).getTime() <
+        new Date(currentReloadAt).getTime()
+        ? nextReviewAt
+        : currentReloadAt;
+    });
+  }
+
   function rate(rating: ReviewRating) {
     const current = reviews[index];
     if (!current?.cards) {
@@ -905,6 +932,9 @@ export default function StudyPage() {
     const reviewedCurrent: DueReview = {
       ...current,
       ...optimisticNextReview,
+      first_reviewed_at:
+        current.first_reviewed_at ||
+        (wasNewCard ? new Date().toISOString() : current.first_reviewed_at),
       last_rating: rating,
       review_count: Number(current.review_count || 0) + 1,
       updated_at: new Date().toISOString(),
@@ -917,6 +947,10 @@ export default function StudyPage() {
     if (wasNewCard) {
       setNewCardsStudiedToday((currentCount) => currentCount + 1);
     }
+    scheduleLearningStepReload(
+      optimisticNextReview.next_review_at,
+      optimisticNextReview.interval_days,
+    );
 
     const nextIndex = index + 1;
     setShowAnswer(false);
@@ -924,14 +958,17 @@ export default function StudyPage() {
     setWritingResult("");
 
     if (rating === "again") {
-      const requeuedReviews = [
+      const remainingReviews = [
         ...reviews.slice(0, index),
         ...reviews.slice(index + 1),
-        reviewedCurrent,
       ];
-      setReviews(requeuedReviews);
-      setIndex(Math.min(index, Math.max(0, requeuedReviews.length - 1)));
-      return;
+
+      if (remainingReviews.length > 0) {
+        const requeuedReviews = [...remainingReviews, reviewedCurrent];
+        setReviews(requeuedReviews);
+        setIndex(Math.min(index, requeuedReviews.length - 1));
+        return;
+      }
     }
 
     if (nextIndex >= reviews.length) {
@@ -959,6 +996,30 @@ export default function StudyPage() {
   }
 
   useEffect(() => {
+    if (!scheduledReloadAt) {
+      return;
+    }
+
+    const delayMs = Math.max(
+      0,
+      new Date(scheduledReloadAt).getTime() - Date.now() + 500,
+    );
+    const timer = window.setTimeout(() => {
+      if (reviews.length > 0 || loading || repairingReviews) {
+        return;
+      }
+
+      setScheduledReloadAt(null);
+      setLoading(true);
+      reloadReviewsRef.current();
+    }, delayMs);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [loading, repairingReviews, reviews.length, scheduledReloadAt]);
+
+  useEffect(() => {
     keyboardActionsRef.current = {
       replayAudio: () => {
         if (showAnswer) {
@@ -978,6 +1039,12 @@ export default function StudyPage() {
 
   const current = reviews[index];
   const card = current?.cards;
+  const scheduledLearningStepLabel = scheduledReloadAt
+    ? formatReviewIntervalLabel(scheduledReloadAt, 0)
+    : "";
+  const waitingForLearningStep =
+    Boolean(scheduledReloadAt) &&
+    new Date(scheduledReloadAt || 0).getTime() > Date.now();
   const dailyLimitReached =
     !weakOnly &&
     newCardsWaiting > 0 &&
@@ -1010,7 +1077,7 @@ export default function StudyPage() {
           ) : !card ? (
             <EmptyState
               action={
-                dailyLimitReached ? (
+                !waitingForLearningStep && dailyLimitReached ? (
                   <Link
                     className="inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
                     href="/options"
@@ -1020,12 +1087,16 @@ export default function StudyPage() {
                 ) : undefined
               }
               body={
-                dailyLimitReached
+                waitingForLearningStep
+                  ? `Thẻ vừa bấm Quên/Khó sẽ quay lại sau ${scheduledLearningStepLabel} theo cài đặt Learning steps/Again interval.`
+                  : dailyLimitReached
                   ? `Bạn đã học đủ ${studySettings.daily_new_card_limit} thẻ mới hôm nay. Còn ít nhất ${newCardsWaiting} thẻ mới đang chờ trong bộ đã chọn.`
                   : "Hiện chưa có thẻ nào cần ôn trong bộ đã chọn."
               }
               title={
-                dailyLimitReached
+                waitingForLearningStep
+                  ? "Đang chờ bước lặp lại"
+                  : dailyLimitReached
                   ? "Đã đạt giới hạn thẻ mới hôm nay"
                   : "Bạn đã ôn xong"
               }
