@@ -591,6 +591,7 @@ export default function DashboardPage() {
           </section>
         ) : null}
 
+        {false && (
         <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -678,6 +679,7 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+        )}
 
         {false && (
           <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">

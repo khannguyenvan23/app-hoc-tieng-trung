@@ -13,6 +13,30 @@ type ChartPoint = {
   count: number;
 };
 
+type HskProgressLevel = {
+  slug: string;
+  name: string;
+  level: string;
+  totalCards: number;
+  copiedCards: number;
+  learnedCards: number;
+  percent: number;
+};
+
+type HskProgress = {
+  levels: HskProgressLevel[];
+  totalLearned: number;
+  totalCards: number;
+  completedLevels: number;
+};
+
+const emptyProgress: HskProgress = {
+  levels: [],
+  totalLearned: 0,
+  totalCards: 0,
+  completedLevels: 0,
+};
+
 function toDateKey(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -130,6 +154,8 @@ export default function StatisticsPage() {
   const monthOptions = useMemo(() => getMonthOptions(), []);
   const [selectedMonth, setSelectedMonth] = useState(monthOptions[0].key);
   const [learnedDates, setLearnedDates] = useState<string[]>([]);
+  const [progress, setProgress] = useState<HskProgress>(emptyProgress);
+  const [progressLoading, setProgressLoading] = useState(configured);
   const [loading, setLoading] = useState(configured);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -157,6 +183,33 @@ export default function StatisticsPage() {
 
         setErrorMessage(getErrorMessage(error));
         setLoading(false);
+      });
+
+    fetchWithAuth("/api/progress")
+      .then(async (response) => {
+        if (!active) {
+          return;
+        }
+
+        if (response.ok) {
+          const progressData = await response.json();
+          setProgress((progressData || emptyProgress) as HskProgress);
+          return;
+        }
+
+        setProgress(emptyProgress);
+      })
+      .catch(() => {
+        if (!active) {
+          return;
+        }
+
+        setProgress(emptyProgress);
+      })
+      .finally(() => {
+        if (active) {
+          setProgressLoading(false);
+        }
       });
 
     return () => {
@@ -251,6 +304,94 @@ export default function StatisticsPage() {
             {errorMessage}
           </div>
         ) : null}
+
+        <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase text-teal-800">
+                Chứng chỉ & cấp độ
+              </p>
+              <h2 className="mt-1 text-xl font-semibold">
+                {progressLoading
+                  ? "Đang tính tiến độ HSK"
+                  : `Đã học ${progress.totalLearned} từ HSK`}
+              </h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                Theo dõi HSK1 đến HSK5 theo số từ đã ôn ít nhất một lần.
+              </p>
+            </div>
+            <div className="rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900">
+              Hoàn thành{" "}
+              <span className="text-lg font-semibold">
+                {progressLoading
+                  ? "..."
+                  : `${progress.completedLevels}/${progress.levels.length}`}
+              </span>{" "}
+              cấp
+            </div>
+          </div>
+
+          {progressLoading ? (
+            <p className="mt-5 text-sm text-zinc-600">
+              Đang tải tiến độ HSK...
+            </p>
+          ) : progress.levels.length === 0 ? (
+            <p className="mt-5 text-sm text-zinc-600">
+              Chưa có dữ liệu HSK. Hãy thêm bộ HSK mẫu và ôn ít nhất một thẻ.
+            </p>
+          ) : (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {progress.levels.map((level) => {
+                const remainingCards = Math.max(
+                  0,
+                  level.totalCards - level.learnedCards,
+                );
+                const copiedButNotStudied = Math.max(
+                  0,
+                  level.copiedCards - level.learnedCards,
+                );
+
+                return (
+                  <div
+                    className="rounded-md border border-zinc-200 bg-stone-50 p-4"
+                    key={level.slug}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold">{level.level}</h3>
+                        <p className="mt-1 text-xs text-zinc-500">
+                          {level.name}
+                        </p>
+                      </div>
+                      <span className="text-2xl font-semibold text-teal-800">
+                        {level.percent}%
+                      </span>
+                    </div>
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200">
+                      <div
+                        className="h-full rounded-full bg-teal-700"
+                        style={{ width: `${level.percent}%` }}
+                      />
+                    </div>
+                    <p className="mt-3 text-sm text-zinc-700">
+                      {level.learnedCards}/{level.totalCards} từ đã học
+                    </p>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      {remainingCards === 0
+                        ? "Đã hoàn thành cấp này."
+                        : `Còn ${remainingCards} từ để đạt 100%.`}
+                    </p>
+                    {copiedButNotStudied > 0 ? (
+                      <p className="mt-1 text-xs text-teal-800">
+                        {copiedButNotStudied} từ đã có trong bộ, chưa ôn.
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
 
         <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
