@@ -125,6 +125,25 @@ function applyNewSentenceLimit(
   );
 }
 
+function buildSentenceStudyQueue(
+  reviews: DueSentenceReview[],
+  remainingNewSentences: number,
+  settings: StudySettings,
+  capTotalSentences: boolean,
+) {
+  const queue = applyNewSentenceLimit(
+    reviews,
+    remainingNewSentences,
+    settings,
+  );
+
+  if (!capTotalSentences) {
+    return queue;
+  }
+
+  return queue.slice(0, Math.max(0, settings.daily_new_sentence_limit));
+}
+
 function countWaitingNewSentences(
   reviews: DueSentenceReview[],
   remainingNewSentences: number,
@@ -568,10 +587,11 @@ export default function StudySentencesPage() {
       countWaitingNewSentences(reviewRows, remainingNewSentences),
     );
     setReviews(
-      applyNewSentenceLimit(
+      buildSentenceStudyQueue(
         reviewRows,
         remainingNewSentences,
         studySettings,
+        !weakOnly,
       ),
     );
     setIndex(0);
@@ -763,10 +783,11 @@ export default function StudySentencesPage() {
               countWaitingNewSentences(retryRows, remainingNewSentences),
             );
             setReviews(
-              applyNewSentenceLimit(
+              buildSentenceStudyQueue(
                 retryRows,
                 remainingNewSentences,
                 studySettings,
+                !weakOnly,
               ),
             );
             setIndex(0);
@@ -786,10 +807,11 @@ export default function StudySentencesPage() {
         countWaitingNewSentences(reviewRows, remainingNewSentences),
       );
       setReviews(
-        applyNewSentenceLimit(
+        buildSentenceStudyQueue(
           reviewRows,
           remainingNewSentences,
           studySettings,
+          !weakOnly,
         ),
       );
       setIndex(0);

@@ -100,6 +100,21 @@ function applyNewCardLimit(
   );
 }
 
+function buildStudyQueue(
+  reviews: DueReview[],
+  remainingNewCards: number,
+  settings: StudySettings,
+  capTotalCards: boolean,
+) {
+  const queue = applyNewCardLimit(reviews, remainingNewCards, settings);
+
+  if (!capTotalCards) {
+    return queue;
+  }
+
+  return queue.slice(0, Math.max(0, settings.daily_new_card_limit));
+}
+
 function getRatingIntervalLabel(
   rating: ReviewRating,
   review: DueReview,
@@ -398,10 +413,11 @@ export default function StudyPage() {
 
     setNewCardsStudiedToday(studiedToday);
     setReviews(
-      applyNewCardLimit(
+      buildStudyQueue(
         (data || []) as DueReview[],
         remainingNewCards,
         studySettings,
+        !weakOnly,
       ),
     );
     setIndex(0);
@@ -579,10 +595,11 @@ export default function StudyPage() {
 
             setNewCardsStudiedToday(studiedToday);
             setReviews(
-              applyNewCardLimit(
+              buildStudyQueue(
                 (retryResult.data || []) as DueReview[],
                 remainingNewCards,
                 studySettings,
+                !weakOnly,
               ),
             );
             setIndex(0);
@@ -597,10 +614,11 @@ export default function StudyPage() {
 
       setNewCardsStudiedToday(studiedToday);
       setReviews(
-        applyNewCardLimit(
+        buildStudyQueue(
           (data || []) as DueReview[],
           remainingNewCards,
           studySettings,
+          !weakOnly,
         ),
       );
       setIndex(0);
