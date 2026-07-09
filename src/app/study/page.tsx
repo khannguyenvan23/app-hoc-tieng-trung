@@ -358,10 +358,23 @@ export default function StudyPage() {
 
     const supabase = createSupabaseBrowserClient();
     const studiedToday = await getNewCardsStudiedToday(deckId);
+    const shouldLimitNewCards = deckId === allDecksValue;
     const remainingNewCards = Math.max(
       0,
-      studySettings.daily_new_card_limit - studiedToday,
+      shouldLimitNewCards
+        ? studySettings.daily_new_card_limit - studiedToday
+        : Number.MAX_SAFE_INTEGER,
     );
+
+    if (!weakOnly && deckId !== allDecksValue) {
+      await fetchWithAuth("/api/repair-deck-reviews", {
+        method: "POST",
+        body: JSON.stringify({ deckId }),
+      }).catch((error) => {
+        console.warn("Could not repair deck reviews", error);
+      });
+    }
+
     let query = supabase.from("reviews").select("*, cards!inner(*)").limit(200);
 
     if (weakOnly) {
@@ -501,14 +514,28 @@ export default function StudyPage() {
       query = query.eq("cards.deck_id", selectedDeckId);
     }
 
-    Promise.all([query, getNewCardsStudiedToday(selectedDeckId)]).then(async ([{ data }, studiedToday]) => {
+    const repairSelectedDeck =
+      !weakOnly && selectedDeckId !== allDecksValue
+        ? fetchWithAuth("/api/repair-deck-reviews", {
+            method: "POST",
+            body: JSON.stringify({ deckId: selectedDeckId }),
+          }).catch((error) => {
+            console.warn("Could not repair deck reviews", error);
+          })
+        : Promise.resolve();
+
+    repairSelectedDeck.then(() =>
+      Promise.all([query, getNewCardsStudiedToday(selectedDeckId)]).then(async ([{ data }, studiedToday]) => {
       if (!active) {
         return;
       }
 
+      const shouldLimitNewCards = selectedDeckId === allDecksValue;
       const remainingNewCards = Math.max(
         0,
-        studySettings.daily_new_card_limit - studiedToday,
+        shouldLimitNewCards
+          ? studySettings.daily_new_card_limit - studiedToday
+          : Number.MAX_SAFE_INTEGER,
       );
 
       if (
@@ -578,7 +605,8 @@ export default function StudyPage() {
       setWritingAnswer("");
       setWritingResult("");
       setLoading(false);
-    });
+      }),
+    );
 
     return () => {
       active = false;

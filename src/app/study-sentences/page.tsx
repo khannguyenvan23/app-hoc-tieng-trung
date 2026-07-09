@@ -521,10 +521,23 @@ export default function StudySentencesPage() {
 
     const supabase = createSupabaseBrowserClient();
     const studiedToday = await getNewSentencesStudiedToday(deckId);
+    const shouldLimitNewSentences = deckId === allDecksValue;
     const remainingNewSentences = Math.max(
       0,
-      studySettings.daily_new_sentence_limit - studiedToday,
+      shouldLimitNewSentences
+        ? studySettings.daily_new_sentence_limit - studiedToday
+        : Number.MAX_SAFE_INTEGER,
     );
+
+    if (!weakOnly && deckId !== allDecksValue) {
+      await fetchWithAuth("/api/repair-sentence-deck-reviews", {
+        method: "POST",
+        body: JSON.stringify({ deckId }),
+      }).catch((error) => {
+        console.warn("Could not repair sentence deck reviews", error);
+      });
+    }
+
     let query = supabase
       .from("sentence_reviews")
       .select("*, sentence_cards!inner(*)")
@@ -678,15 +691,29 @@ export default function StudySentencesPage() {
       query = query.eq("sentence_cards.deck_id", selectedDeckId);
     }
 
-    Promise.all([query, getNewSentencesStudiedToday(selectedDeckId)]).then(
-      async ([{ data }, studiedToday]) => {
+    const repairSelectedDeck =
+      !weakOnly && selectedDeckId !== allDecksValue
+        ? fetchWithAuth("/api/repair-sentence-deck-reviews", {
+            method: "POST",
+            body: JSON.stringify({ deckId: selectedDeckId }),
+          }).catch((error) => {
+            console.warn("Could not repair sentence deck reviews", error);
+          })
+        : Promise.resolve();
+
+    repairSelectedDeck.then(() =>
+      Promise.all([query, getNewSentencesStudiedToday(selectedDeckId)]).then(
+        async ([{ data }, studiedToday]) => {
       if (!active) {
         return;
       }
 
+      const shouldLimitNewSentences = selectedDeckId === allDecksValue;
       const remainingNewSentences = Math.max(
         0,
-        studySettings.daily_new_sentence_limit - studiedToday,
+        shouldLimitNewSentences
+          ? studySettings.daily_new_sentence_limit - studiedToday
+          : Number.MAX_SAFE_INTEGER,
       );
 
       if (
@@ -768,7 +795,8 @@ export default function StudySentencesPage() {
       setWritingResult("");
       setSentenceDiff(null);
       setLoading(false);
-      },
+        },
+      ),
     );
 
     return () => {
