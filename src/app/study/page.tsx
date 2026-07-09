@@ -341,12 +341,16 @@ export default function StudyPage() {
     [cacheAudio],
   );
 
-  const getNewCardsStudiedToday = useCallback(async () => {
+  const getNewCardsStudiedToday = useCallback(async (deckId = selectedDeckId) => {
     const supabase = createSupabaseBrowserClient();
-    const query = supabase
+    let query = supabase
       .from("reviews")
       .select("id, cards!inner(id)", { count: "exact", head: true })
       .gte("first_reviewed_at", startOfLocalDay(new Date()).toISOString());
+
+    if (deckId !== allDecksValue) {
+      query = query.eq("cards.deck_id", deckId);
+    }
 
     const { count, error } = await query;
 
@@ -354,15 +358,19 @@ export default function StudyPage() {
       return count || 0;
     }
 
-    const fallbackQuery = supabase
+    let fallbackQuery = supabase
       .from("reviews")
       .select("id, cards!inner(id)", { count: "exact", head: true })
       .eq("review_count", 1)
       .gte("updated_at", startOfLocalDay(new Date()).toISOString());
 
+    if (deckId !== allDecksValue) {
+      fallbackQuery = fallbackQuery.eq("cards.deck_id", deckId);
+    }
+
     const { count: fallbackCount } = await fallbackQuery;
     return fallbackCount || 0;
-  }, []);
+  }, [selectedDeckId]);
 
   async function loadReviews(deckId = selectedDeckId) {
     if (!configured) {
@@ -370,7 +378,7 @@ export default function StudyPage() {
     }
 
     const supabase = createSupabaseBrowserClient();
-    const studiedToday = await getNewCardsStudiedToday();
+    const studiedToday = await getNewCardsStudiedToday(deckId);
     const remainingNewCards = Math.max(
       0,
       studySettings.daily_new_card_limit - studiedToday,
@@ -543,7 +551,7 @@ export default function StudyPage() {
         : Promise.resolve();
 
     repairSelectedDeck.then(() =>
-      Promise.all([query, getNewCardsStudiedToday()]).then(async ([{ data }, studiedToday]) => {
+      Promise.all([query, getNewCardsStudiedToday(selectedDeckId)]).then(async ([{ data }, studiedToday]) => {
       if (!active) {
         return;
       }

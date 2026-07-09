@@ -495,12 +495,16 @@ export default function StudySentencesPage() {
     [cacheSentenceAudio],
   );
 
-  const getNewSentencesStudiedToday = useCallback(async () => {
+  const getNewSentencesStudiedToday = useCallback(async (deckId = selectedDeckId) => {
     const supabase = createSupabaseBrowserClient();
-    const query = supabase
+    let query = supabase
       .from("sentence_reviews")
       .select("id, sentence_cards!inner(id)", { count: "exact", head: true })
       .gte("first_reviewed_at", startOfLocalDay(new Date()).toISOString());
+
+    if (deckId !== allDecksValue) {
+      query = query.eq("sentence_cards.deck_id", deckId);
+    }
 
     const { count, error } = await query;
 
@@ -508,15 +512,19 @@ export default function StudySentencesPage() {
       return count || 0;
     }
 
-    const fallbackQuery = supabase
+    let fallbackQuery = supabase
       .from("sentence_reviews")
       .select("id, sentence_cards!inner(id)", { count: "exact", head: true })
       .eq("review_count", 1)
       .gte("updated_at", startOfLocalDay(new Date()).toISOString());
 
+    if (deckId !== allDecksValue) {
+      fallbackQuery = fallbackQuery.eq("sentence_cards.deck_id", deckId);
+    }
+
     const { count: fallbackCount } = await fallbackQuery;
     return fallbackCount || 0;
-  }, []);
+  }, [selectedDeckId]);
 
   async function loadReviews(deckId = selectedDeckId) {
     if (!configured) {
@@ -524,7 +532,7 @@ export default function StudySentencesPage() {
     }
 
     const supabase = createSupabaseBrowserClient();
-    const studiedToday = await getNewSentencesStudiedToday();
+    const studiedToday = await getNewSentencesStudiedToday(deckId);
     const remainingNewSentences = Math.max(
       0,
       studySettings.daily_new_sentence_limit - studiedToday,
@@ -709,7 +717,7 @@ export default function StudySentencesPage() {
         : Promise.resolve();
 
     repairSelectedDeck.then(() =>
-      Promise.all([query, getNewSentencesStudiedToday()]).then(
+      Promise.all([query, getNewSentencesStudiedToday(selectedDeckId)]).then(
         async ([{ data }, studiedToday]) => {
       if (!active) {
         return;
