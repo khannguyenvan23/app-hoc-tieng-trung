@@ -104,15 +104,8 @@ function buildStudyQueue(
   reviews: DueReview[],
   remainingNewCards: number,
   settings: StudySettings,
-  capTotalCards: boolean,
 ) {
-  const queue = applyNewCardLimit(reviews, remainingNewCards, settings);
-
-  if (!capTotalCards) {
-    return queue;
-  }
-
-  return queue.slice(0, Math.max(0, settings.daily_new_card_limit));
+  return applyNewCardLimit(reviews, remainingNewCards, settings);
 }
 
 function getRatingIntervalLabel(
@@ -373,12 +366,9 @@ export default function StudyPage() {
 
     const supabase = createSupabaseBrowserClient();
     const studiedToday = await getNewCardsStudiedToday(deckId);
-    const shouldLimitNewCards = deckId === allDecksValue;
     const remainingNewCards = Math.max(
       0,
-      shouldLimitNewCards
-        ? studySettings.daily_new_card_limit - studiedToday
-        : Number.MAX_SAFE_INTEGER,
+      studySettings.daily_new_card_limit - studiedToday,
     );
 
     if (!weakOnly && deckId !== allDecksValue) {
@@ -397,12 +387,10 @@ export default function StudyPage() {
         .gte("weak_score", 2)
         .order("weak_score", { ascending: false })
         .order("next_review_at", { ascending: true });
-    } else if (deckId === allDecksValue) {
+    } else {
       query = query
         .lte("next_review_at", dueReviewCutoff())
         .order("next_review_at", { ascending: true });
-    } else {
-      query = query.order("next_review_at", { ascending: true });
     }
 
     if (deckId !== allDecksValue) {
@@ -417,7 +405,6 @@ export default function StudyPage() {
         (data || []) as DueReview[],
         remainingNewCards,
         studySettings,
-        !weakOnly,
       ),
     );
     setIndex(0);
@@ -522,12 +509,10 @@ export default function StudyPage() {
         .gte("weak_score", 2)
         .order("weak_score", { ascending: false })
         .order("next_review_at", { ascending: true });
-    } else if (selectedDeckId === allDecksValue) {
+    } else {
       query = query
         .lte("next_review_at", dueReviewCutoff())
         .order("next_review_at", { ascending: true });
-    } else {
-      query = query.order("next_review_at", { ascending: true });
     }
 
     if (selectedDeckId !== allDecksValue) {
@@ -550,12 +535,9 @@ export default function StudyPage() {
         return;
       }
 
-      const shouldLimitNewCards = selectedDeckId === allDecksValue;
       const remainingNewCards = Math.max(
         0,
-        shouldLimitNewCards
-          ? studySettings.daily_new_card_limit - studiedToday
-          : Number.MAX_SAFE_INTEGER,
+        studySettings.daily_new_card_limit - studiedToday,
       );
 
       if (
@@ -584,6 +566,7 @@ export default function StudyPage() {
             const retryQuery = supabase
               .from("reviews")
               .select("*, cards!inner(*)")
+              .lte("next_review_at", dueReviewCutoff())
               .eq("cards.deck_id", selectedDeckId)
               .order("next_review_at", { ascending: true })
               .limit(200);
@@ -599,7 +582,6 @@ export default function StudyPage() {
                 (retryResult.data || []) as DueReview[],
                 remainingNewCards,
                 studySettings,
-                !weakOnly,
               ),
             );
             setIndex(0);
@@ -618,7 +600,6 @@ export default function StudyPage() {
           (data || []) as DueReview[],
           remainingNewCards,
           studySettings,
-          !weakOnly,
         ),
       );
       setIndex(0);

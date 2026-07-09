@@ -129,19 +129,8 @@ function buildSentenceStudyQueue(
   reviews: DueSentenceReview[],
   remainingNewSentences: number,
   settings: StudySettings,
-  capTotalSentences: boolean,
 ) {
-  const queue = applyNewSentenceLimit(
-    reviews,
-    remainingNewSentences,
-    settings,
-  );
-
-  if (!capTotalSentences) {
-    return queue;
-  }
-
-  return queue.slice(0, Math.max(0, settings.daily_new_sentence_limit));
+  return applyNewSentenceLimit(reviews, remainingNewSentences, settings);
 }
 
 function countWaitingNewSentences(
@@ -540,12 +529,9 @@ export default function StudySentencesPage() {
 
     const supabase = createSupabaseBrowserClient();
     const studiedToday = await getNewSentencesStudiedToday(deckId);
-    const shouldLimitNewSentences = deckId === allDecksValue;
     const remainingNewSentences = Math.max(
       0,
-      shouldLimitNewSentences
-        ? studySettings.daily_new_sentence_limit - studiedToday
-        : Number.MAX_SAFE_INTEGER,
+      studySettings.daily_new_sentence_limit - studiedToday,
     );
 
     if (!weakOnly && deckId !== allDecksValue) {
@@ -567,12 +553,10 @@ export default function StudySentencesPage() {
         .gte("weak_score", 2)
         .order("weak_score", { ascending: false })
         .order("next_review_at", { ascending: true });
-    } else if (deckId === allDecksValue) {
+    } else {
       query = query
         .lte("next_review_at", dueReviewCutoff())
         .order("next_review_at", { ascending: true });
-    } else {
-      query = query.order("next_review_at", { ascending: true });
     }
 
     if (deckId !== allDecksValue) {
@@ -591,7 +575,6 @@ export default function StudySentencesPage() {
         reviewRows,
         remainingNewSentences,
         studySettings,
-        !weakOnly,
       ),
     );
     setIndex(0);
@@ -703,12 +686,10 @@ export default function StudySentencesPage() {
         .gte("weak_score", 2)
         .order("weak_score", { ascending: false })
         .order("next_review_at", { ascending: true });
-    } else if (selectedDeckId === allDecksValue) {
+    } else {
       query = query
         .lte("next_review_at", dueReviewCutoff())
         .order("next_review_at", { ascending: true });
-    } else {
-      query = query.order("next_review_at", { ascending: true });
     }
 
     if (selectedDeckId !== allDecksValue) {
@@ -732,12 +713,9 @@ export default function StudySentencesPage() {
         return;
       }
 
-      const shouldLimitNewSentences = selectedDeckId === allDecksValue;
       const remainingNewSentences = Math.max(
         0,
-        shouldLimitNewSentences
-          ? studySettings.daily_new_sentence_limit - studiedToday
-          : Number.MAX_SAFE_INTEGER,
+        studySettings.daily_new_sentence_limit - studiedToday,
       );
 
       if (
@@ -769,6 +747,7 @@ export default function StudySentencesPage() {
             const retryResult = await supabase
               .from("sentence_reviews")
               .select("*, sentence_cards!inner(*)")
+              .lte("next_review_at", dueReviewCutoff())
               .eq("sentence_cards.deck_id", selectedDeckId)
               .order("next_review_at", { ascending: true })
               .limit(200);
@@ -787,7 +766,6 @@ export default function StudySentencesPage() {
                 retryRows,
                 remainingNewSentences,
                 studySettings,
-                !weakOnly,
               ),
             );
             setIndex(0);
@@ -811,7 +789,6 @@ export default function StudySentencesPage() {
           reviewRows,
           remainingNewSentences,
           studySettings,
-          !weakOnly,
         ),
       );
       setIndex(0);
