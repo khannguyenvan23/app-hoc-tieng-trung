@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell, EmptyState } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
+import { ReviewQueueStatus } from "@/components/review-queue-status";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
@@ -143,6 +144,14 @@ function countWaitingNewSentences(
   ).length;
 
   return Math.max(0, newSentenceCount - remainingNewSentences);
+}
+
+function shouldRequeueInCurrentSession(nextReviewAt: string) {
+  const minutesUntilDue = Math.round(
+    (new Date(nextReviewAt).getTime() - Date.now()) / 60_000,
+  );
+
+  return minutesUntilDue < 23 * 60;
 }
 
 function getRatingIntervalLabel(
@@ -1216,7 +1225,9 @@ export default function StudySentencesPage() {
     setWritingResult("");
     setSentenceDiff(null);
 
-    if (rating === "again") {
+    if (
+      shouldRequeueInCurrentSession(optimisticNextReview.next_review_at)
+    ) {
       if (remainingReviews.length > 0) {
         const requeuedReviews = [...remainingReviews, reviewedCurrent];
         setReviews(requeuedReviews);
@@ -1669,22 +1680,7 @@ export default function StudySentencesPage() {
           )}
 
           {reviews.length > 0 ? (
-            <div
-              aria-label={`Câu mới ${queueStats.new}, câu đang ôn ${queueStats.learning}, câu cần review ${queueStats.review}`}
-              className="mt-3 flex items-center justify-center text-sm font-medium"
-            >
-              <span className="text-sky-600" title="Câu mới">
-                {queueStats.new}
-              </span>
-              <span className="px-1 text-zinc-400">+</span>
-              <span className="text-red-600" title="Câu đang ôn">
-                {queueStats.learning}
-              </span>
-              <span className="px-1 text-zinc-400">+</span>
-              <span className="text-emerald-700" title="Câu cần review">
-                {queueStats.review}
-              </span>
-            </div>
+            <ReviewQueueStatus itemName="Câu" stats={queueStats} />
           ) : null}
 
           {dailyLimitError ? (

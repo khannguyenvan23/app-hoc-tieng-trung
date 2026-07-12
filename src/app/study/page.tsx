@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell, EmptyState } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
+import { ReviewQueueStatus } from "@/components/review-queue-status";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
@@ -115,6 +116,14 @@ function countWaitingNewCards(reviews: DueReview[], remainingNewCards: number) {
   ).length;
 
   return Math.max(0, newCardCount - remainingNewCards);
+}
+
+function shouldRequeueInCurrentSession(nextReviewAt: string) {
+  const minutesUntilDue = Math.round(
+    (new Date(nextReviewAt).getTime() - Date.now()) / 60_000,
+  );
+
+  return minutesUntilDue < 23 * 60;
 }
 
 function getRatingIntervalLabel(
@@ -973,7 +982,9 @@ export default function StudyPage() {
     setWritingAnswer("");
     setWritingResult("");
 
-    if (rating === "again") {
+    if (
+      shouldRequeueInCurrentSession(optimisticNextReview.next_review_at)
+    ) {
       if (remainingReviews.length > 0) {
         const requeuedReviews = [...remainingReviews, reviewedCurrent];
         setReviews(requeuedReviews);
@@ -1306,22 +1317,7 @@ export default function StudyPage() {
           )}
 
           {reviews.length > 0 ? (
-            <div
-              aria-label={`Thẻ mới ${queueStats.new}, thẻ đang ôn ${queueStats.learning}, thẻ cần review ${queueStats.review}`}
-              className="mt-3 flex items-center justify-center text-sm font-medium"
-            >
-              <span className="text-sky-600" title="Thẻ mới">
-                {queueStats.new}
-              </span>
-              <span className="px-1 text-zinc-400">+</span>
-              <span className="text-red-600" title="Thẻ đang ôn">
-                {queueStats.learning}
-              </span>
-              <span className="px-1 text-zinc-400">+</span>
-              <span className="text-emerald-700" title="Thẻ cần review">
-                {queueStats.review}
-              </span>
-            </div>
+            <ReviewQueueStatus itemName="Thẻ" stats={queueStats} />
           ) : null}
 
           <div className="mt-5 border-t border-zinc-200 pt-4">
