@@ -1371,7 +1371,7 @@ export default function StudySentencesPage() {
                 !waitingForLearningStep && dailyLimitReached ? (
                   <div className="flex flex-wrap justify-center gap-2">
                     <button
-                      className="min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+                      className="btn-primary px-4 py-2 text-sm disabled:opacity-60"
                       disabled={updatingDailyLimit}
                       onClick={increaseDailySentenceLimit}
                       type="button"
@@ -1381,7 +1381,7 @@ export default function StudySentencesPage() {
                         : `Tăng lên ${suggestedDailyLimit} câu/ngày`}
                     </button>
                     <Link
-                      className="inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                      className="btn-secondary inline-flex items-center px-4 py-2 text-sm"
                       href="/options"
                     >
                       Mở cài đặt
@@ -1405,7 +1405,7 @@ export default function StudySentencesPage() {
               }
             />
           ) : (
-            <section className="min-w-0 overflow-hidden rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
+            <section className="study-card min-w-0 overflow-hidden p-4 sm:p-5">
               <div className="text-sm text-zinc-500">
                 Câu {index + 1} / {reviews.length}
               </div>
@@ -1421,7 +1421,7 @@ export default function StudySentencesPage() {
                     </div>
                     <div className="mt-5 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center">
                       <button
-                        className="min-h-10 rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60 sm:px-4"
+                        className="btn-secondary px-3 py-2 text-sm disabled:opacity-60 sm:px-4"
                         disabled={creatingAudioId === card.id}
                         onClick={() => void playSentenceAudio()}
                         type="button"
@@ -1470,13 +1470,13 @@ export default function StudySentencesPage() {
               {!showAnswer ? (
                 <div className="mt-7 sm:mt-10">
                   {writingMode || dictationMode ? (
-                    <div className="rounded-lg border border-zinc-200 bg-stone-50 p-3 sm:p-4">
+                    <div className="app-surface-muted rounded-xl p-3 sm:p-4">
                       <label className="block text-sm font-medium text-zinc-700">
                         {dictationMode
                           ? "Gõ lại câu tiếng Trung vừa nghe"
                           : "Gõ câu tiếng Trung"}
                         <textarea
-                          className="mt-2 h-24 w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-28 sm:text-2xl"
+                          className="mt-2 h-24 w-full rounded-xl border border-zinc-300 bg-white px-3 py-3 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-28 sm:text-2xl"
                           ref={sentenceAnswerRef}
                           onChange={(event) => {
                             setSentenceAnswer(event.target.value);
@@ -1519,7 +1519,7 @@ export default function StudySentencesPage() {
                       ) : null}
 
                       {writingResult === "wrong" && sentenceDiff ? (
-                        <div className="mt-4 rounded-md border border-zinc-200 bg-white p-3 sm:p-4">
+                        <div className="app-surface mt-4 rounded-xl p-3 sm:p-4">
                           <div className="flex flex-col items-start gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2">
                             <h3 className="text-sm font-semibold text-zinc-900">
                               Kết quả từng từ
@@ -1555,14 +1555,14 @@ export default function StudySentencesPage() {
 
                       <div className="mt-4 grid grid-cols-2 gap-2">
                         <button
-                          className="min-h-11 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                          className="btn-primary px-4 py-2 text-sm"
                           onClick={checkSentenceAnswer}
                           type="button"
                         >
                           Kiểm tra
                         </button>
                         <button
-                          className="min-h-11 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                          className="btn-secondary px-4 py-2 text-sm"
                           onClick={showAnswerAndPlayAudio}
                           type="button"
                         >
@@ -1572,7 +1572,7 @@ export default function StudySentencesPage() {
                     </div>
                   ) : (
                     <button
-                      className="min-h-11 w-full rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                      className="btn-primary w-full px-4 py-2 text-sm"
                       onClick={showAnswerAndPlayAudio}
                       type="button"
                     >
@@ -1587,7 +1587,7 @@ export default function StudySentencesPage() {
                       Đúng rồi. Đây là câu chính xác:
                     </div>
                   ) : null}
-                  <div className="rounded-lg bg-stone-50 p-3 text-center sm:p-4">
+                  <div className="study-answer-panel p-3 text-center sm:p-4">
                     <div className="text-2xl font-semibold leading-relaxed sm:text-3xl">
                       {card.sentence_cn}
                     </div>
@@ -1600,7 +1600,7 @@ export default function StudySentencesPage() {
                     {card.sentence_audio_url ? (
                       <div className="mt-3 flex justify-center">
                         <button
-                          className="min-h-9 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium hover:bg-zinc-100"
+                          className="btn-secondary px-3 py-1.5 text-sm"
                           onClick={() => void playSentenceAudio()}
                           type="button"
                         >
@@ -1625,7 +1625,7 @@ export default function StudySentencesPage() {
                   </div>
 
                   {vocabItems.length > 0 ? (
-                    <div className="mt-3 rounded-lg border border-zinc-200 bg-white">
+                    <div className="app-surface mt-3 rounded-xl">
                       <div className="border-b border-zinc-100 px-4 py-3 text-sm font-semibold">
                         Từ vựng trong câu
                       </div>
@@ -1654,7 +1654,7 @@ export default function StudySentencesPage() {
                     {(Object.keys(ratingLabels) as ReviewRating[]).map(
                       (rating) => (
                         <button
-                          className="min-h-14 rounded-md border border-zinc-300 px-3 py-2 text-sm hover:bg-zinc-100 disabled:opacity-60"
+                          className="rating-button px-3 py-2 text-sm disabled:opacity-60"
                           key={rating}
                           onClick={() => rate(rating)}
                           type="button"
@@ -1691,7 +1691,7 @@ export default function StudySentencesPage() {
             <div className="grid min-w-0 w-full grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <select
                 aria-label="Chọn bộ thẻ luyện câu"
-                className="col-span-3 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
+                className="col-span-3 h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
                 onChange={(event) => changeDeck(event.target.value)}
                 value={selectedDeckId}
               >
@@ -1702,9 +1702,9 @@ export default function StudySentencesPage() {
                   </option>
                 ))}
               </select>
-              <div className="col-span-3 grid h-10 w-full grid-cols-2 rounded-md border border-zinc-200 bg-zinc-50 p-1 text-sm sm:w-40 sm:shrink-0">
+              <div className="col-span-3 grid h-10 w-full grid-cols-2 rounded-xl border border-zinc-200 bg-zinc-50 p-1 text-sm shadow-sm sm:w-40 sm:shrink-0">
                 <button
-                  className={`rounded px-2 py-1 font-medium transition ${
+                  className={`rounded-lg px-2 py-1 font-medium transition ${
                     audioSpeed === "normal"
                       ? "bg-teal-700 text-white shadow-sm"
                       : "text-zinc-700 hover:bg-white"
@@ -1715,7 +1715,7 @@ export default function StudySentencesPage() {
                   Bình thường
                 </button>
                 <button
-                  className={`rounded px-2 py-1 font-medium transition ${
+                  className={`rounded-lg px-2 py-1 font-medium transition ${
                     audioSpeed === "slow"
                       ? "bg-teal-700 text-white shadow-sm"
                       : "text-zinc-700 hover:bg-white"
@@ -1728,10 +1728,10 @@ export default function StudySentencesPage() {
               </div>
               <button
                 aria-pressed={writingMode}
-                className={`h-10 w-full rounded-md border bg-white px-3 text-sm font-medium transition sm:w-auto sm:shrink-0 ${
+                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${
                   writingMode
-                    ? "border-teal-700 bg-teal-50 text-teal-800"
-                    : "border-zinc-300 hover:bg-zinc-100"
+                    ? "btn-mode-active"
+                    : ""
                 }`}
                 onClick={toggleWritingMode}
                 type="button"
@@ -1740,10 +1740,10 @@ export default function StudySentencesPage() {
               </button>
               <button
                 aria-pressed={dictationMode}
-                className={`h-10 w-full rounded-md border bg-white px-3 text-sm font-medium transition sm:w-auto sm:shrink-0 ${
+                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${
                   dictationMode
-                    ? "border-teal-700 bg-teal-50 text-teal-800"
-                    : "border-zinc-300 hover:bg-zinc-100"
+                    ? "btn-mode-active"
+                    : ""
                 }`}
                 onClick={toggleDictationMode}
                 type="button"
@@ -1752,10 +1752,10 @@ export default function StudySentencesPage() {
               </button>
               <button
                 aria-pressed={showPinyinHint}
-                className={`h-10 w-full rounded-md border bg-white px-3 text-sm font-medium transition sm:w-auto sm:shrink-0 ${
+                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${
                   showPinyinHint
-                    ? "border-teal-700 bg-teal-50 text-teal-800"
-                    : "border-zinc-300 hover:bg-zinc-100"
+                    ? "btn-mode-active"
+                    : ""
                 }`}
                 onClick={togglePinyinHint}
                 type="button"

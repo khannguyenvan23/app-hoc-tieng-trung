@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafaf9;
+  --background: #f6f8f7;
   --foreground: #18181b;
+  --surface: #ffffff;
+  --surface-soft: #f7f7f4;
+  --border-soft: #e4e4df;
+  --brand: #0f766e;
+  --brand-strong: #0b5f59;
+  --brand-soft: #e7f8f5;
 }
 
 @theme inline {
@@ -15,6 +21,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
+  min-height: 100vh;
 }
 
 button,
@@ -26,4 +33,117 @@ textarea {
     border-color 150ms ease,
     color 150ms ease,
     opacity 150ms ease;
+}
+
+button,
+a {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+::selection {
+  background: #99f6e4;
+  color: #134e4a;
+}
+
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 3px solid rgba(20, 184, 166, 0.25);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .app-bg {
+    background:
+      linear-gradient(180deg, rgba(240, 253, 250, 0.72), transparent 360px),
+      linear-gradient(90deg, rgba(250, 250, 249, 0.9), rgba(245, 245, 240, 0.7)),
+      var(--background);
+  }
+
+  .app-surface {
+    border: 1px solid var(--border-soft);
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow:
+      0 1px 2px rgba(24, 24, 27, 0.04),
+      0 12px 30px rgba(24, 24, 27, 0.06);
+  }
+
+  .app-surface-muted {
+    border: 1px solid var(--border-soft);
+    background: rgba(247, 247, 244, 0.9);
+  }
+
+  .btn-primary {
+    min-height: 2.75rem;
+    border-radius: 0.5rem;
+    background: var(--brand);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 8px 18px rgba(15, 118, 110, 0.18);
+  }
+
+  .btn-primary:hover {
+    background: var(--brand-strong);
+  }
+
+  .btn-secondary {
+    min-height: 2.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #d4d4d8;
+    background: rgba(255, 255, 255, 0.92);
+    font-weight: 600;
+  }
+
+  .btn-secondary:hover {
+    border-color: #a1a1aa;
+    background: #fafafa;
+  }
+
+  .btn-mode {
+    min-height: 2.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #d4d4d8;
+    background: rgba(255, 255, 255, 0.94);
+    font-weight: 600;
+  }
+
+  .btn-mode:hover {
+    background: #f4f4f5;
+  }
+
+  .btn-mode-active {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+    color: #115e59;
+  }
+
+  .study-card {
+    border: 1px solid var(--border-soft);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow:
+      0 1px 2px rgba(24, 24, 27, 0.04),
+      0 18px 44px rgba(24, 24, 27, 0.08);
+  }
+
+  .study-answer-panel {
+    border: 1px solid rgba(228, 228, 223, 0.72);
+    border-radius: 0.875rem;
+    background:
+      linear-gradient(180deg, rgba(250, 250, 249, 0.92), rgba(244, 244, 242, 0.72));
+  }
+
+  .rating-button {
+    min-height: 3.7rem;
+    border-radius: 0.75rem;
+    border: 1px solid #d4d4d8;
+    background: rgba(255, 255, 255, 0.96);
+  }
+
+  .rating-button:hover {
+    border-color: #14b8a6;
+    background: #f0fdfa;
+  }
 }

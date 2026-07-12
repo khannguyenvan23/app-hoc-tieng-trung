@@ -1103,7 +1103,7 @@ export default function StudyPage() {
               action={
                 !waitingForLearningStep && dailyLimitReached ? (
                   <Link
-                    className="inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                    className="btn-secondary inline-flex items-center px-4 py-2 text-sm"
                     href="/options"
                   >
                     Mở cài đặt
@@ -1126,7 +1126,7 @@ export default function StudyPage() {
               }
             />
           ) : (
-            <section className="min-w-0 overflow-hidden rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
+            <section className="study-card min-w-0 overflow-hidden p-4 sm:p-5">
               <div className="text-sm text-zinc-500">
                 Thẻ {index + 1} / {reviews.length}
               </div>
@@ -1143,11 +1143,11 @@ export default function StudyPage() {
               {!showAnswer ? (
                 <div className="mt-7 sm:mt-10">
                   {writingMode ? (
-                    <div className="rounded-lg border border-zinc-200 bg-stone-50 p-3 sm:p-4">
+                    <div className="app-surface-muted rounded-xl p-3 sm:p-4">
                       <label className="block text-sm font-medium text-zinc-700">
                         Gõ chữ Hán bạn đoán
                         <input
-                          className="mt-2 w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-center text-2xl outline-none focus:border-teal-700 sm:text-3xl"
+                          className="mt-2 w-full rounded-xl border border-zinc-300 bg-white px-3 py-3 text-center text-2xl outline-none focus:border-teal-700 sm:text-3xl"
                           onChange={(event) => {
                             setWritingAnswer(event.target.value);
                             setWritingResult("");
@@ -1179,14 +1179,14 @@ export default function StudyPage() {
 
                       <div className="mt-4 grid grid-cols-2 gap-2">
                         <button
-                          className="min-h-11 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                          className="btn-primary px-4 py-2 text-sm"
                           onClick={checkWritingAnswer}
                           type="button"
                         >
                           Kiểm tra
                         </button>
                         <button
-                          className="min-h-11 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                          className="btn-secondary px-4 py-2 text-sm"
                           onClick={showAnswerAndPlayAudio}
                           type="button"
                         >
@@ -1196,7 +1196,7 @@ export default function StudyPage() {
                     </div>
                   ) : (
                     <button
-                      className="min-h-11 w-full rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                      className="btn-primary w-full px-4 py-2 text-sm"
                       onClick={showAnswerAndPlayAudio}
                       type="button"
                     >
@@ -1206,7 +1206,7 @@ export default function StudyPage() {
                 </div>
               ) : (
                 <div className="mt-4 sm:mt-5">
-                  <div className="rounded-lg bg-stone-50 p-3 text-center sm:p-4">
+                  <div className="study-answer-panel p-3 text-center sm:p-4">
                     <div className="text-4xl font-semibold sm:text-5xl">{card.chinese}</div>
                     {showPinyinHint && card?.pinyin ? (
                       <div className="mt-3 text-lg text-teal-800">
@@ -1240,7 +1240,7 @@ export default function StudyPage() {
                         {card.word_audio_url ? (
                           <>
                             <button
-                              className="min-h-9 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium hover:bg-zinc-100"
+                              className="btn-secondary px-3 py-1.5 text-sm"
                               onClick={() =>
                                 playVisibleAudio(wordAudioRef.current)
                               }
@@ -1263,7 +1263,7 @@ export default function StudyPage() {
                         {card.sentence_audio_url ? (
                           <>
                             <button
-                              className="min-h-9 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium hover:bg-zinc-100"
+                              className="btn-secondary px-3 py-1.5 text-sm"
                               onClick={() =>
                                 playVisibleAudio(sentenceAudioRef.current)
                               }
@@ -1291,7 +1291,7 @@ export default function StudyPage() {
                     {(Object.keys(ratingLabels) as ReviewRating[]).map(
                       (rating) => (
                         <button
-                          className="min-h-14 rounded-md border border-zinc-300 px-3 py-2 text-sm hover:bg-zinc-100 disabled:opacity-60"
+                          className="rating-button px-3 py-2 text-sm disabled:opacity-60"
                           key={rating}
                           onClick={() => rate(rating)}
                           type="button"
@@ -1324,7 +1324,7 @@ export default function StudyPage() {
             <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <select
                 aria-label="Chọn bộ thẻ ôn từ"
-                className="col-span-2 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
+                className="col-span-2 h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
                 onChange={(event) => changeDeck(event.target.value)}
                 value={selectedDeckId}
               >
@@ -1335,9 +1335,9 @@ export default function StudyPage() {
                   </option>
                 ))}
               </select>
-              <div className="col-span-2 grid h-10 w-full grid-cols-2 rounded-md border border-zinc-200 bg-zinc-50 p-1 text-sm sm:w-40 sm:shrink-0">
+              <div className="col-span-2 grid h-10 w-full grid-cols-2 rounded-xl border border-zinc-200 bg-zinc-50 p-1 text-sm shadow-sm sm:w-40 sm:shrink-0">
                 <button
-                  className={`rounded px-2 py-1 font-medium transition ${
+                  className={`rounded-lg px-2 py-1 font-medium transition ${
                     audioSpeed === "normal"
                       ? "bg-teal-700 text-white shadow-sm"
                       : "text-zinc-700 hover:bg-white"
@@ -1348,7 +1348,7 @@ export default function StudyPage() {
                   Bình thường
                 </button>
                 <button
-                  className={`rounded px-2 py-1 font-medium transition ${
+                  className={`rounded-lg px-2 py-1 font-medium transition ${
                     audioSpeed === "slow"
                       ? "bg-teal-700 text-white shadow-sm"
                       : "text-zinc-700 hover:bg-white"
@@ -1361,10 +1361,10 @@ export default function StudyPage() {
               </div>
               <button
                 aria-pressed={writingMode}
-                className={`h-10 w-full rounded-md border bg-white px-3 text-sm font-medium transition sm:w-auto sm:shrink-0 ${
+                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${
                   writingMode
-                    ? "border-teal-700 bg-teal-50 text-teal-800"
-                    : "border-zinc-300 hover:bg-zinc-100"
+                    ? "btn-mode-active"
+                    : ""
                 }`}
                 onClick={toggleWritingMode}
                 type="button"
@@ -1373,10 +1373,10 @@ export default function StudyPage() {
               </button>
               <button
                 aria-pressed={showPinyinHint}
-                className={`h-10 w-full rounded-md border bg-white px-3 text-sm font-medium transition sm:w-auto sm:shrink-0 ${
+                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${
                   showPinyinHint
-                    ? "border-teal-700 bg-teal-50 text-teal-800"
-                    : "border-zinc-300 hover:bg-zinc-100"
+                    ? "btn-mode-active"
+                    : ""
                 }`}
                 onClick={togglePinyinHint}
                 type="button"

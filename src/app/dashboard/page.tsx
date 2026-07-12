@@ -491,7 +491,7 @@ export default function DashboardPage() {
         </div>
 
         {showOnboarding ? (
-          <section className="mt-6 rounded-lg border border-teal-200 bg-white p-5 shadow-sm">
+          <section className="app-surface mt-6 rounded-xl p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold">Bắt đầu học trong 3 bước</h2>
@@ -506,7 +506,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="mt-5 grid gap-3 lg:grid-cols-3">
-              <div className="rounded-lg border border-zinc-200 bg-stone-50 p-4">
+              <div className="app-surface-muted rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-700 text-sm font-semibold text-white">
                     1
@@ -531,7 +531,7 @@ export default function DashboardPage() {
                 </button>
               </div>
 
-              <div className="rounded-lg border border-zinc-200 bg-stone-50 p-4">
+              <div className="app-surface-muted rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-700 text-sm font-semibold text-white">
                     2
@@ -556,7 +556,7 @@ export default function DashboardPage() {
                 </button>
               </div>
 
-              <div className="rounded-lg border border-zinc-200 bg-stone-50 p-4">
+              <div className="app-surface-muted rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-700 text-sm font-semibold text-white">
                     3
@@ -592,7 +592,7 @@ export default function DashboardPage() {
         ) : null}
 
         {false && (
-        <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <section className="app-surface mt-6 rounded-xl p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-medium uppercase text-teal-800">
@@ -682,7 +682,7 @@ export default function DashboardPage() {
         )}
 
         {false && (
-          <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+          <section className="app-surface mt-6 rounded-xl p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-medium uppercase text-teal-800">
@@ -794,7 +794,7 @@ export default function DashboardPage() {
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {decks.map((deck) => (
                   <Link
-                    className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm hover:border-teal-700"
+                    className="app-surface rounded-xl p-5 hover:border-teal-700"
                     href={`/decks/${deck.id}`}
                     key={deck.id}
                   >
@@ -833,7 +833,7 @@ export default function DashboardPage() {
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {sharedDecks.map((sharedDeck) => (
                 <article
-                  className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm"
+                  className="app-surface rounded-xl p-5"
                   key={sharedDeck.token}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -859,7 +859,7 @@ export default function DashboardPage() {
           )}
         </section>
 
-        <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <section className="app-surface mt-6 rounded-xl p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold">Cần học lại</h2>
@@ -893,7 +893,7 @@ export default function DashboardPage() {
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {weakItems.map((item) => (
                 <div
-                  className="rounded-md border border-zinc-200 bg-zinc-50 p-4"
+                  className="app-surface-muted rounded-xl p-4"
                   key={`${item.type}-${item.id}`}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -941,7 +941,7 @@ export default function DashboardPage() {
 
                 return (
                 <div
-                  className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm"
+                  className="app-surface rounded-xl p-5"
                   key={template.id}
                 >
                   <div className="flex items-start justify-between gap-3">

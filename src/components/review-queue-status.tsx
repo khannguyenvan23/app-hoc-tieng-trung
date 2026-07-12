@@ -36,13 +36,13 @@ export function ReviewQueueStatus({
   return (
     <div
       aria-label={`${itemName} mới ${stats.new}, ${itemName} đang ôn ${stats.learning}, ${itemName} cần review ${stats.review}`}
-      className="mx-auto mt-3 w-full max-w-md rounded-lg border border-zinc-200 bg-white p-1 shadow-sm"
+      className="app-surface mx-auto mt-3 w-full max-w-md rounded-xl p-1"
       role="status"
     >
       <div className="grid grid-cols-3 gap-1">
         {queueItems.map((item) => (
           <div
-            className={`min-w-0 rounded-md border px-2 py-2 text-center ${item.panelClassName}`}
+            className={`min-w-0 rounded-lg border px-2 py-2 text-center ${item.panelClassName}`}
             key={item.key}
             title={`${item.label}: ${stats[item.key]}`}
           >
