@@ -8,6 +8,7 @@ import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
 import { getNextReview } from "@/lib/review";
+import { getReviewQueueStats } from "@/lib/review-queue-stats";
 import { sortDecksByRecentContent } from "@/lib/deck-activity";
 import {
   defaultStudySettings,
@@ -1057,6 +1058,7 @@ export default function StudyPage() {
   const waitingForLearningStep =
     Boolean(scheduledReloadAt) &&
     new Date(scheduledReloadAt || 0).getTime() > Date.now();
+  const queueStats = getReviewQueueStats(reviews);
   const dailyLimitReached =
     !weakOnly &&
     newCardsWaiting > 0 &&
@@ -1303,6 +1305,25 @@ export default function StudyPage() {
               )}
             </section>
           )}
+
+          {reviews.length > 0 ? (
+            <div
+              aria-label={`Thẻ mới ${queueStats.new}, thẻ đang ôn ${queueStats.learning}, thẻ cần review ${queueStats.review}`}
+              className="mt-3 flex items-center justify-center text-sm font-medium"
+            >
+              <span className="text-sky-600" title="Thẻ mới">
+                {queueStats.new}
+              </span>
+              <span className="px-1 text-zinc-400">+</span>
+              <span className="text-red-600" title="Thẻ đang ôn">
+                {queueStats.learning}
+              </span>
+              <span className="px-1 text-zinc-400">+</span>
+              <span className="text-emerald-700" title="Thẻ cần review">
+                {queueStats.review}
+              </span>
+            </div>
+          ) : null}
 
           <div className="mt-5 border-t border-zinc-200 pt-4">
             <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">

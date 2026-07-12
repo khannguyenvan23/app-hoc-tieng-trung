@@ -9,6 +9,7 @@ import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
 import { sortDecksByRecentContent } from "@/lib/deck-activity";
 import { getNextReview } from "@/lib/review";
+import { getReviewQueueStats } from "@/lib/review-queue-stats";
 import {
   compareChineseSentences,
   type SentenceDiffItem,
@@ -1332,6 +1333,7 @@ export default function StudySentencesPage() {
   const waitingForLearningStep =
     Boolean(scheduledReloadAt) &&
     new Date(scheduledReloadAt || 0).getTime() > Date.now();
+  const queueStats = getReviewQueueStats(reviews);
   const dailyLimitReached =
     !weakOnly &&
     newSentencesWaiting > 0 &&
@@ -1666,6 +1668,25 @@ export default function StudySentencesPage() {
               )}
             </section>
           )}
+
+          {reviews.length > 0 ? (
+            <div
+              aria-label={`Câu mới ${queueStats.new}, câu đang ôn ${queueStats.learning}, câu cần review ${queueStats.review}`}
+              className="mt-3 flex items-center justify-center text-sm font-medium"
+            >
+              <span className="text-sky-600" title="Câu mới">
+                {queueStats.new}
+              </span>
+              <span className="px-1 text-zinc-400">+</span>
+              <span className="text-red-600" title="Câu đang ôn">
+                {queueStats.learning}
+              </span>
+              <span className="px-1 text-zinc-400">+</span>
+              <span className="text-emerald-700" title="Câu cần review">
+                {queueStats.review}
+              </span>
+            </div>
+          ) : null}
 
           {dailyLimitError ? (
             <p className="mt-3 text-sm text-red-700">{dailyLimitError}</p>
