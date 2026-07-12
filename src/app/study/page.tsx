@@ -965,17 +965,15 @@ export default function StudyPage() {
       optimisticNextReview.interval_days,
     );
 
-    const nextIndex = index + 1;
+    const remainingReviews = [
+      ...reviews.slice(0, index),
+      ...reviews.slice(index + 1),
+    ];
     setShowAnswer(false);
     setWritingAnswer("");
     setWritingResult("");
 
     if (rating === "again") {
-      const remainingReviews = [
-        ...reviews.slice(0, index),
-        ...reviews.slice(index + 1),
-      ];
-
       if (remainingReviews.length > 0) {
         const requeuedReviews = [...remainingReviews, reviewedCurrent];
         setReviews(requeuedReviews);
@@ -984,7 +982,7 @@ export default function StudyPage() {
       }
     }
 
-    if (nextIndex >= reviews.length) {
+    if (remainingReviews.length === 0) {
       setReviews([]);
       setIndex(0);
 
@@ -1004,7 +1002,8 @@ export default function StudyPage() {
         void loadReviews();
       });
     } else {
-      setIndex(nextIndex);
+      setReviews(remainingReviews);
+      setIndex(Math.min(index, remainingReviews.length - 1));
     }
   }
 
