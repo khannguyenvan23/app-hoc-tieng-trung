@@ -1085,10 +1085,6 @@ export default function StudyPage() {
     <AuthGuard>
       <AppShell>
         <div className="mx-auto min-w-0 w-full max-w-2xl">
-          <div className="mb-4">
-            <h1 className="text-2xl font-semibold">Ôn tập</h1>
-          </div>
-
           {creditNotice ? (
             <div className="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800">
               <div>{creditNotice}</div>

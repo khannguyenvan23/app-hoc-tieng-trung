@@ -1364,10 +1364,6 @@ export default function StudySentencesPage() {
     <AuthGuard>
       <AppShell>
         <div className="mx-auto min-w-0 w-full max-w-2xl">
-          <div className="mb-4">
-            <h1 className="text-2xl font-semibold">Luyện câu</h1>
-          </div>
-
           {loading || repairingReviews ? (
             <p className="text-sm text-zinc-600">
               {repairingReviews ? "Đang kiểm tra lịch ôn câu..." : "Đang tải câu..."}
