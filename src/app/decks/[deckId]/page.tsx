@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppShell, EmptyState, PrimaryLink } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
+import { DeckGridSkeleton } from "@/components/loading-skeletons";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -273,7 +274,14 @@ export default function DeckPage() {
     <AuthGuard>
       <AppShell>
         {loading ? (
-          <p className="text-sm text-zinc-600">Đang tải bộ thẻ...</p>
+          <div className="space-y-6">
+            <div>
+              <div className="h-8 w-56 animate-pulse rounded-md bg-zinc-200/80" />
+              <div className="mt-3 h-4 w-40 animate-pulse rounded-md bg-zinc-200/80" />
+            </div>
+            <DeckGridSkeleton count={3} />
+            <DeckGridSkeleton count={3} />
+          </div>
         ) : !deck ? (
           <EmptyState
             body="Không tìm thấy bộ thẻ này hoặc bạn không có quyền truy cập."

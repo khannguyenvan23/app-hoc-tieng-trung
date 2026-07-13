@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { SharedDeckPreviewSkeleton } from "@/components/loading-skeletons";
 import { fetchWithAuth } from "@/lib/fetch-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -144,7 +145,7 @@ export default function SharedDeckPage() {
 
       <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
         {loading ? (
-          <p className="text-sm text-zinc-600">Đang tải bộ thẻ được chia sẻ...</p>
+          <SharedDeckPreviewSkeleton />
         ) : !preview ? (
           <div className="rounded-lg border border-zinc-200 bg-white p-6 text-center">
             <h1 className="text-xl font-semibold">Không thể mở bộ thẻ</h1>

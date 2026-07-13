@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell, EmptyState } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
+import { StudyCardSkeleton } from "@/components/loading-skeletons";
 import { ReviewQueueStatus } from "@/components/review-queue-status";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
@@ -1365,9 +1366,7 @@ export default function StudySentencesPage() {
       <AppShell>
         <div className="mx-auto min-w-0 w-full max-w-2xl">
           {loading || repairingReviews ? (
-            <p className="text-sm text-zinc-600">
-              {repairingReviews ? "Đang kiểm tra lịch ôn câu..." : "Đang tải câu..."}
-            </p>
+            <StudyCardSkeleton />
           ) : !card ? (
             <EmptyState
               action={

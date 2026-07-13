@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppShell, EmptyState, PrimaryLink } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
+import {
+  CommunityDeckSkeleton,
+  DeckGridSkeleton,
+  HskProgressSkeleton,
+  WeakItemsSkeleton,
+} from "@/components/loading-skeletons";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
 import {
@@ -619,9 +625,7 @@ export default function DashboardPage() {
           </div>
 
           {progressLoading ? (
-            <p className="mt-5 text-sm text-zinc-600">
-              Đang tải tiến độ HSK...
-            </p>
+            <HskProgressSkeleton />
           ) : progress.levels.length === 0 ? (
             <p className="mt-5 text-sm text-zinc-600">
               Chưa có dữ liệu HSK. Hãy thêm bộ HSK mẫu và ôn ít nhất một thẻ.
@@ -783,7 +787,7 @@ export default function DashboardPage() {
 
           <div className="mt-4">
             {loading ? (
-              <p className="text-sm text-zinc-600">Đang tải bộ thẻ...</p>
+              <DeckGridSkeleton />
             ) : decks.length === 0 ? (
               <EmptyState
                 action={<PrimaryLink href="/decks/new">Tạo bộ thẻ</PrimaryLink>}
@@ -824,7 +828,7 @@ export default function DashboardPage() {
           </div>
 
           {loading ? (
-            <p className="mt-4 text-sm text-zinc-600">Đang tải bộ thẻ chia sẻ...</p>
+            <CommunityDeckSkeleton />
           ) : sharedDecks.length === 0 ? (
             <p className="mt-4 text-sm text-zinc-600">
               Chưa có học viên nào chia sẻ bộ thẻ.
@@ -884,7 +888,7 @@ export default function DashboardPage() {
           </div>
 
           {loading ? (
-            <p className="mt-4 text-sm text-zinc-600">Đang tải nhóm yếu...</p>
+            <WeakItemsSkeleton />
           ) : weakItems.length === 0 ? (
             <p className="mt-4 text-sm text-zinc-600">
               Chưa có thẻ nào bị quên nhiều lần.
@@ -991,7 +995,7 @@ export default function DashboardPage() {
               })}
             </div>
           ) : loading ? (
-            <p className="mt-3 text-sm text-zinc-600">Đang tải bộ mẫu...</p>
+            <DeckGridSkeleton />
           ) : (
             <p className="mt-3 text-sm text-zinc-600">
               Chưa có bộ thẻ mẫu. Hãy chạy migration template trong Supabase.
