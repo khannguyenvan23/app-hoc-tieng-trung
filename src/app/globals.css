@@ -32,7 +32,9 @@ textarea {
     background-color 150ms ease,
     border-color 150ms ease,
     color 150ms ease,
-    opacity 150ms ease;
+    opacity 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
 }
 
 button,
@@ -57,7 +59,7 @@ button:disabled {
 @layer components {
   .app-bg {
     background:
-      linear-gradient(180deg, rgba(240, 253, 250, 0.72), transparent 360px),
+      linear-gradient(180deg, rgba(240, 253, 250, 0.86), transparent 390px),
       linear-gradient(90deg, rgba(250, 250, 249, 0.9), rgba(245, 245, 240, 0.7)),
       var(--background);
   }
@@ -65,6 +67,7 @@ button:disabled {
   .app-surface {
     border: 1px solid var(--border-soft);
     background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(10px);
     box-shadow:
       0 1px 2px rgba(24, 24, 27, 0.04),
       0 12px 30px rgba(24, 24, 27, 0.06);
@@ -73,6 +76,7 @@ button:disabled {
   .app-surface-muted {
     border: 1px solid var(--border-soft);
     background: rgba(247, 247, 244, 0.9);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   }
 
   .btn-primary {
@@ -86,6 +90,7 @@ button:disabled {
 
   .btn-primary:hover {
     background: var(--brand-strong);
+    transform: translateY(-1px);
   }
 
   .btn-secondary {
@@ -99,6 +104,7 @@ button:disabled {
   .btn-secondary:hover {
     border-color: #a1a1aa;
     background: #fafafa;
+    transform: translateY(-1px);
   }
 
   .btn-mode {
@@ -120,6 +126,7 @@ button:disabled {
   }
 
   .study-card {
+    position: relative;
     border: 1px solid var(--border-soft);
     border-radius: 1rem;
     background: rgba(255, 255, 255, 0.96);
@@ -128,11 +135,20 @@ button:disabled {
       0 18px 44px rgba(24, 24, 27, 0.08);
   }
 
+  .study-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 4px;
+    background: linear-gradient(90deg, #0f766e, #14b8a6, #38bdf8);
+  }
+
   .study-answer-panel {
     border: 1px solid rgba(228, 228, 223, 0.72);
     border-radius: 0.875rem;
     background:
       linear-gradient(180deg, rgba(250, 250, 249, 0.92), rgba(244, 244, 242, 0.72));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
   }
 
   .rating-button {
@@ -140,10 +156,52 @@ button:disabled {
     border-radius: 0.75rem;
     border: 1px solid #d4d4d8;
     background: rgba(255, 255, 255, 0.96);
+    font-weight: 600;
   }
 
   .rating-button:hover {
     border-color: #14b8a6;
     background: #f0fdfa;
+    transform: translateY(-1px);
+  }
+
+  .rating-again {
+    border-color: #fecaca;
+    background: #fff7f7;
+  }
+
+  .rating-again:hover {
+    border-color: #ef4444;
+    background: #fef2f2;
+  }
+
+  .rating-hard {
+    border-color: #fed7aa;
+    background: #fffaf5;
+  }
+
+  .rating-hard:hover {
+    border-color: #f97316;
+    background: #fff7ed;
+  }
+
+  .rating-good {
+    border-color: #bfdbfe;
+    background: #f8fbff;
+  }
+
+  .rating-good:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+  }
+
+  .rating-easy {
+    border-color: #bbf7d0;
+    background: #f7fff9;
+  }
+
+  .rating-easy:hover {
+    border-color: #22c55e;
+    background: #f0fdf4;
   }
 }

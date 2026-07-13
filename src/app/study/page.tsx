@@ -29,6 +29,13 @@ const ratingLabels: Record<ReviewRating, string> = {
   easy: "Dễ",
 };
 
+const ratingToneClasses: Record<ReviewRating, string> = {
+  again: "rating-again",
+  hard: "rating-hard",
+  good: "rating-good",
+  easy: "rating-easy",
+};
+
 const audioSpeeds = {
   normal: 1,
   slow: 0.75,
@@ -1291,7 +1298,7 @@ export default function StudyPage() {
                     {(Object.keys(ratingLabels) as ReviewRating[]).map(
                       (rating) => (
                         <button
-                          className="rating-button px-3 py-2 text-sm disabled:opacity-60"
+                          className={`rating-button ${ratingToneClasses[rating]} px-3 py-2 text-sm disabled:opacity-60`}
                           key={rating}
                           onClick={() => rate(rating)}
                           type="button"
