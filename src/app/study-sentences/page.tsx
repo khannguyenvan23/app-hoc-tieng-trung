@@ -23,6 +23,11 @@ import {
   formatReviewIntervalLabel,
   type StudySettings,
 } from "@/lib/study-settings";
+import {
+  getStoredReviewIndex,
+  getStudySessionKey,
+  saveStoredReviewId,
+} from "@/lib/study-session";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type {
   Deck,
@@ -592,14 +597,18 @@ export default function StudySentencesPage() {
     setNewSentencesWaiting(
       countWaitingNewSentences(reviewRows, remainingNewSentences),
     );
-    setReviews(
-      buildSentenceStudyQueue(
-        reviewRows,
-        remainingNewSentences,
-        studySettings,
+    const reviewQueue = buildSentenceStudyQueue(
+      reviewRows,
+      remainingNewSentences,
+      studySettings,
+    );
+    setReviews(reviewQueue);
+    setIndex(
+      getStoredReviewIndex(
+        reviewQueue,
+        getStudySessionKey("sentence", deckId, weakOnly),
       ),
     );
-    setIndex(0);
     setShowAnswer(false);
     setSentenceAnswer("");
     setWritingResult("");
@@ -612,6 +621,17 @@ export default function StudySentencesPage() {
       void loadReviews();
     };
   });
+
+  useEffect(() => {
+    if (!configured || loading || reviews.length === 0) {
+      return;
+    }
+
+    saveStoredReviewId(
+      getStudySessionKey("sentence", selectedDeckId, weakOnly),
+      reviews[index]?.id,
+    );
+  }, [configured, index, loading, reviews, selectedDeckId, weakOnly]);
 
   useEffect(() => {
     if (!configured) {
@@ -785,18 +805,22 @@ export default function StudySentencesPage() {
             }
 
             const retryRows = (retryResult.data || []) as DueSentenceReview[];
+            const retryQueue = buildSentenceStudyQueue(
+              retryRows,
+              remainingNewSentences,
+              studySettings,
+            );
             setNewSentencesStudiedToday(studiedToday);
             setNewSentencesWaiting(
               countWaitingNewSentences(retryRows, remainingNewSentences),
             );
-            setReviews(
-              buildSentenceStudyQueue(
-                retryRows,
-                remainingNewSentences,
-                studySettings,
+            setReviews(retryQueue);
+            setIndex(
+              getStoredReviewIndex(
+                retryQueue,
+                getStudySessionKey("sentence", selectedDeckId, weakOnly),
               ),
             );
-            setIndex(0);
             setShowAnswer(false);
             setSentenceAnswer("");
             setWritingResult("");
@@ -808,18 +832,22 @@ export default function StudySentencesPage() {
       }
 
       const reviewRows = (data || []) as DueSentenceReview[];
+      const reviewQueue = buildSentenceStudyQueue(
+        reviewRows,
+        remainingNewSentences,
+        studySettings,
+      );
       setNewSentencesStudiedToday(studiedToday);
       setNewSentencesWaiting(
         countWaitingNewSentences(reviewRows, remainingNewSentences),
       );
-      setReviews(
-        buildSentenceStudyQueue(
-          reviewRows,
-          remainingNewSentences,
-          studySettings,
+      setReviews(reviewQueue);
+      setIndex(
+        getStoredReviewIndex(
+          reviewQueue,
+          getStudySessionKey("sentence", selectedDeckId, weakOnly),
         ),
       );
-      setIndex(0);
       setShowAnswer(false);
       setSentenceAnswer("");
       setWritingResult("");
