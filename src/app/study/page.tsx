@@ -448,6 +448,7 @@ export default function StudyPage() {
       getStoredReviewIndex(
         reviewQueue,
         getStudySessionKey("word", deckId, weakOnly),
+        (review) => review.cards?.id,
       ),
     );
     setShowAnswer(false);
@@ -470,6 +471,8 @@ export default function StudyPage() {
     saveStoredReviewId(
       getStudySessionKey("word", selectedDeckId, weakOnly),
       reviews[index]?.id,
+      reviews[index]?.cards?.id,
+      index,
     );
   }, [configured, index, loading, reviews, selectedDeckId, weakOnly]);
 
@@ -650,6 +653,7 @@ export default function StudyPage() {
               getStoredReviewIndex(
                 retryQueue,
                 getStudySessionKey("word", selectedDeckId, weakOnly),
+                (review) => review.cards?.id,
               ),
             );
             setShowAnswer(false);
@@ -674,6 +678,7 @@ export default function StudyPage() {
         getStoredReviewIndex(
           reviewQueue,
           getStudySessionKey("word", selectedDeckId, weakOnly),
+          (review) => review.cards?.id,
         ),
       );
       setShowAnswer(false);
