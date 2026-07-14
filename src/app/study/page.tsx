@@ -20,7 +20,9 @@ import {
 import {
   getStoredReviewIndex,
   getStudySessionKey,
+  restoreStoredReviewQueue,
   saveStoredReviewId,
+  saveStoredReviewQueue,
 } from "@/lib/study-session";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Card, Deck, DueReview, ReviewRating } from "@/lib/types";
@@ -438,16 +440,21 @@ export default function StudyPage() {
 
     setNewCardsStudiedToday(studiedToday);
     setNewCardsWaiting(countWaitingNewCards(reviewRows, remainingNewCards));
-    const reviewQueue = buildStudyQueue(
-      reviewRows,
-      remainingNewCards,
-      studySettings,
+    const storageKey = getStudySessionKey("word", deckId, weakOnly);
+    const reviewQueue = restoreStoredReviewQueue(
+      buildStudyQueue(
+        reviewRows,
+        remainingNewCards,
+        studySettings,
+      ),
+      storageKey,
+      (review) => review.cards?.id,
     );
     setReviews(reviewQueue);
     setIndex(
       getStoredReviewIndex(
         reviewQueue,
-        getStudySessionKey("word", deckId, weakOnly),
+        storageKey,
         (review) => review.cards?.id,
       ),
     );
@@ -468,8 +475,10 @@ export default function StudyPage() {
       return;
     }
 
+    const storageKey = getStudySessionKey("word", selectedDeckId, weakOnly);
+    saveStoredReviewQueue(storageKey, reviews);
     saveStoredReviewId(
-      getStudySessionKey("word", selectedDeckId, weakOnly),
+      storageKey,
       reviews[index]?.id,
       reviews[index]?.cards?.id,
       index,
@@ -639,10 +648,19 @@ export default function StudyPage() {
             }
 
             const retryRows = (retryResult.data || []) as DueReview[];
-            const retryQueue = buildStudyQueue(
-              retryRows,
-              remainingNewCards,
-              studySettings,
+            const storageKey = getStudySessionKey(
+              "word",
+              selectedDeckId,
+              weakOnly,
+            );
+            const retryQueue = restoreStoredReviewQueue(
+              buildStudyQueue(
+                retryRows,
+                remainingNewCards,
+                studySettings,
+              ),
+              storageKey,
+              (review) => review.cards?.id,
             );
             setNewCardsStudiedToday(studiedToday);
             setNewCardsWaiting(
@@ -652,7 +670,7 @@ export default function StudyPage() {
             setIndex(
               getStoredReviewIndex(
                 retryQueue,
-                getStudySessionKey("word", selectedDeckId, weakOnly),
+                storageKey,
                 (review) => review.cards?.id,
               ),
             );
@@ -666,10 +684,19 @@ export default function StudyPage() {
       }
 
       const reviewRows = (data || []) as DueReview[];
-      const reviewQueue = buildStudyQueue(
-        reviewRows,
-        remainingNewCards,
-        studySettings,
+      const storageKey = getStudySessionKey(
+        "word",
+        selectedDeckId,
+        weakOnly,
+      );
+      const reviewQueue = restoreStoredReviewQueue(
+        buildStudyQueue(
+          reviewRows,
+          remainingNewCards,
+          studySettings,
+        ),
+        storageKey,
+        (review) => review.cards?.id,
       );
       setNewCardsStudiedToday(studiedToday);
       setNewCardsWaiting(countWaitingNewCards(reviewRows, remainingNewCards));
@@ -677,7 +704,7 @@ export default function StudyPage() {
       setIndex(
         getStoredReviewIndex(
           reviewQueue,
-          getStudySessionKey("word", selectedDeckId, weakOnly),
+          storageKey,
           (review) => review.cards?.id,
         ),
       );
@@ -1029,8 +1056,10 @@ export default function StudyPage() {
       if (remainingReviews.length > 0) {
         const requeuedReviews = [...remainingReviews, reviewedCurrent];
         const nextIndex = Math.min(index, requeuedReviews.length - 1);
+        const storageKey = getStudySessionKey("word", selectedDeckId, weakOnly);
+        saveStoredReviewQueue(storageKey, requeuedReviews);
         saveStoredReviewId(
-          getStudySessionKey("word", selectedDeckId, weakOnly),
+          storageKey,
           requeuedReviews[nextIndex]?.id,
           requeuedReviews[nextIndex]?.cards?.id,
           nextIndex,
@@ -1042,7 +1071,9 @@ export default function StudyPage() {
     }
 
     if (remainingReviews.length === 0) {
-      saveStoredReviewId(getStudySessionKey("word", selectedDeckId, weakOnly));
+      const storageKey = getStudySessionKey("word", selectedDeckId, weakOnly);
+      saveStoredReviewQueue(storageKey, []);
+      saveStoredReviewId(storageKey);
       setReviews([]);
       setIndex(0);
 
@@ -1063,8 +1094,10 @@ export default function StudyPage() {
       });
     } else {
       const nextIndex = Math.min(index, remainingReviews.length - 1);
+      const storageKey = getStudySessionKey("word", selectedDeckId, weakOnly);
+      saveStoredReviewQueue(storageKey, remainingReviews);
       saveStoredReviewId(
-        getStudySessionKey("word", selectedDeckId, weakOnly),
+        storageKey,
         remainingReviews[nextIndex]?.id,
         remainingReviews[nextIndex]?.cards?.id,
         nextIndex,

@@ -2,6 +2,13 @@ type ReviewLike = {
   id: string;
 };
 
+type StoredReviewQueue<TReview> = {
+  savedAt: number;
+  reviews: TReview[];
+};
+
+const maxStoredQueueAgeMs = 12 * 60 * 60 * 1000;
+
 export function getStudySessionKey(
   kind: "word" | "sentence",
   deckId: string,
@@ -75,4 +82,76 @@ export function saveStoredReviewId(
   window.localStorage.removeItem(storageKey);
   window.localStorage.removeItem(`${storageKey}:item`);
   window.localStorage.removeItem(`${storageKey}:index`);
+}
+
+export function restoreStoredReviewQueue<TReview extends ReviewLike>(
+  reviews: TReview[],
+  storageKey: string,
+  getItemId?: (review: TReview) => string | null | undefined,
+) {
+  if (typeof window === "undefined") {
+    return reviews;
+  }
+
+  const storedValue = window.localStorage.getItem(`${storageKey}:queue`);
+
+  if (!storedValue) {
+    return reviews;
+  }
+
+  try {
+    const storedQueue = JSON.parse(storedValue) as StoredReviewQueue<TReview>;
+
+    if (
+      !storedQueue ||
+      !Array.isArray(storedQueue.reviews) ||
+      Date.now() - Number(storedQueue.savedAt || 0) > maxStoredQueueAgeMs
+    ) {
+      window.localStorage.removeItem(`${storageKey}:queue`);
+      return reviews;
+    }
+
+    const storedReviewIds = new Set(
+      storedQueue.reviews.map((review) => review.id),
+    );
+    const storedItemIds = new Set(
+      getItemId
+        ? storedQueue.reviews
+            .map((review) => getItemId(review))
+            .filter(Boolean)
+        : [],
+    );
+    const freshReviews = reviews.filter((review) => {
+      if (storedReviewIds.has(review.id)) {
+        return false;
+      }
+
+      const itemId = getItemId?.(review);
+      return !itemId || !storedItemIds.has(itemId);
+    });
+
+    return [...storedQueue.reviews, ...freshReviews];
+  } catch {
+    window.localStorage.removeItem(`${storageKey}:queue`);
+    return reviews;
+  }
+}
+
+export function saveStoredReviewQueue<TReview extends ReviewLike>(
+  storageKey: string,
+  reviews: TReview[],
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (reviews.length === 0) {
+    window.localStorage.removeItem(`${storageKey}:queue`);
+    return;
+  }
+
+  window.localStorage.setItem(
+    `${storageKey}:queue`,
+    JSON.stringify({ savedAt: Date.now(), reviews }),
+  );
 }
