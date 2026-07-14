@@ -1271,13 +1271,21 @@ export default function StudySentencesPage() {
     ) {
       if (remainingReviews.length > 0) {
         const requeuedReviews = [...remainingReviews, reviewedCurrent];
+        const nextIndex = Math.min(index, requeuedReviews.length - 1);
+        saveStoredReviewId(
+          getStudySessionKey("sentence", selectedDeckId, weakOnly),
+          requeuedReviews[nextIndex]?.id,
+          requeuedReviews[nextIndex]?.sentence_cards?.id,
+          nextIndex,
+        );
         setReviews(requeuedReviews);
-        setIndex(Math.min(index, requeuedReviews.length - 1));
+        setIndex(nextIndex);
         return;
       }
     }
 
     if (remainingReviews.length === 0) {
+      saveStoredReviewId(getStudySessionKey("sentence", selectedDeckId, weakOnly));
       setReviews([]);
       setIndex(0);
 
@@ -1297,8 +1305,15 @@ export default function StudySentencesPage() {
         void loadReviews();
       });
     } else {
+      const nextIndex = Math.min(index, remainingReviews.length - 1);
+      saveStoredReviewId(
+        getStudySessionKey("sentence", selectedDeckId, weakOnly),
+        remainingReviews[nextIndex]?.id,
+        remainingReviews[nextIndex]?.sentence_cards?.id,
+        nextIndex,
+      );
       setReviews(remainingReviews);
-      setIndex(Math.min(index, remainingReviews.length - 1));
+      setIndex(nextIndex);
     }
   }
 

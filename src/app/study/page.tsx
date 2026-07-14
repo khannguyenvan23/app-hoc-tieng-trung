@@ -1028,13 +1028,21 @@ export default function StudyPage() {
     ) {
       if (remainingReviews.length > 0) {
         const requeuedReviews = [...remainingReviews, reviewedCurrent];
+        const nextIndex = Math.min(index, requeuedReviews.length - 1);
+        saveStoredReviewId(
+          getStudySessionKey("word", selectedDeckId, weakOnly),
+          requeuedReviews[nextIndex]?.id,
+          requeuedReviews[nextIndex]?.cards?.id,
+          nextIndex,
+        );
         setReviews(requeuedReviews);
-        setIndex(Math.min(index, requeuedReviews.length - 1));
+        setIndex(nextIndex);
         return;
       }
     }
 
     if (remainingReviews.length === 0) {
+      saveStoredReviewId(getStudySessionKey("word", selectedDeckId, weakOnly));
       setReviews([]);
       setIndex(0);
 
@@ -1054,8 +1062,15 @@ export default function StudyPage() {
         void loadReviews();
       });
     } else {
+      const nextIndex = Math.min(index, remainingReviews.length - 1);
+      saveStoredReviewId(
+        getStudySessionKey("word", selectedDeckId, weakOnly),
+        remainingReviews[nextIndex]?.id,
+        remainingReviews[nextIndex]?.cards?.id,
+        nextIndex,
+      );
       setReviews(remainingReviews);
-      setIndex(Math.min(index, remainingReviews.length - 1));
+      setIndex(nextIndex);
     }
   }
 
