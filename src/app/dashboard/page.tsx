@@ -11,6 +11,7 @@ import {
   HskProgressSkeleton,
   WeakItemsSkeleton,
 } from "@/components/loading-skeletons";
+import { communityJoinUrl, hasZaloGroupUrl } from "@/lib/community";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
 import {
@@ -596,6 +597,38 @@ export default function DashboardPage() {
             ) : null}
           </section>
         ) : null}
+
+        <section className="mt-6 rounded-2xl border border-teal-100 bg-teal-50 p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-teal-800">
+                Cộng đồng học viên
+              </p>
+              <h2 className="mt-1 text-xl font-semibold">
+                Vào nhóm Zalo Tiếng Trung Hihi
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-zinc-700">
+                Hỏi bài, nhận gợi ý bộ thẻ và học cùng mọi người mỗi ngày.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <a
+                className="inline-flex min-h-10 items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                href={communityJoinUrl}
+                rel="noreferrer"
+                target="_blank"
+              >
+                {hasZaloGroupUrl ? "Vào nhóm Zalo" : "Nhắn Zalo nhận link"}
+              </a>
+              <Link
+                className="inline-flex min-h-10 items-center rounded-md border border-teal-200 bg-white px-4 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-100"
+                href="/community"
+              >
+                Xem giới thiệu
+              </Link>
+            </div>
+          </div>
+        </section>
 
         {false && (
         <section className="app-surface mt-6 rounded-xl p-5">

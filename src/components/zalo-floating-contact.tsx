@@ -1,13 +1,8 @@
-const zaloContacts = [
-  {
-    label: "SĐT 1",
-    phone: "0986942504",
-  },
-  {
-    label: "SĐT 2",
-    phone: "0889737768",
-  },
-];
+import {
+  communityJoinUrl,
+  defaultZaloContacts,
+  hasZaloGroupUrl,
+} from "@/lib/community";
 
 export function ZaloFloatingContact() {
   return (
@@ -24,7 +19,18 @@ export function ZaloFloatingContact() {
           Liên hệ Zalo
         </div>
         <div className="grid gap-1">
-          {zaloContacts.map((contact) => (
+          <a
+            className="rounded-md bg-blue-50 px-3 py-2 text-blue-700 hover:bg-blue-100"
+            href={communityJoinUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <span className="block text-xs text-blue-500">
+              {hasZaloGroupUrl ? "Nhóm học viên" : "Liên hệ để nhận link nhóm"}
+            </span>
+            <span className="font-semibold">Vào nhóm Zalo</span>
+          </a>
+          {defaultZaloContacts.map((contact) => (
             <a
               className="rounded-md px-3 py-2 text-zinc-800 hover:bg-blue-50 hover:text-blue-700"
               href={`https://zalo.me/${contact.phone}`}

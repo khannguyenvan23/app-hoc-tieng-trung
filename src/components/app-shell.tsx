@@ -22,6 +22,11 @@ const navItems = [
     paths: ["/statistics"],
   },
   {
+    href: "/community",
+    label: "Cộng đồng",
+    paths: ["/community"],
+  },
+  {
     href: "/dashboard",
     label: "Bộ thẻ",
     paths: ["/dashboard", "/decks"],

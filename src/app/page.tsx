@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { communityJoinUrl, hasZaloGroupUrl } from "@/lib/community";
 import { hasPublicEnv } from "@/lib/env";
 import { seoPageList } from "@/lib/seo-pages";
 import { absoluteSiteUrl, siteConfig } from "@/lib/site";
@@ -167,6 +168,12 @@ export default async function Home({ searchParams }: HomeProps) {
           <nav className="flex items-center gap-2 text-sm">
             <Link
               className="rounded-md px-3 py-2 text-white/85 hover:bg-white/10 hover:text-white"
+              href="/community"
+            >
+              Cộng đồng
+            </Link>
+            <Link
+              className="rounded-md px-3 py-2 text-white/85 hover:bg-white/10 hover:text-white"
               href="/pricing"
             >
               Bảng giá
@@ -218,6 +225,14 @@ export default async function Home({ searchParams }: HomeProps) {
               >
                 Xem bảng giá
               </Link>
+              <a
+                className="rounded-md border border-white/35 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
+                href={communityJoinUrl}
+                rel="noreferrer"
+                target="_blank"
+              >
+                {hasZaloGroupUrl ? "Vào nhóm Zalo" : "Nhận link nhóm Zalo"}
+              </a>
             </div>
             <div className="mt-8 flex flex-wrap gap-2 text-sm text-stone-100">
               <span className="rounded-md bg-white/12 px-3 py-2">HSK1-HSK5</span>
@@ -358,6 +373,29 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </section>
 
+      <section className="border-b border-zinc-200 bg-teal-50 py-12">
+        <div className="mx-auto flex max-w-6xl flex-col gap-5 px-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-wide text-teal-800">
+              Cộng đồng học viên
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold">
+              Vào nhóm Zalo để hỏi bài và học cùng mọi người
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-700">
+              Nhận gợi ý bộ thẻ, hỏi nhanh khi bí câu và duy trì thói quen học
+              tiếng Trung mỗi ngày.
+            </p>
+          </div>
+          <Link
+            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white hover:bg-teal-800"
+            href="/community"
+          >
+            Xem nhóm học viên
+          </Link>
+        </div>
+      </section>
+
       <section className="py-16">
         <div className="mx-auto max-w-3xl px-5 text-center">
           <h2 className="text-3xl font-semibold">Bắt đầu học tiếng Trung hôm nay</h2>
@@ -395,6 +433,9 @@ export default async function Home({ searchParams }: HomeProps) {
             </Link>
             <Link className="hover:text-teal-800 hover:underline" href="/pricing">
               Bảng giá credit
+            </Link>
+            <Link className="hover:text-teal-800 hover:underline" href="/community">
+              Nhóm Zalo học viên
             </Link>
           </nav>
         </div>
