@@ -608,6 +608,7 @@ export default function StudySentencesPage() {
       ),
       storageKey,
       (review) => review.sentence_cards?.id,
+      (review) => shouldRequeueInCurrentSession(review.next_review_at),
     );
     setReviews(reviewQueue);
     setIndex(
@@ -830,6 +831,7 @@ export default function StudySentencesPage() {
               ),
               storageKey,
               (review) => review.sentence_cards?.id,
+              (review) => shouldRequeueInCurrentSession(review.next_review_at),
             );
             setNewSentencesStudiedToday(studiedToday);
             setNewSentencesWaiting(
@@ -867,6 +869,7 @@ export default function StudySentencesPage() {
         ),
         storageKey,
         (review) => review.sentence_cards?.id,
+        (review) => shouldRequeueInCurrentSession(review.next_review_at),
       );
       setNewSentencesStudiedToday(studiedToday);
       setNewSentencesWaiting(

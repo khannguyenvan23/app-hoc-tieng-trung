@@ -449,6 +449,7 @@ export default function StudyPage() {
       ),
       storageKey,
       (review) => review.cards?.id,
+      (review) => shouldRequeueInCurrentSession(review.next_review_at),
     );
     setReviews(reviewQueue);
     setIndex(
@@ -661,6 +662,7 @@ export default function StudyPage() {
               ),
               storageKey,
               (review) => review.cards?.id,
+              (review) => shouldRequeueInCurrentSession(review.next_review_at),
             );
             setNewCardsStudiedToday(studiedToday);
             setNewCardsWaiting(
@@ -697,6 +699,7 @@ export default function StudyPage() {
         ),
         storageKey,
         (review) => review.cards?.id,
+        (review) => shouldRequeueInCurrentSession(review.next_review_at),
       );
       setNewCardsStudiedToday(studiedToday);
       setNewCardsWaiting(countWaitingNewCards(reviewRows, remainingNewCards));

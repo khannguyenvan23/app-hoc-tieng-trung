@@ -88,6 +88,7 @@ export function restoreStoredReviewQueue<TReview extends ReviewLike>(
   reviews: TReview[],
   storageKey: string,
   getItemId?: (review: TReview) => string | null | undefined,
+  shouldKeepStoredReview?: (review: TReview) => boolean,
 ) {
   if (typeof window === "undefined") {
     return reviews;
@@ -111,12 +112,16 @@ export function restoreStoredReviewQueue<TReview extends ReviewLike>(
       return reviews;
     }
 
+    const storedReviews = shouldKeepStoredReview
+      ? storedQueue.reviews.filter(shouldKeepStoredReview)
+      : storedQueue.reviews;
+
     const storedReviewIds = new Set(
-      storedQueue.reviews.map((review) => review.id),
+      storedReviews.map((review) => review.id),
     );
     const storedItemIds = new Set(
       getItemId
-        ? storedQueue.reviews
+        ? storedReviews
             .map((review) => getItemId(review))
             .filter(Boolean)
         : [],
@@ -130,7 +135,11 @@ export function restoreStoredReviewQueue<TReview extends ReviewLike>(
       return !itemId || !storedItemIds.has(itemId);
     });
 
-    return [...storedQueue.reviews, ...freshReviews];
+    if (storedReviews.length !== storedQueue.reviews.length) {
+      saveStoredReviewQueue(storageKey, storedReviews);
+    }
+
+    return [...storedReviews, ...freshReviews];
   } catch {
     window.localStorage.removeItem(`${storageKey}:queue`);
     return reviews;
