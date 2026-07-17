@@ -441,7 +441,7 @@ export default function StudyPage() {
     setNewCardsStudiedToday(studiedToday);
     setNewCardsWaiting(countWaitingNewCards(reviewRows, remainingNewCards));
     const storageKey = getStudySessionKey("word", deckId, weakOnly);
-    const reviewQueue = restoreStoredReviewQueue(
+    const storedReviewQueue = restoreStoredReviewQueue(
       buildStudyQueue(
         reviewRows,
         remainingNewCards,
@@ -450,6 +450,11 @@ export default function StudyPage() {
       storageKey,
       (review) => review.cards?.id,
       (review) => shouldRequeueInCurrentSession(review.next_review_at),
+    );
+    const reviewQueue = buildStudyQueue(
+      storedReviewQueue,
+      remainingNewCards,
+      studySettings,
     );
     setReviews(reviewQueue);
     setIndex(
@@ -654,7 +659,7 @@ export default function StudyPage() {
               selectedDeckId,
               weakOnly,
             );
-            const retryQueue = restoreStoredReviewQueue(
+            const storedRetryQueue = restoreStoredReviewQueue(
               buildStudyQueue(
                 retryRows,
                 remainingNewCards,
@@ -663,6 +668,11 @@ export default function StudyPage() {
               storageKey,
               (review) => review.cards?.id,
               (review) => shouldRequeueInCurrentSession(review.next_review_at),
+            );
+            const retryQueue = buildStudyQueue(
+              storedRetryQueue,
+              remainingNewCards,
+              studySettings,
             );
             setNewCardsStudiedToday(studiedToday);
             setNewCardsWaiting(
@@ -691,7 +701,7 @@ export default function StudyPage() {
         selectedDeckId,
         weakOnly,
       );
-      const reviewQueue = restoreStoredReviewQueue(
+      const storedReviewQueue = restoreStoredReviewQueue(
         buildStudyQueue(
           reviewRows,
           remainingNewCards,
@@ -700,6 +710,11 @@ export default function StudyPage() {
         storageKey,
         (review) => review.cards?.id,
         (review) => shouldRequeueInCurrentSession(review.next_review_at),
+      );
+      const reviewQueue = buildStudyQueue(
+        storedReviewQueue,
+        remainingNewCards,
+        studySettings,
       );
       setNewCardsStudiedToday(studiedToday);
       setNewCardsWaiting(countWaitingNewCards(reviewRows, remainingNewCards));

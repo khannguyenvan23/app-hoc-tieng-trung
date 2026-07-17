@@ -600,7 +600,7 @@ export default function StudySentencesPage() {
       countWaitingNewSentences(reviewRows, remainingNewSentences),
     );
     const storageKey = getStudySessionKey("sentence", deckId, weakOnly);
-    const reviewQueue = restoreStoredReviewQueue(
+    const storedReviewQueue = restoreStoredReviewQueue(
       buildSentenceStudyQueue(
         reviewRows,
         remainingNewSentences,
@@ -609,6 +609,11 @@ export default function StudySentencesPage() {
       storageKey,
       (review) => review.sentence_cards?.id,
       (review) => shouldRequeueInCurrentSession(review.next_review_at),
+    );
+    const reviewQueue = buildSentenceStudyQueue(
+      storedReviewQueue,
+      remainingNewSentences,
+      studySettings,
     );
     setReviews(reviewQueue);
     setIndex(
@@ -823,7 +828,7 @@ export default function StudySentencesPage() {
               selectedDeckId,
               weakOnly,
             );
-            const retryQueue = restoreStoredReviewQueue(
+            const storedRetryQueue = restoreStoredReviewQueue(
               buildSentenceStudyQueue(
                 retryRows,
                 remainingNewSentences,
@@ -832,6 +837,11 @@ export default function StudySentencesPage() {
               storageKey,
               (review) => review.sentence_cards?.id,
               (review) => shouldRequeueInCurrentSession(review.next_review_at),
+            );
+            const retryQueue = buildSentenceStudyQueue(
+              storedRetryQueue,
+              remainingNewSentences,
+              studySettings,
             );
             setNewSentencesStudiedToday(studiedToday);
             setNewSentencesWaiting(
@@ -861,7 +871,7 @@ export default function StudySentencesPage() {
         selectedDeckId,
         weakOnly,
       );
-      const reviewQueue = restoreStoredReviewQueue(
+      const storedReviewQueue = restoreStoredReviewQueue(
         buildSentenceStudyQueue(
           reviewRows,
           remainingNewSentences,
@@ -870,6 +880,11 @@ export default function StudySentencesPage() {
         storageKey,
         (review) => review.sentence_cards?.id,
         (review) => shouldRequeueInCurrentSession(review.next_review_at),
+      );
+      const reviewQueue = buildSentenceStudyQueue(
+        storedReviewQueue,
+        remainingNewSentences,
+        studySettings,
       );
       setNewSentencesStudiedToday(studiedToday);
       setNewSentencesWaiting(
