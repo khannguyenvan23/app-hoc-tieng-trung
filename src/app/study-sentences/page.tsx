@@ -63,8 +63,8 @@ const ratingToneClasses: Record<ReviewRating, string> = {
 const sentenceDiffLabels: Record<SentenceDiffStatus, string> = {
   correct: "Đúng",
   wrong: "Sai",
-  missing: "Bỏ trống",
-  extra: "Thừa",
+  missing: "Thiếu",
+  extra: "Gõ dư",
 };
 
 const sentenceDiffStyles: Record<SentenceDiffStatus, string> = {
@@ -149,66 +149,40 @@ function normalizePinyinSyllable(value: string) {
     .trim();
 }
 
-function getTokenPinyinMap(
-  sentence: string | null | undefined,
-  sentencePinyin: string | null | undefined,
-) {
-  const map = new Map<string, string[]>();
-
-  if (!sentence || !sentencePinyin) {
-    return map;
+function countChineseTokenCharacters(token: string | null | undefined) {
+  if (!token) {
+    return 0;
   }
 
-  const pinyinSyllables = sentencePinyin
-    .split(/\s+/)
-    .map(normalizePinyinSyllable)
-    .filter(Boolean);
-  let syllableIndex = 0;
-
-  Array.from(sentence.normalize("NFKC")).forEach((character) => {
-    if (/^[\p{P}\p{S}\s]+$/u.test(character)) {
-      return;
-    }
-
-    const syllable = pinyinSyllables[syllableIndex];
-    syllableIndex += 1;
-
-    if (!syllable) {
-      return;
-    }
-
-    const values = map.get(character) || [];
-    values.push(syllable);
-    map.set(character, values);
-  });
-
-  return map;
+  return Array.from(token.normalize("NFKC")).filter(
+    (character) => !/^[\p{P}\p{S}\s]+$/u.test(character),
+  ).length;
 }
 
-function takeTokenPinyin(
-  token: string | null | undefined,
-  pinyinMap: Map<string, string[]>,
+function getSentenceDiffPinyin(
+  items: SentenceDiffItem[],
+  sentencePinyin: string | null | undefined,
 ) {
-  if (!token) {
-    return "";
-  }
+  const syllables =
+    sentencePinyin
+      ?.split(/\s+/)
+      .map(normalizePinyinSyllable)
+      .filter(Boolean) || [];
+  let syllableIndex = 0;
 
-  const syllables: string[] = [];
-
-  Array.from(token.normalize("NFKC")).forEach((character) => {
-    if (/^[\p{P}\p{S}\s]+$/u.test(character)) {
-      return;
+  return items.map((item) => {
+    if (!item.expected) {
+      return "";
     }
 
-    const values = pinyinMap.get(character);
-    const syllable = values?.shift();
-
-    if (syllable) {
-      syllables.push(syllable);
-    }
+    const characterCount = countChineseTokenCharacters(item.expected);
+    const tokenPinyin = syllables.slice(
+      syllableIndex,
+      syllableIndex + characterCount,
+    );
+    syllableIndex += characterCount;
+    return tokenPinyin.join(" ");
   });
-
-  return syllables.join(" ");
 }
 
 function SentenceDiffToken({
@@ -1605,15 +1579,15 @@ export default function StudySentencesPage() {
                             </h3>
                             <p className="text-xs text-zinc-500">
                               Đúng {sentenceDiff.counts.correct} · Sai{" "}
-                              {sentenceDiff.counts.wrong} · Bỏ trống{" "}
-                              {sentenceDiff.counts.missing} · Thừa{" "}
+                              {sentenceDiff.counts.wrong} · Thiếu{" "}
+                              {sentenceDiff.counts.missing} · Gõ dư{" "}
                               {sentenceDiff.counts.extra}
                             </p>
                           </div>
                           <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
                             {(() => {
-                              const tokenPinyinMap = getTokenPinyinMap(
-                                card.sentence_cn,
+                              const pinyinByItem = getSentenceDiffPinyin(
+                                sentenceDiff.items,
                                 card.sentence_pinyin,
                               );
 
@@ -1621,10 +1595,7 @@ export default function StudySentencesPage() {
                                 <SentenceDiffToken
                                   item={item}
                                   key={`${item.status}-${itemIndex}-${item.actual || ""}-${item.expected || ""}`}
-                                  pinyin={takeTokenPinyin(
-                                    item.expected || item.actual,
-                                    tokenPinyinMap,
-                                  )}
+                                  pinyin={pinyinByItem[itemIndex]}
                                 />
                               ));
                             })()}

@@ -63,8 +63,32 @@ export function compareChineseSentences(
   expectedSentence: string,
   actualSentence: string,
 ): SentenceDiffResult {
+  const normalizedActual = actualSentence.normalize("NFKC").trim();
+
+  if (!normalizedActual) {
+    const normalizedExpected = expectedSentence.normalize("NFKC").trim();
+
+    return {
+      counts: {
+        correct: 0,
+        wrong: 0,
+        missing: normalizedExpected ? 1 : 0,
+        extra: 0,
+      },
+      items: normalizedExpected
+        ? [
+            {
+              actual: null,
+              expected: normalizedExpected,
+              status: "missing",
+            },
+          ]
+        : [],
+    };
+  }
+
   const expectedTokens = tokenizeChineseSentence(expectedSentence);
-  const actualTokens = tokenizeChineseSentence(actualSentence);
+  const actualTokens = tokenizeChineseSentence(normalizedActual);
   const rows = expectedTokens.length + 1;
   const columns = actualTokens.length + 1;
   const distances = Array.from({ length: rows }, () =>
