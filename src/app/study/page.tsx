@@ -18,6 +18,11 @@ import {
   type StudySettings,
 } from "@/lib/study-settings";
 import {
+  buildStudyQueue as buildLimitedStudyQueue,
+  countWaitingNewItems,
+  shouldRequeueInCurrentSession,
+} from "@/lib/study-queue";
+import {
   getStoredReviewIndex,
   getStudySessionKey,
   restoreStoredReviewQueue,
@@ -78,67 +83,21 @@ function normalizeHanzi(value: string) {
   return value.replace(/\s+/g, "").trim();
 }
 
-function shuffleReviews(reviews: DueReview[]) {
-  const nextReviews = [...reviews];
-
-  for (let index = nextReviews.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [nextReviews[index], nextReviews[swapIndex]] = [
-      nextReviews[swapIndex],
-      nextReviews[index],
-    ];
-  }
-
-  return nextReviews;
-}
-
-function applyNewCardLimit(
-  reviews: DueReview[],
-  remainingNewCards: number,
-  settings: StudySettings,
-) {
-  const reviewCards = reviews.filter((review) => Number(review.review_count) > 0);
-  const newCardCandidates = reviews
-    .filter((review) => Number(review.review_count) === 0)
-    .sort(
-      (left, right) =>
-        new Date(left.cards?.created_at || left.next_review_at).getTime() -
-        new Date(right.cards?.created_at || right.next_review_at).getTime(),
-    );
-  const newCards =
-    settings.insertion_order === "random"
-      ? shuffleReviews(newCardCandidates).slice(0, remainingNewCards)
-      : newCardCandidates.slice(0, remainingNewCards);
-
-  return [...reviewCards, ...newCards].sort(
-    (left, right) =>
-      new Date(left.next_review_at).getTime() -
-      new Date(right.next_review_at).getTime(),
-  );
-}
-
 function buildStudyQueue(
   reviews: DueReview[],
   remainingNewCards: number,
   settings: StudySettings,
 ) {
-  return applyNewCardLimit(reviews, remainingNewCards, settings);
+  return buildLimitedStudyQueue(
+    reviews,
+    remainingNewCards,
+    settings,
+    (review) => review.cards?.created_at,
+  );
 }
 
 function countWaitingNewCards(reviews: DueReview[], remainingNewCards: number) {
-  const newCardCount = reviews.filter(
-    (review) => Number(review.review_count) === 0,
-  ).length;
-
-  return Math.max(0, newCardCount - remainingNewCards);
-}
-
-function shouldRequeueInCurrentSession(nextReviewAt: string) {
-  const minutesUntilDue = Math.round(
-    (new Date(nextReviewAt).getTime() - Date.now()) / 60_000,
-  );
-
-  return minutesUntilDue < 23 * 60;
+  return countWaitingNewItems(reviews, remainingNewCards);
 }
 
 function getRatingIntervalLabel(
@@ -767,7 +726,7 @@ export default function StudyPage() {
         .map((deck) => deck.id),
     );
 
-    reviews.slice(index, index + 2).forEach((review) => {
+    reviews.slice(index, index + 3).forEach((review) => {
       const audioData = getCardAudioData(review.cards);
 
       cacheAudio(audioData?.wordAudioUrl);

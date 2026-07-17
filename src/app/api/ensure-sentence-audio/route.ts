@@ -8,7 +8,10 @@ import {
   spendCredits,
 } from "@/lib/credits";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createAndUploadSpeech } from "@/lib/tts";
+import {
+  createAndUploadSpeech,
+  getOrCreateTemplateSpeech,
+} from "@/lib/tts";
 
 const schema = z.object({
   sentenceCardId: z.string().uuid(),
@@ -30,7 +33,7 @@ export async function POST(request: Request) {
   const supabase = createSupabaseAdminClient();
   const { data: sentenceCard, error: cardError } = await supabase
     .from("sentence_cards")
-    .select("id, sentence_cn, sentence_audio_url")
+    .select("id, deck_id, sentence_cn, sentence_audio_url")
     .eq("id", body.data.sentenceCardId)
     .eq("user_id", user.id)
     .single();
@@ -48,6 +51,47 @@ export async function POST(request: Request) {
       sentenceAudioUrl: sentenceCard.sentence_audio_url,
       creditsUsed: 0,
     });
+  }
+
+  const { data: deck } = await supabase
+    .from("decks")
+    .select("source_template_slug")
+    .eq("id", sentenceCard.deck_id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (deck?.source_template_slug) {
+    try {
+      const sentenceAudioUrl = await getOrCreateTemplateSpeech(
+        deck.source_template_slug,
+        "sentence",
+        sentenceCard.sentence_cn,
+      );
+
+      if (sentenceAudioUrl) {
+        const { error: updateError } = await supabase
+          .from("sentence_cards")
+          .update({ sentence_audio_url: sentenceAudioUrl })
+          .eq("id", sentenceCard.id)
+          .eq("user_id", user.id);
+
+        if (updateError) {
+          throw updateError;
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        sentenceAudioUrl,
+        creditsUsed: 0,
+      });
+    } catch (error) {
+      console.error("Could not prepare shared template sentence audio", error);
+      return NextResponse.json(
+        { error: "Không thể chuẩn bị audio cho câu mẫu" },
+        { status: 500 },
+      );
+    }
   }
 
   let spentCredits = 0;

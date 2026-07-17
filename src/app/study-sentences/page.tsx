@@ -24,6 +24,11 @@ import {
   type StudySettings,
 } from "@/lib/study-settings";
 import {
+  buildStudyQueue as buildLimitedStudyQueue,
+  countWaitingNewItems,
+  shouldRequeueInCurrentSession,
+} from "@/lib/study-queue";
+import {
   getStoredReviewIndex,
   getStudySessionKey,
   restoreStoredReviewQueue,
@@ -94,79 +99,24 @@ function dueReviewCutoff() {
   return new Date(Date.now() + 60_000).toISOString();
 }
 
-function shuffleSentenceReviews(reviews: DueSentenceReview[]) {
-  const nextReviews = [...reviews];
-
-  for (let index = nextReviews.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [nextReviews[index], nextReviews[swapIndex]] = [
-      nextReviews[swapIndex],
-      nextReviews[index],
-    ];
-  }
-
-  return nextReviews;
-}
-
-function applyNewSentenceLimit(
-  reviews: DueSentenceReview[],
-  remainingNewSentences: number,
-  settings: StudySettings,
-) {
-  const reviewSentences = reviews.filter(
-    (review) => Number(review.review_count) > 0,
-  );
-  const newSentenceCandidates = reviews
-    .filter((review) => Number(review.review_count) === 0)
-    .sort(
-      (left, right) =>
-        new Date(
-          left.sentence_cards?.created_at || left.next_review_at,
-        ).getTime() -
-        new Date(
-          right.sentence_cards?.created_at || right.next_review_at,
-        ).getTime(),
-    );
-  const newSentences =
-    settings.insertion_order === "random"
-      ? shuffleSentenceReviews(newSentenceCandidates).slice(
-          0,
-          remainingNewSentences,
-        )
-      : newSentenceCandidates.slice(0, remainingNewSentences);
-
-  return [...reviewSentences, ...newSentences].sort(
-    (left, right) =>
-      new Date(left.next_review_at).getTime() -
-      new Date(right.next_review_at).getTime(),
-  );
-}
-
 function buildSentenceStudyQueue(
   reviews: DueSentenceReview[],
   remainingNewSentences: number,
   settings: StudySettings,
 ) {
-  return applyNewSentenceLimit(reviews, remainingNewSentences, settings);
+  return buildLimitedStudyQueue(
+    reviews,
+    remainingNewSentences,
+    settings,
+    (review) => review.sentence_cards?.created_at,
+  );
 }
 
 function countWaitingNewSentences(
   reviews: DueSentenceReview[],
   remainingNewSentences: number,
 ) {
-  const newSentenceCount = reviews.filter(
-    (review) => Number(review.review_count) === 0,
-  ).length;
-
-  return Math.max(0, newSentenceCount - remainingNewSentences);
-}
-
-function shouldRequeueInCurrentSession(nextReviewAt: string) {
-  const minutesUntilDue = Math.round(
-    (new Date(nextReviewAt).getTime() - Date.now()) / 60_000,
-  );
-
-  return minutesUntilDue < 23 * 60;
+  return countWaitingNewItems(reviews, remainingNewSentences);
 }
 
 function getRatingIntervalLabel(
@@ -931,16 +881,32 @@ export default function StudySentencesPage() {
   }, [audioSpeed, showAnswer, index]);
 
   useEffect(() => {
+    const templateDeckIds = new Set(
+      decks
+        .filter((deck) => Boolean(deck.source_template_slug))
+        .map((deck) => deck.id),
+    );
+
     reviews.slice(index, index + 3).forEach((review) => {
-      cacheSentenceAudio(getSentenceAudioUrl(review.sentence_cards));
+      const sentenceCard = review.sentence_cards;
+
+      cacheSentenceAudio(getSentenceAudioUrl(sentenceCard));
+
+      if (
+        sentenceCard &&
+        templateDeckIds.has(sentenceCard.deck_id) &&
+        !sentenceCard.sentence_audio_url
+      ) {
+        void ensureSentenceAudioForCard(sentenceCard);
+      }
     });
-
-    const currentCard = reviews[index]?.sentence_cards;
-
-    if (currentCard && !currentCard.sentence_audio_url) {
-      void ensureSentenceAudioForCard(currentCard);
-    }
-  }, [cacheSentenceAudio, ensureSentenceAudioForCard, index, reviews]);
+  }, [
+    cacheSentenceAudio,
+    decks,
+    ensureSentenceAudioForCard,
+    index,
+    reviews,
+  ]);
 
   useEffect(() => {
     const audioCache = audioCacheRef.current;

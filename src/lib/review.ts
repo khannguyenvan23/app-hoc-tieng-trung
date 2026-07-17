@@ -1,4 +1,4 @@
-import type { ReviewRating } from "@/lib/types";
+import type { ReviewRating } from "./types";
 import {
   addDays,
   addMinutes,
@@ -7,7 +7,7 @@ import {
   getFirstRelearningStepMinutes,
   getHardLearningStepMinutes,
   type StudySettings,
-} from "@/lib/study-settings";
+} from "./study-settings";
 
 type ReviewState = {
   review_count: number | null;
