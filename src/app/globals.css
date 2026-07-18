@@ -125,14 +125,33 @@ button:disabled {
     color: #115e59;
   }
 
+  @keyframes study-card-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.992);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
   .study-card {
     position: relative;
     border: 1px solid var(--border-soft);
     border-radius: 1rem;
     background: rgba(255, 255, 255, 0.96);
+    animation: study-card-enter 180ms ease-out both;
     box-shadow:
       0 1px 2px rgba(24, 24, 27, 0.04),
       0 18px 44px rgba(24, 24, 27, 0.08);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .study-card {
+      animation: none;
+    }
   }
 
   .study-card::before {
@@ -226,11 +245,19 @@ button:disabled {
   }
 
   @media (max-width: 640px) {
+    .study-page-shell {
+      padding-bottom: 10.5rem;
+    }
+
     .study-controls {
-      position: sticky;
-      bottom: 0.75rem;
-      z-index: 20;
-      margin-inline: -0.25rem;
+      position: fixed;
+      right: 0.75rem;
+      bottom: calc(0.75rem + env(safe-area-inset-bottom));
+      left: 0.75rem;
+      z-index: 50;
+      margin: 0;
+      max-height: calc(42vh - env(safe-area-inset-bottom));
+      overflow-y: auto;
       border: 1px solid rgba(228, 228, 223, 0.92);
       border-radius: 1rem;
       background: rgba(255, 255, 255, 0.96);

@@ -30,11 +30,13 @@ import {
   shouldRequeueInCurrentSession,
 } from "@/lib/study-queue";
 import {
+  getStoredStudyProgress,
   getStoredReviewIndex,
   getStudySessionKey,
   restoreStoredReviewQueue,
   saveStoredReviewId,
   saveStoredReviewQueue,
+  saveStoredStudyProgress,
 } from "@/lib/study-session";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type {
@@ -268,6 +270,8 @@ export default function StudySentencesPage() {
   });
   const [reviews, setReviews] = useState<DueSentenceReview[]>([]);
   const [index, setIndex] = useState(0);
+  const [sessionTotal, setSessionTotal] = useState(0);
+  const [sessionAnswered, setSessionAnswered] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [showPinyinHint, setShowPinyinHint] = useState(() => {
     if (typeof window === "undefined") {
@@ -540,7 +544,13 @@ export default function StudySentencesPage() {
       remainingNewSentences,
       studySettings,
     );
+    const sessionProgress = getStoredStudyProgress(
+      storageKey,
+      reviewQueue.length,
+    );
     setReviews(reviewQueue);
+    setSessionTotal(sessionProgress.total);
+    setSessionAnswered(sessionProgress.answered);
     setIndex(
       getStoredReviewIndex(
         reviewQueue,
@@ -1247,6 +1257,23 @@ export default function StudySentencesPage() {
       ...reviews.slice(0, index),
       ...reviews.slice(index + 1),
     ];
+    const progressStorageKey = getStudySessionKey(
+      "sentence",
+      selectedDeckId,
+      weakOnly,
+    );
+    const nextSessionTotal = Math.max(sessionTotal, reviews.length);
+    const nextSessionAnswered = Math.min(
+      sessionAnswered + 1,
+      nextSessionTotal,
+    );
+    setSessionTotal(nextSessionTotal);
+    setSessionAnswered(nextSessionAnswered);
+    saveStoredStudyProgress(
+      progressStorageKey,
+      nextSessionTotal,
+      nextSessionAnswered,
+    );
     setShowAnswer(false);
     setSentenceAnswer("");
     setWritingResult("");
@@ -1284,8 +1311,11 @@ export default function StudySentencesPage() {
       );
       saveStoredReviewQueue(storageKey, []);
       saveStoredReviewId(storageKey);
+      saveStoredStudyProgress(storageKey);
       setReviews([]);
       setIndex(0);
+      setSessionTotal(0);
+      setSessionAnswered(0);
 
       if (!weakOnly && selectedDeckId !== allDecksValue) {
         void Promise.allSettled([
@@ -1404,6 +1434,8 @@ export default function StudySentencesPage() {
     Boolean(scheduledReloadAt) &&
     new Date(scheduledReloadAt || 0).getTime() > Date.now();
   const queueStats = getReviewQueueStats(reviews);
+  const progressTotal = Math.max(sessionTotal, reviews.length);
+  const progressCurrent = Math.min(sessionAnswered + 1, progressTotal);
   const dailyLimitReached =
     !weakOnly &&
     newSentencesWaiting > 0 &&
@@ -1416,7 +1448,7 @@ export default function StudySentencesPage() {
   return (
     <AuthGuard>
       <AppShell>
-        <div className="mx-auto min-w-0 w-full max-w-2xl">
+        <div className="study-page-shell mx-auto min-w-0 w-full max-w-2xl">
           {loading || repairingReviews ? (
             <StudyCardSkeleton />
           ) : !card ? (
@@ -1459,11 +1491,14 @@ export default function StudySentencesPage() {
               }
             />
           ) : (
-            <section className="study-card min-w-0 overflow-hidden p-4 sm:p-5">
+            <section
+              className="study-card min-w-0 overflow-hidden p-4 sm:p-5"
+              key={current?.id || card.id}
+            >
               <StudyProgress
-                current={index + 1}
+                current={progressCurrent}
                 itemName="Câu"
-                total={reviews.length}
+                total={progressTotal}
               />
 
               <div className="mt-4 text-center sm:mt-5">

@@ -7,6 +7,12 @@ type StoredReviewQueue<TReview> = {
   reviews: TReview[];
 };
 
+type StoredStudyProgress = {
+  answered: number;
+  savedAt: number;
+  total: number;
+};
+
 const maxStoredQueueAgeMs = 12 * 60 * 60 * 1000;
 
 export function getStudySessionKey(
@@ -162,5 +168,74 @@ export function saveStoredReviewQueue<TReview extends ReviewLike>(
   window.localStorage.setItem(
     `${storageKey}:queue`,
     JSON.stringify({ savedAt: Date.now(), reviews }),
+  );
+}
+
+export function getStoredStudyProgress(storageKey: string, queueLength: number) {
+  const fallbackTotal = Math.max(0, queueLength);
+
+  if (typeof window === "undefined") {
+    return { answered: 0, total: fallbackTotal };
+  }
+
+  const storedValue = window.localStorage.getItem(`${storageKey}:progress`);
+
+  if (!storedValue) {
+    return { answered: 0, total: fallbackTotal };
+  }
+
+  try {
+    const storedProgress = JSON.parse(storedValue) as StoredStudyProgress;
+
+    if (
+      !storedProgress ||
+      Date.now() - Number(storedProgress.savedAt || 0) > maxStoredQueueAgeMs
+    ) {
+      window.localStorage.removeItem(`${storageKey}:progress`);
+      return { answered: 0, total: fallbackTotal };
+    }
+
+    const total = Math.max(
+      fallbackTotal,
+      Number.isFinite(storedProgress.total) ? storedProgress.total : 0,
+    );
+    const answered = Math.min(
+      Math.max(
+        0,
+        Number.isFinite(storedProgress.answered)
+          ? storedProgress.answered
+          : 0,
+      ),
+      total,
+    );
+
+    return { answered, total };
+  } catch {
+    window.localStorage.removeItem(`${storageKey}:progress`);
+    return { answered: 0, total: fallbackTotal };
+  }
+}
+
+export function saveStoredStudyProgress(
+  storageKey: string,
+  total?: number,
+  answered?: number,
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (typeof total !== "number" || total <= 0) {
+    window.localStorage.removeItem(`${storageKey}:progress`);
+    return;
+  }
+
+  window.localStorage.setItem(
+    `${storageKey}:progress`,
+    JSON.stringify({
+      answered: Math.min(Math.max(0, answered ?? 0), total),
+      savedAt: Date.now(),
+      total,
+    }),
   );
 }
