@@ -1167,7 +1167,10 @@ export default function StudyPage() {
     new Date(scheduledReloadAt || 0).getTime() > Date.now();
   const queueStats = getReviewQueueStats(reviews);
   const progressTotal = Math.max(sessionTotal, reviews.length);
-  const progressCurrent = Math.min(sessionAnswered + 1, progressTotal);
+  const progressCurrent = Math.min(
+    Math.max(1, progressTotal - reviews.length + 1),
+    progressTotal,
+  );
   const dailyLimitReached =
     !weakOnly &&
     newCardsWaiting > 0 &&
