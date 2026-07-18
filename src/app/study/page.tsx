@@ -1436,12 +1436,12 @@ export default function StudyPage() {
                   </option>
                 ))}
               </select>
-              <div className="col-span-2 grid h-10 w-full grid-cols-2 rounded-xl border border-zinc-200 bg-zinc-50 p-1 text-sm shadow-sm sm:w-40 sm:shrink-0">
+              <div className="audio-speed-toggle col-span-2 sm:w-44 sm:shrink-0">
                 <button
-                  className={`rounded-lg px-2 py-1 font-medium transition ${
+                  className={`audio-speed-option ${
                     audioSpeed === "normal"
-                      ? "bg-teal-700 text-white shadow-sm"
-                      : "text-zinc-700 hover:bg-white"
+                      ? "audio-speed-option-active"
+                      : ""
                   }`}
                   onClick={() => changeAudioSpeed("normal")}
                   type="button"
@@ -1449,10 +1449,10 @@ export default function StudyPage() {
                   Bình thường
                 </button>
                 <button
-                  className={`rounded-lg px-2 py-1 font-medium transition ${
+                  className={`audio-speed-option ${
                     audioSpeed === "slow"
-                      ? "bg-teal-700 text-white shadow-sm"
-                      : "text-zinc-700 hover:bg-white"
+                      ? "audio-speed-option-active"
+                      : ""
                   }`}
                   onClick={() => changeAudioSpeed("slow")}
                   type="button"
