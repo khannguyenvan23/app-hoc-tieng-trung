@@ -1551,10 +1551,7 @@ export default function StudySentencesPage() {
                   </div>
                 ) : (
                   <div>
-                    <div className="text-sm font-medium text-zinc-500">
-                      Câu tiếng Việt
-                    </div>
-                    <div className="mt-3 break-words text-2xl font-semibold leading-tight sm:text-3xl">
+                    <div className="break-words text-2xl font-semibold leading-tight sm:text-3xl">
                       {card.sentence_vi}
                     </div>
                   </div>
