@@ -1491,7 +1491,7 @@ export default function StudyPage() {
             </span>
           </div>
 
-          <div className="mt-3 flex flex-col gap-2 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
+          <div className="study-shortcuts-hint">
             <span>Space đáp án · R audio · 1-4 đánh giá · P/W chế độ</span>
             <Link
               className="font-medium text-teal-800 hover:underline"
