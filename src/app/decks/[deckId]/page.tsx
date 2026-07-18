@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AppShell, EmptyState, PrimaryLink } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { DeckGridSkeleton } from "@/components/loading-skeletons";
+import { ConfirmDialog, ToastList, useToast } from "@/components/ui-feedback";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -20,6 +21,25 @@ type DeckAction =
 type SupabaseBrowserClient = ReturnType<typeof createSupabaseBrowserClient>;
 
 const selectPageSize = 1000;
+
+const deckActionDialogs: Record<DeckAction, { body: string; title: string }> = {
+  "reset-progress": {
+    body: "Reset toàn bộ tiến độ ôn của bộ thẻ này? Nội dung thẻ vẫn được giữ lại.",
+    title: "Reset tiến độ học?",
+  },
+  "delete-vocabulary": {
+    body: "Xóa toàn bộ thẻ từ vựng trong bộ này? Câu luyện tập vẫn được giữ lại.",
+    title: "Xóa thẻ từ vựng?",
+  },
+  "delete-sentences": {
+    body: "Xóa toàn bộ câu luyện tập trong bộ này? Thẻ từ vựng vẫn được giữ lại.",
+    title: "Xóa câu luyện tập?",
+  },
+  "delete-deck": {
+    body: "Xóa toàn bộ bộ thẻ này, bao gồm tất cả thẻ, câu và lịch ôn? Thao tác này không thể hoàn tác.",
+    title: "Xóa toàn bộ deck?",
+  },
+};
 
 async function fetchAllDeckCards(
   supabase: SupabaseBrowserClient,
@@ -82,6 +102,7 @@ export default function DeckPage() {
   const [sentenceCards, setSentenceCards] = useState<SentenceCard[]>([]);
   const [loading, setLoading] = useState(configured);
   const [actionLoading, setActionLoading] = useState<DeckAction | "">("");
+  const [pendingAction, setPendingAction] = useState<DeckAction | "">("");
   const [actionMessage, setActionMessage] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [deckName, setDeckName] = useState("");
@@ -90,6 +111,7 @@ export default function DeckPage() {
   const [shareLoading, setShareLoading] = useState(false);
   const [shareToken, setShareToken] = useState("");
   const [shareMessage, setShareMessage] = useState("");
+  const { dismissToast, showToast, toasts } = useToast();
 
   useEffect(() => {
     if (!configured) {
@@ -128,7 +150,7 @@ export default function DeckPage() {
         "Xóa toàn bộ bộ thẻ này, bao gồm tất cả thẻ, câu và lịch ôn?",
     };
 
-    if (!window.confirm(confirmations[action])) {
+    if (!confirmations[action]) {
       return;
     }
 
@@ -144,22 +166,42 @@ export default function DeckPage() {
 
     if (!response.ok) {
       setActionMessage(data.error || "Không thể thực hiện thao tác.");
+      showToast({
+        message: data.error || "Không thể thực hiện thao tác.",
+        title: "Thao tác thất bại",
+        tone: "error",
+      });
       return;
     }
 
     if (action === "delete-deck") {
+      showToast({
+        message: "Đã xóa bộ thẻ.",
+        title: "Thành công",
+        tone: "success",
+      });
       router.push("/dashboard");
       return;
     }
 
     if (action === "delete-vocabulary") {
       setCards([]);
+      showToast({
+        message: "Đã xóa toàn bộ thẻ từ vựng trong bộ này.",
+        title: "Thành công",
+        tone: "success",
+      });
       setActionMessage("Đã xóa toàn bộ thẻ từ vựng trong bộ này.");
       return;
     }
 
     if (action === "delete-sentences") {
       setSentenceCards([]);
+      showToast({
+        message: "Đã xóa toàn bộ câu luyện tập trong bộ này.",
+        title: "Thành công",
+        tone: "success",
+      });
       setActionMessage("Đã xóa toàn bộ câu luyện tập trong bộ này.");
       return;
     }
@@ -273,6 +315,25 @@ export default function DeckPage() {
   return (
     <AuthGuard>
       <AppShell>
+        <ToastList dismissToast={dismissToast} toasts={toasts} />
+        <ConfirmDialog
+          body={pendingAction ? deckActionDialogs[pendingAction].body : ""}
+          confirmLabel={
+            pendingAction === "reset-progress" ? "Reset" : "Xóa"
+          }
+          destructive={pendingAction !== "reset-progress"}
+          loading={Boolean(actionLoading)}
+          onCancel={() => setPendingAction("")}
+          onConfirm={() => {
+            const action = pendingAction;
+            setPendingAction("");
+            if (action) {
+              void runDeckAction(action);
+            }
+          }}
+          open={Boolean(pendingAction)}
+          title={pendingAction ? deckActionDialogs[pendingAction].title : ""}
+        />
         {loading ? (
           <div className="space-y-6">
             <div>
@@ -620,7 +681,7 @@ export default function DeckPage() {
                 <button
                   className="min-h-10 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
                   disabled={Boolean(actionLoading)}
-                  onClick={() => runDeckAction("reset-progress")}
+                  onClick={() => setPendingAction("reset-progress")}
                   type="button"
                 >
                   {actionLoading === "reset-progress"
@@ -630,7 +691,7 @@ export default function DeckPage() {
                 <button
                   className="min-h-10 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
                   disabled={Boolean(actionLoading) || cards.length === 0}
-                  onClick={() => runDeckAction("delete-vocabulary")}
+                  onClick={() => setPendingAction("delete-vocabulary")}
                   type="button"
                 >
                   {actionLoading === "delete-vocabulary"
@@ -640,7 +701,7 @@ export default function DeckPage() {
                 <button
                   className="min-h-10 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
                   disabled={Boolean(actionLoading) || sentenceCards.length === 0}
-                  onClick={() => runDeckAction("delete-sentences")}
+                  onClick={() => setPendingAction("delete-sentences")}
                   type="button"
                 >
                   {actionLoading === "delete-sentences"
@@ -650,7 +711,7 @@ export default function DeckPage() {
                 <button
                   className="min-h-10 rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-60"
                   disabled={Boolean(actionLoading)}
-                  onClick={() => runDeckAction("delete-deck")}
+                  onClick={() => setPendingAction("delete-deck")}
                   type="button"
                 >
                   {actionLoading === "delete-deck"

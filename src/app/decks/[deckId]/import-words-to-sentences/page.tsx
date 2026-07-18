@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
+import { ToastList, useToast } from "@/components/ui-feedback";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { parseVocabularyText } from "@/lib/parse-vocabulary";
 
@@ -20,7 +21,22 @@ export default function ImportWordsToSentencesPage() {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"error" | "success" | "">("");
   const [loading, setLoading] = useState(false);
+  const lastToastMessageRef = useRef("");
+  const { dismissToast, showToast, toasts } = useToast();
   const items = useMemo(() => parseVocabularyText(text), [text]);
+
+  useEffect(() => {
+    if (!message || !messageType || lastToastMessageRef.current === message) {
+      return;
+    }
+
+    lastToastMessageRef.current = message;
+    showToast({
+      message,
+      title: messageType === "success" ? "Thành công" : "Có lỗi",
+      tone: messageType === "success" ? "success" : "error",
+    });
+  }, [message, messageType, showToast]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -54,6 +70,7 @@ export default function ImportWordsToSentencesPage() {
   return (
     <AuthGuard>
       <AppShell>
+        <ToastList dismissToast={dismissToast} toasts={toasts} />
         <form className="max-w-3xl" onSubmit={submit}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>

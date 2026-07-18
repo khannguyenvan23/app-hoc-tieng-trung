@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
+import { ConfirmDialog } from "@/components/ui-feedback";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Card } from "@/lib/types";
@@ -37,6 +38,7 @@ export default function EditCardPage() {
   const [form, setForm] = useState<CardForm>(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -103,11 +105,26 @@ export default function EditCardPage() {
     router.push(`/decks/${params.deckId}`);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function deleteCard() {
     if (!window.confirm("Xóa thẻ này? Lịch ôn liên quan cũng sẽ bị xóa.")) {
       return;
     }
 
+    setSaving(true);
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.from("cards").delete().eq("id", params.cardId);
+    setSaving(false);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    router.push(`/decks/${params.deckId}`);
+  }
+
+  async function deleteCardAfterConfirm() {
     setSaving(true);
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.from("cards").delete().eq("id", params.cardId);
@@ -148,6 +165,19 @@ export default function EditCardPage() {
   return (
     <AuthGuard>
       <AppShell>
+        <ConfirmDialog
+          body="Xóa thẻ này? Lịch ôn liên quan cũng sẽ bị xóa."
+          confirmLabel="Xóa"
+          destructive
+          loading={saving}
+          onCancel={() => setConfirmDeleteOpen(false)}
+          onConfirm={() => {
+            setConfirmDeleteOpen(false);
+            void deleteCardAfterConfirm();
+          }}
+          open={confirmDeleteOpen}
+          title="Xóa thẻ từ vựng?"
+        />
         <form className="max-w-2xl" onSubmit={save}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -215,7 +245,7 @@ export default function EditCardPage() {
             <button
               className="min-h-11 rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
               disabled={saving || loading}
-              onClick={deleteCard}
+              onClick={() => setConfirmDeleteOpen(true)}
               type="button"
             >
               Xóa thẻ

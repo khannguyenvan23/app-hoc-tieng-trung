@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
+import { ToastList, useToast } from "@/components/ui-feedback";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { parseVocabularyText } from "@/lib/parse-vocabulary";
 import type { GeneratedCard } from "@/lib/types";
@@ -38,7 +39,22 @@ export default function ImportPage() {
   const [messageType, setMessageType] = useState<"error" | "success" | "">("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const lastToastMessageRef = useRef("");
+  const { dismissToast, showToast, toasts } = useToast();
   const items = useMemo(() => parseVocabularyText(text), [text]);
+
+  useEffect(() => {
+    if (!message || !messageType || lastToastMessageRef.current === message) {
+      return;
+    }
+
+    lastToastMessageRef.current = message;
+    showToast({
+      message,
+      title: messageType === "success" ? "Thành công" : "Có lỗi",
+      tone: messageType === "success" ? "success" : "error",
+    });
+  }, [message, messageType, showToast]);
 
   function updatePreviewCard(
     cardIndex: number,
@@ -131,6 +147,7 @@ export default function ImportPage() {
   return (
     <AuthGuard>
       <AppShell>
+        <ToastList dismissToast={dismissToast} toasts={toasts} />
         <div className="max-w-6xl">
           <form onSubmit={createPreview}>
             <div className="flex flex-wrap items-center justify-between gap-3">

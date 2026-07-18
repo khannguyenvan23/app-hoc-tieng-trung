@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
+import { ConfirmDialog } from "@/components/ui-feedback";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { SentenceCard, SentenceVocabItem } from "@/lib/types";
@@ -60,6 +61,7 @@ export default function EditSentencePage() {
   const [form, setForm] = useState<SentenceForm>(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -120,6 +122,7 @@ export default function EditSentencePage() {
     router.push(`/decks/${params.deckId}`);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function deleteSentence() {
     if (
       !window.confirm("Xóa câu luyện tập này? Lịch ôn liên quan cũng sẽ bị xóa.")
@@ -127,6 +130,23 @@ export default function EditSentencePage() {
       return;
     }
 
+    setSaving(true);
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase
+      .from("sentence_cards")
+      .delete()
+      .eq("id", params.sentenceCardId);
+    setSaving(false);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    router.push(`/decks/${params.deckId}`);
+  }
+
+  async function deleteSentenceAfterConfirm() {
     setSaving(true);
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase
@@ -169,6 +189,19 @@ export default function EditSentencePage() {
   return (
     <AuthGuard>
       <AppShell>
+        <ConfirmDialog
+          body="Xóa câu luyện tập này? Lịch ôn liên quan cũng sẽ bị xóa."
+          confirmLabel="Xóa"
+          destructive
+          loading={saving}
+          onCancel={() => setConfirmDeleteOpen(false)}
+          onConfirm={() => {
+            setConfirmDeleteOpen(false);
+            void deleteSentenceAfterConfirm();
+          }}
+          open={confirmDeleteOpen}
+          title="Xóa câu luyện tập?"
+        />
         <form className="max-w-2xl" onSubmit={save}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -270,7 +303,7 @@ export default function EditSentencePage() {
             <button
               className="min-h-11 rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
               disabled={saving || loading}
-              onClick={deleteSentence}
+              onClick={() => setConfirmDeleteOpen(true)}
               type="button"
             >
               Xóa câu
