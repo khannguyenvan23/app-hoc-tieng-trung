@@ -6,6 +6,7 @@ import { AppShell, EmptyState } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { StudyCardSkeleton } from "@/components/loading-skeletons";
 import { ReviewQueueStatus } from "@/components/review-queue-status";
+import { StudyProgress } from "@/components/study-progress";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
@@ -1187,9 +1188,11 @@ export default function StudyPage() {
             />
           ) : (
             <section className="study-card min-w-0 overflow-hidden p-4 sm:p-5">
-              <div className="text-sm text-zinc-500">
-                Thẻ {index + 1} / {reviews.length}
-              </div>
+              <StudyProgress
+                current={index + 1}
+                itemName="Thẻ"
+                total={reviews.length}
+              />
 
               <div className="mt-4 text-center sm:mt-5">
                 <div className="text-sm font-medium text-zinc-500">
@@ -1380,7 +1383,7 @@ export default function StudyPage() {
             <ReviewQueueStatus itemName="Thẻ" stats={queueStats} />
           ) : null}
 
-          <div className="mt-5 border-t border-zinc-200 pt-4">
+          <div className="study-controls">
             <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <select
                 aria-label="Chọn bộ thẻ ôn từ"

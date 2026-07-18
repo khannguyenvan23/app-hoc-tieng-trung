@@ -6,6 +6,7 @@ import { AppShell, EmptyState } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { StudyCardSkeleton } from "@/components/loading-skeletons";
 import { ReviewQueueStatus } from "@/components/review-queue-status";
+import { StudyProgress } from "@/components/study-progress";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
@@ -1459,9 +1460,11 @@ export default function StudySentencesPage() {
             />
           ) : (
             <section className="study-card min-w-0 overflow-hidden p-4 sm:p-5">
-              <div className="text-sm text-zinc-500">
-                Câu {index + 1} / {reviews.length}
-              </div>
+              <StudyProgress
+                current={index + 1}
+                itemName="Câu"
+                total={reviews.length}
+              />
 
               <div className="mt-4 text-center sm:mt-5">
                 {dictationMode && !showAnswer ? (
@@ -1737,7 +1740,7 @@ export default function StudySentencesPage() {
             <p className="mt-3 text-sm text-red-700">{dailyLimitError}</p>
           ) : null}
 
-          <div className="mt-5 border-t border-zinc-200 pt-4">
+          <div className="study-controls">
             <div className="grid min-w-0 w-full grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <select
                 aria-label="Chọn bộ thẻ luyện câu"

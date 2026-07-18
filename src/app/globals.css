@@ -143,6 +143,14 @@ button:disabled {
     background: linear-gradient(90deg, #0f766e, #14b8a6, #38bdf8);
   }
 
+  .study-progress {
+    border-radius: 0.875rem;
+    border: 1px solid rgba(228, 228, 223, 0.8);
+    background: rgba(250, 250, 249, 0.72);
+    padding: 0.75rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  }
+
   .study-answer-panel {
     border: 1px solid rgba(228, 228, 223, 0.72);
     border-radius: 0.875rem;
@@ -157,12 +165,18 @@ button:disabled {
     border: 1px solid #d4d4d8;
     background: rgba(255, 255, 255, 0.96);
     font-weight: 600;
+    box-shadow:
+      0 1px 2px rgba(24, 24, 27, 0.04),
+      0 8px 18px rgba(24, 24, 27, 0.05);
   }
 
   .rating-button:hover {
     border-color: #14b8a6;
     background: #f0fdfa;
     transform: translateY(-1px);
+    box-shadow:
+      0 2px 4px rgba(24, 24, 27, 0.06),
+      0 12px 24px rgba(24, 24, 27, 0.08);
   }
 
   .rating-again {
@@ -203,5 +217,28 @@ button:disabled {
   .rating-easy:hover {
     border-color: #22c55e;
     background: #f0fdf4;
+  }
+
+  .study-controls {
+    margin-top: 1.25rem;
+    border-top: 1px solid #e4e4e7;
+    padding-top: 1rem;
+  }
+
+  @media (max-width: 640px) {
+    .study-controls {
+      position: sticky;
+      bottom: 0.75rem;
+      z-index: 20;
+      margin-inline: -0.25rem;
+      border: 1px solid rgba(228, 228, 223, 0.92);
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.96);
+      padding: 0.75rem;
+      backdrop-filter: blur(14px);
+      box-shadow:
+        0 1px 2px rgba(24, 24, 27, 0.05),
+        0 16px 40px rgba(24, 24, 27, 0.12);
+    }
   }
 }
