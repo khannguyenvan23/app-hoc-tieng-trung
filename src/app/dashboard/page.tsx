@@ -479,7 +479,7 @@ export default function DashboardPage() {
 
     return name.includes("hsk1") || slug.includes("hsk1") || level === "hsk1";
   });
-  const showOnboarding = !loading && stats.totalCards === 0;
+  const showOnboarding = !loading && decks.length === 0;
   const starterPlanReady =
     studySettings.daily_new_card_limit === 10 &&
     studySettings.daily_new_sentence_limit === 5;
