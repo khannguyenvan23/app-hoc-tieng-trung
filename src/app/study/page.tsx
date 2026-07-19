@@ -1036,28 +1036,26 @@ export default function StudyPage() {
     if (
       shouldRequeueInCurrentSession(optimisticNextReview.next_review_at)
     ) {
-      if (remainingReviews.length > 0) {
-        const requeuedReviews = [...remainingReviews, reviewedCurrent];
-        const nextStudyIndex = getNextStudyQueueIndex(
-          requeuedReviews,
-          index,
-        );
-        const nextIndex =
-          nextStudyIndex >= 0
-            ? nextStudyIndex
-            : Math.min(index, requeuedReviews.length - 1);
-        const storageKey = getStudySessionKey("word", selectedDeckId, weakOnly);
-        saveStoredReviewQueue(storageKey, requeuedReviews);
-        saveStoredReviewId(
-          storageKey,
-          requeuedReviews[nextIndex]?.id,
-          requeuedReviews[nextIndex]?.cards?.id,
-          nextIndex,
-        );
-        setReviews(requeuedReviews);
-        setIndex(nextIndex);
-        return;
-      }
+      // Keep the just-failed card in the session queue even when it is the last
+      // one left, so the "waiting for the next step" screen shows and the card
+      // comes back after its learning step instead of ending the session.
+      const requeuedReviews = [...remainingReviews, reviewedCurrent];
+      const nextStudyIndex = getNextStudyQueueIndex(requeuedReviews, index);
+      const nextIndex =
+        nextStudyIndex >= 0
+          ? nextStudyIndex
+          : Math.min(index, requeuedReviews.length - 1);
+      const storageKey = getStudySessionKey("word", selectedDeckId, weakOnly);
+      saveStoredReviewQueue(storageKey, requeuedReviews);
+      saveStoredReviewId(
+        storageKey,
+        requeuedReviews[nextIndex]?.id,
+        requeuedReviews[nextIndex]?.cards?.id,
+        nextIndex,
+      );
+      setReviews(requeuedReviews);
+      setIndex(nextIndex);
+      return;
     }
 
     if (remainingReviews.length === 0) {

@@ -15,12 +15,12 @@
  * Usage:
  *   npx tsx scripts/simulate-srs.ts [--days 365] [--cards 500] [--new 15] [--seed 7]
  */
-import { applyReviewFuzz, getNextReview } from "../src/lib/review.ts";
+import { applyReviewFuzz, getNextReview } from "@/lib/review";
 import {
   defaultStudySettings,
   type StudySettings,
-} from "../src/lib/study-settings.ts";
-import type { ReviewRating } from "../src/lib/types.ts";
+} from "@/lib/study-settings";
+import type { ReviewRating } from "@/lib/types";
 
 const DAY_MS = 86_400_000;
 
