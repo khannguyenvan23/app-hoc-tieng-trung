@@ -122,8 +122,14 @@ function scheduleLearning(
   }
 
   if (rating === "hard") {
-    // Hard repeats the current step.
-    return stepResult(currentStep, steps[currentStep]);
+    // Hard stays on the current step but nudges the delay so it sits between
+    // Again and Good, the way Anki does: the average of the current and next
+    // step, or 1.5x the step when there is no next step.
+    const hardMinutes =
+      currentStep < lastIndex
+        ? Math.round((steps[currentStep] + steps[currentStep + 1]) / 2)
+        : Math.round(steps[currentStep] * 1.5);
+    return stepResult(currentStep, hardMinutes);
   }
 
   if (rating === "good") {

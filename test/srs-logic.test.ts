@@ -105,13 +105,18 @@ test("learning steps advance one at a time before graduating", () => {
   const good = getNextReview("good", newState, baseNow, settings);
   const easy = getNextReview("easy", newState, baseNow, settings);
 
-  // again resets to the first step, hard repeats the current step.
+  // again resets to the first step; hard stays on the step but sits between
+  // again (3m) and good (10m): round((3 + 10) / 2) = 7m.
   assert.equal(again.interval_days, 0);
   assert.equal(again.learning_step, 0);
   assert.equal(minutesUntil(again.next_review_at), 3);
   assert.equal(hard.interval_days, 0);
   assert.equal(hard.learning_step, 0);
-  assert.equal(minutesUntil(hard.next_review_at), 3);
+  assert.equal(minutesUntil(hard.next_review_at), 7);
+  assert.ok(
+    minutesUntil(again.next_review_at) < minutesUntil(hard.next_review_at) &&
+      minutesUntil(hard.next_review_at) < minutesUntil(good.next_review_at),
+  );
 
   // good on a new card advances to the second step, it does NOT graduate yet.
   assert.equal(good.interval_days, 0);
