@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:srs": "tsx --test test/srs-logic.test.ts test/sentence-diff.test.ts",
+    "sim:srs": "tsx scripts/simulate-srs.ts",
     "audio:templates": "tsx scripts/prepare-template-audio.ts"
   },
   "dependencies": {
