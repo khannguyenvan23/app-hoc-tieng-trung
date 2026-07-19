@@ -25,7 +25,7 @@ export function StudyProgress({
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-teal-700 via-teal-500 to-sky-400"
+          className="h-full rounded-full bg-gradient-to-r from-teal-700 via-teal-500 to-sky-400 transition-[width] duration-500 ease-out motion-reduce:transition-none"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
