@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell, EmptyState } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { StudyCardSkeleton } from "@/components/loading-skeletons";
+import { RatingButtons } from "@/components/rating-buttons";
 import { ReviewQueueStatus } from "@/components/review-queue-status";
 import { StudyProgress } from "@/components/study-progress";
 import { hasPublicEnv } from "@/lib/env";
@@ -41,19 +42,6 @@ import type { Card, Deck, DueReview, ReviewRating } from "@/lib/types";
 const allDecksValue = "all";
 const audioCacheLimit = 16;
 
-const ratingLabels: Record<ReviewRating, string> = {
-  again: "Quên",
-  hard: "Khó",
-  good: "Nhớ",
-  easy: "Dễ",
-};
-
-const ratingToneClasses: Record<ReviewRating, string> = {
-  again: "rating-again",
-  hard: "rating-hard",
-  good: "rating-good",
-  easy: "rating-easy",
-};
 
 const audioSpeeds = {
   normal: 1,
@@ -121,21 +109,6 @@ function getPendingCardStudyAt(reviews: DueReview[]) {
   return getNextStudyQueueIndex(reviews) >= 0
     ? null
     : getNextPendingStudyAt(reviews);
-}
-
-function getRatingIntervalLabel(
-  rating: ReviewRating,
-  review: DueReview,
-  settings: StudySettings,
-) {
-  const now = new Date();
-  const nextReview = getNextReview(rating, review, now, settings);
-
-  return formatReviewIntervalLabel(
-    nextReview.next_review_at,
-    nextReview.interval_days,
-    now,
-  );
 }
 
 function getCardAudioData(card: Card | null | undefined): CardAudioData | null {
@@ -1419,30 +1392,11 @@ export default function StudyPage() {
                     ) : null}
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {(Object.keys(ratingLabels) as ReviewRating[]).map(
-                      (rating) => (
-                        <button
-                          className={`rating-button ${ratingToneClasses[rating]} px-3 py-2 text-sm disabled:opacity-60`}
-                          key={rating}
-                          onClick={() => rate(rating)}
-                          type="button"
-                        >
-                          <span className="block font-medium">
-                            {ratingLabels[rating]}
-                          </span>
-                          <span className="mt-1 block text-xs text-zinc-500">
-                            Lặp lại sau{" "}
-                            {getRatingIntervalLabel(
-                              rating,
-                              current,
-                              studySettings,
-                            )}
-                          </span>
-                        </button>
-                      ),
-                    )}
-                  </div>
+                  <RatingButtons
+                    onRate={rate}
+                    review={current}
+                    settings={studySettings}
+                  />
                 </div>
               )}
             </section>

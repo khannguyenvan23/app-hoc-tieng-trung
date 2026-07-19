@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { recordAnalyticsEvent } from "@/lib/analytics";
 import { getRequestUser } from "@/lib/auth";
-import { getNextReview } from "@/lib/review";
+import { applyReviewFuzz, getNextReview } from "@/lib/review";
 import {
   defaultStudySettings,
   normalizeStudySettings,
@@ -172,10 +172,10 @@ export async function POST(request: Request) {
   const studySettings = normalizeStudySettings(
     settingsError ? defaultStudySettings : studySettingsRow,
   );
-  const nextReview = getNextReview(
-    body.data.rating,
-    review,
-    new Date(),
+  const now = new Date();
+  const nextReview = applyReviewFuzz(
+    getNextReview(body.data.rating, review, now, studySettings),
+    now,
     studySettings,
   );
   const schedulePatch: Record<string, unknown> = { ...nextReview };

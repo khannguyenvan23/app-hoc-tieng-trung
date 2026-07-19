@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getNextReview } from "../src/lib/review.ts";
+import {
+  applyReviewFuzz,
+  fuzzInterval,
+  getNextReview,
+} from "../src/lib/review.ts";
+import { getReviewQueueStats } from "../src/lib/review-queue-stats.ts";
 import { defaultStudySettings } from "../src/lib/study-settings.ts";
 import {
   buildStudyQueue,
@@ -38,6 +43,14 @@ function daysUntil(nextReviewAt: string) {
   return Math.round(
     (new Date(nextReviewAt).getTime() - baseNow.getTime()) / 86_400_000,
   );
+}
+
+function addMinutesIso(date: Date, minutes: number) {
+  return new Date(date.getTime() + minutes * 60_000).toISOString();
+}
+
+function addDaysIso(date: Date, days: number) {
+  return new Date(date.getTime() + days * 86_400_000).toISOString();
 }
 
 function makeReview(id: number, reviewCount: number): TestReview {
@@ -170,6 +183,77 @@ test("lapsing a review card sends it through relearning and restores an interval
   assert.equal(relearned.learning_step, -1);
   assert.equal(relearned.interval_days, lapsed.interval_days);
   assert.equal(daysUntil(relearned.next_review_at), lapsed.interval_days);
+});
+
+test("interval fuzz stays within Anki's widening window", () => {
+  // Tiny intervals are never fuzzed so previews stay exact.
+  assert.equal(fuzzInterval(0), 0);
+  assert.equal(fuzzInterval(1), 1);
+
+  // A 2-day card lands on 2 or 3, never below itself.
+  assert.equal(fuzzInterval(2, () => 0), 2);
+  assert.equal(fuzzInterval(2, () => 0.999), 3);
+
+  // 10-day card: fuzz = max(2, floor(10 * 0.15)) = 2 => range [8, 12].
+  assert.equal(fuzzInterval(10, () => 0), 8);
+  assert.equal(fuzzInterval(10, () => 0.999), 12);
+  for (let i = 0; i < 50; i += 1) {
+    const value = fuzzInterval(10);
+    assert.ok(value >= 8 && value <= 12);
+  }
+});
+
+test("fuzz only touches graduated review cards, not learning steps", () => {
+  const now = new Date("2026-07-17T00:00:00.000Z");
+
+  const learningStep = {
+    next_review_at: addMinutesIso(now, 10),
+    interval_days: 0,
+    ease_factor: 2.5,
+    learning_step: 0,
+  };
+  assert.deepEqual(applyReviewFuzz(learningStep, now, settings), learningStep);
+
+  const oneDay = {
+    next_review_at: addDaysIso(now, 1),
+    interval_days: 1,
+    ease_factor: 2.5,
+    learning_step: -1,
+  };
+  assert.deepEqual(applyReviewFuzz(oneDay, now, settings), oneDay);
+
+  const graduated = {
+    next_review_at: addDaysIso(now, 10),
+    interval_days: 10,
+    ease_factor: 2.5,
+    learning_step: -1,
+  };
+  const fuzzedLow = applyReviewFuzz(graduated, now, settings, () => 0);
+  assert.equal(fuzzedLow.interval_days, 8);
+  assert.equal(daysUntil(fuzzedLow.next_review_at), 8);
+
+  const capped = applyReviewFuzz(
+    { ...graduated, interval_days: 400 },
+    now,
+    settings,
+    () => 0.999,
+  );
+  assert.ok(capped.interval_days <= settings.maximum_interval_days);
+});
+
+test("queue stats treat relearning cards as learning, not review", () => {
+  const stats = getReviewQueueStats([
+    { review_count: 0, interval_days: 0, last_rating: null, learning_step: 0 },
+    // relearning: interval > 0 but still stepping, must count as learning.
+    { review_count: 3, interval_days: 1, last_rating: "hard", learning_step: 0 },
+    { review_count: 5, interval_days: 10, last_rating: "good", learning_step: -1 },
+    // legacy row without learning_step falls back to the old heuristic.
+    { review_count: 2, interval_days: 0, last_rating: "good" },
+  ]);
+
+  assert.equal(stats.new, 1);
+  assert.equal(stats.learning, 2);
+  assert.equal(stats.review, 1);
 });
 
 test("review ratings schedule again soon and keep hard < good < easy", () => {

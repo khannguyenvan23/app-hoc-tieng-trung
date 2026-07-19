@@ -260,3 +260,59 @@ export function getNextReview(
     settings,
   );
 }
+
+// Spread out an interval so cards scheduled together don't all come due on the
+// same day (Anki's "fuzz"). The fuzz window widens with the interval.
+export function fuzzInterval(intervalDays: number, random = Math.random) {
+  const interval = Math.round(intervalDays);
+
+  if (interval < 2) {
+    return interval;
+  }
+
+  if (interval === 2) {
+    // Keep a 2-day card at 2-3 days so it never fuzzes back below itself.
+    return 2 + Math.floor(random() * 2);
+  }
+
+  let fuzz: number;
+  if (interval < 7) {
+    fuzz = Math.floor(interval * 0.25);
+  } else if (interval < 30) {
+    fuzz = Math.max(2, Math.floor(interval * 0.15));
+  } else {
+    fuzz = Math.max(4, Math.floor(interval * 0.05));
+  }
+  fuzz = Math.max(fuzz, 1);
+
+  const min = interval - fuzz;
+  const max = interval + fuzz;
+  return min + Math.floor(random() * (max - min + 1));
+}
+
+// Apply fuzz to a graduated review card only. Short (re)learning steps and
+// 1-day graduations stay exact so previews match the actual schedule.
+export function applyReviewFuzz(
+  nextReview: NextReview,
+  now: Date,
+  settings = defaultStudySettings,
+  random = Math.random,
+): NextReview {
+  if (
+    nextReview.learning_step !== REVIEW_PHASE ||
+    nextReview.interval_days < 2
+  ) {
+    return nextReview;
+  }
+
+  const fuzzed = clampInterval(
+    fuzzInterval(nextReview.interval_days, random),
+    settings,
+  );
+
+  return {
+    ...nextReview,
+    interval_days: fuzzed,
+    next_review_at: addDays(now, fuzzed).toISOString(),
+  };
+}
