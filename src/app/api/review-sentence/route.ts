@@ -19,6 +19,7 @@ type ReviewRow = {
   review_count: number | null;
   interval_days: number | null;
   ease_factor: number | null;
+  learning_step?: number | null;
   first_reviewed_at?: string | null;
   weak_score?: number | null;
   lapse_count?: number | null;
@@ -41,6 +42,37 @@ function missingFirstReviewedColumn(error: unknown) {
     "message" in error &&
     String(error.message).includes("first_reviewed_at")
   );
+}
+
+function missingLearningStepColumn(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error &&
+    "message" in error &&
+    String(error.message).includes("learning_step")
+  );
+}
+
+function buildReviewSelect(options: {
+  weak: boolean;
+  firstReviewed: boolean;
+  learningStep: boolean;
+}) {
+  const columns = ["id", "review_count", "interval_days", "ease_factor"];
+
+  if (options.learningStep) {
+    columns.push("learning_step");
+  }
+
+  if (options.firstReviewed) {
+    columns.push("first_reviewed_at");
+  }
+
+  if (options.weak) {
+    columns.push("weak_score", "lapse_count", "weak_since");
+  }
+
+  return columns.join(", ");
 }
 
 function getWeakPatch(rating: z.infer<typeof schema>["rating"], review: ReviewRow) {
@@ -89,21 +121,31 @@ export async function POST(request: Request) {
   let supportsFirstReviewedAt = true;
   let { data: review, error: reviewError } = await supabase
     .from("sentence_reviews")
-    .select("id, review_count, interval_days, ease_factor, first_reviewed_at, weak_score, lapse_count, weak_since")
+    .select(
+      buildReviewSelect({ weak: true, firstReviewed: true, learningStep: true }),
+    )
     .eq("sentence_card_id", body.data.sentenceCardId)
     .eq("user_id", user.id)
     .single<ReviewRow>();
 
   const supportsWeakQueue = !missingWeakColumns(reviewError);
+  const supportsLearningStep = !missingLearningStepColumn(reviewError);
 
-  if (reviewError && (missingFirstReviewedColumn(reviewError) || !supportsWeakQueue)) {
+  if (
+    reviewError &&
+    (missingFirstReviewedColumn(reviewError) ||
+      !supportsWeakQueue ||
+      !supportsLearningStep)
+  ) {
     supportsFirstReviewedAt = !missingFirstReviewedColumn(reviewError);
     const retryResult = await supabase
       .from("sentence_reviews")
       .select(
-        supportsWeakQueue
-          ? "id, review_count, interval_days, ease_factor, weak_score, lapse_count, weak_since"
-          : "id, review_count, interval_days, ease_factor",
+        buildReviewSelect({
+          weak: supportsWeakQueue,
+          firstReviewed: false,
+          learningStep: supportsLearningStep,
+        }),
       )
       .eq("sentence_card_id", body.data.sentenceCardId)
       .eq("user_id", user.id)
@@ -139,6 +181,10 @@ export async function POST(request: Request) {
     new Date(),
     studySettings,
   );
+  const schedulePatch: Record<string, unknown> = { ...nextReview };
+  if (!supportsLearningStep) {
+    delete schedulePatch.learning_step;
+  }
   const weakPatch = supportsWeakQueue ? getWeakPatch(body.data.rating, review) : {};
   const firstReviewPatch =
     supportsFirstReviewedAt &&
@@ -149,7 +195,7 @@ export async function POST(request: Request) {
   const { error } = await supabase
     .from("sentence_reviews")
     .update({
-      ...nextReview,
+      ...schedulePatch,
       ...weakPatch,
       ...firstReviewPatch,
       review_count: Number(review.review_count || 0) + 1,

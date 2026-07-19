@@ -3,16 +3,28 @@ import {
   addDays,
   addMinutes,
   defaultStudySettings,
-  getFirstLearningStepMinutes,
-  getFirstRelearningStepMinutes,
-  getHardLearningStepMinutes,
+  parseLearningSteps,
   type StudySettings,
 } from "./study-settings";
+
+// learning_step semantics:
+//   >= 0  => card is stepping through learning (interval_days === 0) or
+//            relearning (interval_days > 0, holds the interval to restore).
+//   -1 / null => graduated review card, scheduled by interval.
+const REVIEW_PHASE = -1;
 
 type ReviewState = {
   review_count: number | null;
   interval_days: number | null;
   ease_factor: number | null;
+  learning_step?: number | null;
+};
+
+export type NextReview = {
+  next_review_at: string;
+  interval_days: number;
+  ease_factor: number;
+  learning_step: number;
 };
 
 function clampEase(easeFactor: number, settings: StudySettings) {
@@ -30,41 +42,175 @@ function applyIntervalModifier(days: number, settings: StudySettings) {
   return Math.round(days * settings.interval_modifier);
 }
 
-function getLearningInterval(
-  rating: ReviewRating,
+function resolveSteps(raw: string, fallback: string) {
+  const steps = parseLearningSteps(raw);
+
+  if (steps.length > 0) {
+    return steps;
+  }
+
+  const fallbackSteps = parseLearningSteps(fallback);
+  return fallbackSteps.length > 0 ? fallbackSteps : [10];
+}
+
+function graduate(
+  isRelearning: boolean,
+  pendingInterval: number,
   currentEase: number,
+  isEasy: boolean,
   now: Date,
   settings: StudySettings,
-) {
-  if (rating === "again") {
-    return {
-      nextInterval: 0,
-      nextEase: clampEase(currentEase - 0.2, settings),
-      nextReviewAt: addMinutes(now, getFirstLearningStepMinutes(settings)),
-    };
-  }
+): NextReview {
+  let interval: number;
 
-  if (rating === "hard") {
-    return {
-      nextInterval: 0,
-      nextEase: clampEase(currentEase - 0.15, settings),
-      nextReviewAt: addMinutes(now, getHardLearningStepMinutes(settings)),
-    };
-  }
-
-  if (rating === "good") {
-    return {
-      nextInterval: settings.graduating_interval_days,
-      nextEase: clampEase(currentEase, settings),
-      nextReviewAt: addDays(now, settings.graduating_interval_days),
-    };
+  if (isRelearning) {
+    // Restore the interval that was computed when the card lapsed. Easy adds
+    // the easy bonus on top so it stays ahead of Good.
+    interval = isEasy
+      ? clampInterval(
+          Math.max(
+            pendingInterval + 1,
+            applyIntervalModifier(pendingInterval * settings.easy_bonus, settings),
+          ),
+          settings,
+        )
+      : clampInterval(pendingInterval, settings);
+  } else {
+    interval = clampInterval(
+      isEasy ? settings.easy_interval_days : settings.graduating_interval_days,
+      settings,
+    );
   }
 
   return {
-    nextInterval: settings.easy_interval_days,
-    nextEase: clampEase(currentEase + 0.15, settings),
-    nextReviewAt: addDays(now, settings.easy_interval_days),
+    next_review_at: addDays(now, interval).toISOString(),
+    interval_days: interval,
+    // Anki does not change ease while a card is still in (re)learning.
+    ease_factor: clampEase(currentEase, settings),
+    learning_step: REVIEW_PHASE,
   };
+}
+
+function scheduleLearning(
+  rating: ReviewRating,
+  ctx: {
+    currentInterval: number;
+    currentEase: number;
+    currentStep: number;
+    steps: number[];
+    isRelearning: boolean;
+  },
+  now: Date,
+  settings: StudySettings,
+): NextReview {
+  const { currentInterval, currentEase, currentStep, steps, isRelearning } = ctx;
+  const lastIndex = steps.length - 1;
+  // interval_days carries 0 while learning and the pending restore interval
+  // while relearning. Ease stays put until the card graduates.
+  const heldInterval = isRelearning ? currentInterval : 0;
+  const heldEase = clampEase(currentEase, settings);
+
+  const stepResult = (stepIndex: number, minutes: number): NextReview => ({
+    next_review_at: addMinutes(now, minutes).toISOString(),
+    interval_days: heldInterval,
+    ease_factor: heldEase,
+    learning_step: stepIndex,
+  });
+
+  if (rating === "again") {
+    return stepResult(0, steps[0]);
+  }
+
+  if (rating === "hard") {
+    // Hard repeats the current step.
+    return stepResult(currentStep, steps[currentStep]);
+  }
+
+  if (rating === "good") {
+    if (currentStep >= lastIndex) {
+      return graduate(isRelearning, currentInterval, currentEase, false, now, settings);
+    }
+
+    const nextStep = currentStep + 1;
+    return stepResult(nextStep, steps[nextStep]);
+  }
+
+  // easy graduates straight out of the (re)learning steps.
+  return graduate(isRelearning, currentInterval, currentEase, true, now, settings);
+}
+
+function scheduleReview(
+  rating: ReviewRating,
+  ctx: { currentInterval: number; currentEase: number },
+  now: Date,
+  settings: StudySettings,
+): NextReview {
+  const { currentInterval, currentEase } = ctx;
+
+  if (rating === "again") {
+    // Lapse: drop ease, compute the interval to restore after relearning, and
+    // send the card back through the relearning steps.
+    const nextEase = clampEase(currentEase - 0.2, settings);
+    const lapseInterval = clampInterval(
+      Math.max(
+        settings.minimum_lapse_interval_days,
+        Math.round(currentInterval * (settings.new_interval_percentage / 100)),
+      ),
+      settings,
+    );
+    const relearningSteps = resolveSteps(
+      settings.relearning_steps,
+      defaultStudySettings.relearning_steps,
+    );
+
+    return {
+      next_review_at: addMinutes(now, relearningSteps[0]).toISOString(),
+      interval_days: lapseInterval,
+      ease_factor: nextEase,
+      learning_step: 0,
+    };
+  }
+
+  const reviewResult = (interval: number, ease: number): NextReview => ({
+    next_review_at: addDays(now, interval).toISOString(),
+    interval_days: interval,
+    ease_factor: ease,
+    learning_step: REVIEW_PHASE,
+  });
+
+  const hardInterval = clampInterval(
+    Math.max(
+      currentInterval + 1,
+      applyIntervalModifier(currentInterval * settings.hard_interval_multiplier, settings),
+    ),
+    settings,
+  );
+
+  if (rating === "hard") {
+    return reviewResult(hardInterval, clampEase(currentEase - 0.15, settings));
+  }
+
+  const goodInterval = clampInterval(
+    Math.max(
+      hardInterval + 1,
+      applyIntervalModifier(currentInterval * currentEase, settings),
+    ),
+    settings,
+  );
+
+  if (rating === "good") {
+    return reviewResult(goodInterval, clampEase(currentEase, settings));
+  }
+
+  const easyInterval = clampInterval(
+    Math.max(
+      goodInterval + 1,
+      applyIntervalModifier(currentInterval * currentEase * settings.easy_bonus, settings),
+    ),
+    settings,
+  );
+
+  return reviewResult(easyInterval, clampEase(currentEase + 0.15, settings));
 }
 
 export function getNextReview(
@@ -72,105 +218,39 @@ export function getNextReview(
   state: ReviewState,
   now = new Date(),
   settings = defaultStudySettings,
-) {
+): NextReview {
   const currentInterval = Number(state.interval_days || 0);
   const currentEase = Number(
     state.ease_factor || settings.starting_ease_factor,
   );
-  let nextInterval = currentInterval;
-  let nextEase = currentEase;
-  let nextReviewAt = now;
 
-  if (currentInterval <= 0) {
-    const learningStep = getLearningInterval(
-      rating,
-      currentEase,
-      now,
-      settings,
-    );
-    nextInterval = learningStep.nextInterval;
-    nextEase = learningStep.nextEase;
-    nextReviewAt = learningStep.nextReviewAt;
-  } else if (rating === "again") {
-    nextEase = clampEase(currentEase - 0.2, settings);
-    nextInterval = clampInterval(
-      Math.max(
-        settings.minimum_lapse_interval_days,
-        Math.round(
-          currentInterval * (settings.new_interval_percentage / 100),
-        ),
-      ),
-      settings,
-    );
-    nextReviewAt = addMinutes(now, getFirstRelearningStepMinutes(settings));
-  } else if (rating === "hard") {
-    nextEase = clampEase(currentEase - 0.15, settings);
-    nextInterval = clampInterval(
-      Math.max(
-        currentInterval + 1,
-        applyIntervalModifier(
-          currentInterval * settings.hard_interval_multiplier,
-          settings,
-        ),
-      ),
-      settings,
-    );
-    nextReviewAt = addDays(now, nextInterval);
-  } else if (rating === "good") {
-    nextEase = clampEase(currentEase, settings);
-    const hardInterval = clampInterval(
-      Math.max(
-        currentInterval + 1,
-        applyIntervalModifier(
-          currentInterval * settings.hard_interval_multiplier,
-          settings,
-        ),
-      ),
-      settings,
-    );
-    nextInterval = clampInterval(
-      Math.max(
-        hardInterval + 1,
-        applyIntervalModifier(currentInterval * currentEase, settings),
-      ),
-      settings,
-    );
-    nextReviewAt = addDays(now, nextInterval);
-  } else {
-    nextEase = clampEase(currentEase + 0.15, settings);
-    const hardInterval = clampInterval(
-      Math.max(
-        currentInterval + 1,
-        applyIntervalModifier(
-          currentInterval * settings.hard_interval_multiplier,
-          settings,
-        ),
-      ),
-      settings,
-    );
-    const goodInterval = clampInterval(
-      Math.max(
-        hardInterval + 1,
-        applyIntervalModifier(currentInterval * currentEase, settings),
-      ),
-      settings,
-    );
-    nextInterval = clampInterval(
-      Math.max(
-        goodInterval + 1,
-        applyIntervalModifier(
-          currentInterval * currentEase * settings.easy_bonus,
-          settings,
-        ),
-      ),
-      settings,
-    );
-    nextReviewAt = addDays(now, nextInterval);
+  const storedStep = state.learning_step;
+  const hasStoredStep = storedStep !== null && storedStep !== undefined;
+  // With an explicit step we trust it; otherwise (e.g. column missing) fall
+  // back to the interval: 0 means learning, > 0 means a graduated review card.
+  const inLearningPhase = hasStoredStep
+    ? Number(storedStep) >= 0
+    : currentInterval <= 0;
+
+  if (!inLearningPhase) {
+    return scheduleReview(rating, { currentInterval, currentEase }, now, settings);
   }
 
-  return {
-    next_review_at: nextReviewAt.toISOString(),
-    interval_days: nextInterval,
-    ease_factor: nextEase,
-  };
+  const isRelearning = currentInterval > 0;
+  const steps = resolveSteps(
+    isRelearning ? settings.relearning_steps : settings.learning_steps,
+    isRelearning
+      ? defaultStudySettings.relearning_steps
+      : defaultStudySettings.learning_steps,
+  );
+  const currentStep = hasStoredStep
+    ? Math.min(Math.max(Number(storedStep), 0), steps.length - 1)
+    : 0;
+
+  return scheduleLearning(
+    rating,
+    { currentInterval, currentEase, currentStep, steps, isRelearning },
+    now,
+    settings,
+  );
 }

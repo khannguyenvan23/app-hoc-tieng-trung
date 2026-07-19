@@ -92,7 +92,8 @@ test("restored queues are capped again when the user lowers the daily limit", ()
   assert.equal(queue.filter((review) => Number(review.review_count) === 0).length, 10);
 });
 
-test("learning ratings use the configured Anki-style steps and intervals", () => {
+test("learning steps advance one at a time before graduating", () => {
+  // learning_steps === "3m 10m": two steps before graduation.
   const newState = {
     review_count: 0,
     interval_days: 0,
@@ -104,14 +105,66 @@ test("learning ratings use the configured Anki-style steps and intervals", () =>
   const good = getNextReview("good", newState, baseNow, settings);
   const easy = getNextReview("easy", newState, baseNow, settings);
 
+  // again resets to the first step, hard repeats the current step.
   assert.equal(again.interval_days, 0);
+  assert.equal(again.learning_step, 0);
   assert.equal(minutesUntil(again.next_review_at), 3);
   assert.equal(hard.interval_days, 0);
-  assert.equal(minutesUntil(hard.next_review_at), 10);
-  assert.equal(good.interval_days, settings.graduating_interval_days);
-  assert.equal(daysUntil(good.next_review_at), settings.graduating_interval_days);
+  assert.equal(hard.learning_step, 0);
+  assert.equal(minutesUntil(hard.next_review_at), 3);
+
+  // good on a new card advances to the second step, it does NOT graduate yet.
+  assert.equal(good.interval_days, 0);
+  assert.equal(good.learning_step, 1);
+  assert.equal(minutesUntil(good.next_review_at), 10);
+
+  // easy graduates straight away.
   assert.equal(easy.interval_days, settings.easy_interval_days);
+  assert.equal(easy.learning_step, -1);
   assert.equal(daysUntil(easy.next_review_at), settings.easy_interval_days);
+
+  // good again from the last learning step graduates.
+  const graduated = getNextReview(
+    "good",
+    { review_count: 1, interval_days: 0, ease_factor: 2.5, learning_step: 1 },
+    baseNow,
+    settings,
+  );
+  assert.equal(graduated.interval_days, settings.graduating_interval_days);
+  assert.equal(graduated.learning_step, -1);
+  assert.equal(daysUntil(graduated.next_review_at), settings.graduating_interval_days);
+});
+
+test("lapsing a review card sends it through relearning and restores an interval", () => {
+  const reviewState = {
+    review_count: 5,
+    interval_days: 8,
+    ease_factor: 2.5,
+    learning_step: -1,
+  };
+
+  // again lapses the card into the relearning step ("3m").
+  const lapsed = getNextReview("again", reviewState, baseNow, settings);
+  assert.equal(lapsed.learning_step, 0);
+  assert.equal(lapsed.interval_days, settings.minimum_lapse_interval_days);
+  assert.equal(minutesUntil(lapsed.next_review_at), 3);
+  assert.ok(lapsed.ease_factor < reviewState.ease_factor);
+
+  // good on the (single) relearning step graduates back to review.
+  const relearned = getNextReview(
+    "good",
+    {
+      review_count: 6,
+      interval_days: lapsed.interval_days,
+      ease_factor: lapsed.ease_factor,
+      learning_step: 0,
+    },
+    baseNow,
+    settings,
+  );
+  assert.equal(relearned.learning_step, -1);
+  assert.equal(relearned.interval_days, lapsed.interval_days);
+  assert.equal(daysUntil(relearned.next_review_at), lapsed.interval_days);
 });
 
 test("review ratings schedule again soon and keep hard < good < easy", () => {
