@@ -21,6 +21,9 @@ import {
 import {
   buildStudyQueue as buildLimitedStudyQueue,
   countWaitingNewItems,
+  getNextPendingStudyAt,
+  getNextStudyQueueIndex,
+  isDueForStudy,
   shouldRequeueInCurrentSession,
 } from "@/lib/study-queue";
 import {
@@ -101,6 +104,23 @@ function buildStudyQueue(
 
 function countWaitingNewCards(reviews: DueReview[], remainingNewCards: number) {
   return countWaitingNewItems(reviews, remainingNewCards);
+}
+
+function getRestoredCardStudyIndex(reviews: DueReview[], storageKey: string) {
+  const storedIndex = getStoredReviewIndex(
+    reviews,
+    storageKey,
+    (review) => review.cards?.id,
+  );
+  const nextStudyIndex = getNextStudyQueueIndex(reviews, storedIndex);
+
+  return nextStudyIndex >= 0 ? nextStudyIndex : storedIndex;
+}
+
+function getPendingCardStudyAt(reviews: DueReview[]) {
+  return getNextStudyQueueIndex(reviews) >= 0
+    ? null
+    : getNextPendingStudyAt(reviews);
 }
 
 function getRatingIntervalLabel(
@@ -425,15 +445,10 @@ export default function StudyPage() {
       reviewQueue.length,
     );
     setReviews(reviewQueue);
+    setScheduledReloadAt(getPendingCardStudyAt(reviewQueue));
     setSessionTotal(sessionProgress.total);
     setSessionAnswered(sessionProgress.answered);
-    setIndex(
-      getStoredReviewIndex(
-        reviewQueue,
-        storageKey,
-        (review) => review.cards?.id,
-      ),
-    );
+    setIndex(getRestoredCardStudyIndex(reviewQueue, storageKey));
     setShowAnswer(false);
     setWritingAnswer("");
     setWritingResult("");
@@ -649,13 +664,8 @@ export default function StudyPage() {
               countWaitingNewCards(retryRows, remainingNewCards),
             );
             setReviews(retryQueue);
-            setIndex(
-              getStoredReviewIndex(
-                retryQueue,
-                storageKey,
-                (review) => review.cards?.id,
-              ),
-            );
+            setScheduledReloadAt(getPendingCardStudyAt(retryQueue));
+            setIndex(getRestoredCardStudyIndex(retryQueue, storageKey));
             setShowAnswer(false);
             setWritingAnswer("");
             setWritingResult("");
@@ -689,13 +699,8 @@ export default function StudyPage() {
       setNewCardsStudiedToday(studiedToday);
       setNewCardsWaiting(countWaitingNewCards(reviewRows, remainingNewCards));
       setReviews(reviewQueue);
-      setIndex(
-        getStoredReviewIndex(
-          reviewQueue,
-          storageKey,
-          (review) => review.cards?.id,
-        ),
-      );
+      setScheduledReloadAt(getPendingCardStudyAt(reviewQueue));
+      setIndex(getRestoredCardStudyIndex(reviewQueue, storageKey));
       setShowAnswer(false);
       setWritingAnswer("");
       setWritingResult("");
@@ -1060,7 +1065,14 @@ export default function StudyPage() {
     ) {
       if (remainingReviews.length > 0) {
         const requeuedReviews = [...remainingReviews, reviewedCurrent];
-        const nextIndex = Math.min(index, requeuedReviews.length - 1);
+        const nextStudyIndex = getNextStudyQueueIndex(
+          requeuedReviews,
+          index,
+        );
+        const nextIndex =
+          nextStudyIndex >= 0
+            ? nextStudyIndex
+            : Math.min(index, requeuedReviews.length - 1);
         const storageKey = getStudySessionKey("word", selectedDeckId, weakOnly);
         saveStoredReviewQueue(storageKey, requeuedReviews);
         saveStoredReviewId(
@@ -1101,7 +1113,11 @@ export default function StudyPage() {
         void loadReviews();
       });
     } else {
-      const nextIndex = Math.min(index, remainingReviews.length - 1);
+      const nextStudyIndex = getNextStudyQueueIndex(remainingReviews, index);
+      const nextIndex =
+        nextStudyIndex >= 0
+          ? nextStudyIndex
+          : Math.min(index, remainingReviews.length - 1);
       const storageKey = getStudySessionKey("word", selectedDeckId, weakOnly);
       saveStoredReviewQueue(storageKey, remainingReviews);
       saveStoredReviewId(
@@ -1125,6 +1141,17 @@ export default function StudyPage() {
       new Date(scheduledReloadAt).getTime() - Date.now() + 500,
     );
     const timer = window.setTimeout(() => {
+      if (reviews.length > 0) {
+        const nextStudyIndex = getNextStudyQueueIndex(reviews, index);
+
+        if (nextStudyIndex >= 0) {
+          setScheduledReloadAt(null);
+          setIndex(nextStudyIndex);
+        }
+
+        return;
+      }
+
       if (reviews.length > 0 || loading || repairingReviews) {
         return;
       }
@@ -1137,7 +1164,7 @@ export default function StudyPage() {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [loading, repairingReviews, reviews.length, scheduledReloadAt]);
+  }, [index, loading, repairingReviews, reviews, scheduledReloadAt]);
 
   useEffect(() => {
     keyboardActionsRef.current = {
@@ -1157,7 +1184,11 @@ export default function StudyPage() {
     };
   });
 
-  const current = reviews[index];
+  const queuedCurrent = reviews[index];
+  const current =
+    queuedCurrent && isDueForStudy(queuedCurrent.next_review_at)
+      ? queuedCurrent
+      : undefined;
   const card = current?.cards;
   const scheduledLearningStepLabel = scheduledReloadAt
     ? formatReviewIntervalLabel(scheduledReloadAt, 0)

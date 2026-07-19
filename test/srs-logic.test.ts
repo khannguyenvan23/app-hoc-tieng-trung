@@ -5,6 +5,8 @@ import { defaultStudySettings } from "../src/lib/study-settings.ts";
 import {
   buildStudyQueue,
   countWaitingNewItems,
+  getNextPendingStudyAt,
+  getNextStudyQueueIndex,
   shouldRequeueInCurrentSession,
   type StudyQueueReview,
 } from "../src/lib/study-queue.ts";
@@ -147,5 +149,38 @@ test("short learning steps stay in the current session, multi-day reviews do not
       baseNow,
     ),
     false,
+  );
+});
+
+test("study queue skips learning items until their scheduled time", () => {
+  const futureLearning = {
+    ...makeReview(1, 1),
+    next_review_at: new Date(baseNow.getTime() + 10 * 60_000).toISOString(),
+  };
+  const newDueItem = {
+    ...makeReview(2, 0),
+    next_review_at: new Date(baseNow.getTime() - 60_000).toISOString(),
+  };
+
+  assert.equal(
+    getNextStudyQueueIndex([futureLearning, newDueItem], 0, baseNow),
+    1,
+  );
+  assert.equal(getNextStudyQueueIndex([futureLearning], 0, baseNow), -1);
+  assert.equal(
+    getNextStudyQueueIndex(
+      [futureLearning],
+      0,
+      new Date(baseNow.getTime() + 10 * 60_000),
+    ),
+    0,
+  );
+  assert.equal(
+    getNextPendingStudyAt([futureLearning], baseNow),
+    futureLearning.next_review_at,
+  );
+  assert.equal(
+    getNextPendingStudyAt([newDueItem, futureLearning], baseNow),
+    futureLearning.next_review_at,
   );
 });
