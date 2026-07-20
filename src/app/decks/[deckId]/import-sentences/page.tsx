@@ -70,32 +70,32 @@ export default function ImportSentencesPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h1 className="text-2xl font-semibold">Import câu</h1>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 Dán mỗi dòng một câu tiếng Trung. AI sẽ tạo nghĩa tiếng Việt,
                 pinyin và tách từ vựng trong câu.
               </p>
             </div>
             <Link
-              className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+              className="rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
               href={`/decks/${params.deckId}`}
             >
               Quay lại bộ thẻ
             </Link>
             </div>
 
-            <div className="mt-4 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-950">
+            <div className="mt-4 rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm leading-6 text-teal-950">
               Nên import 10-20 câu/lần để AI xử lý nhanh hơn. Audio sẽ tự
               tạo khi bạn vào luyện câu hoặc bấm phát âm. Tối đa 50 câu/lần.
             </div>
 
           <textarea
-            className="mt-6 h-72 w-full rounded-lg border border-zinc-300 bg-white p-4 font-mono text-sm outline-none focus:border-teal-700"
+            className="mt-6 h-72 w-full rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] p-4 font-mono text-sm outline-none focus:border-teal-700"
             onChange={(event) => setText(event.target.value)}
             value={text}
           />
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-zinc-600">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
               {items.length} câu sẵn sàng gửi AI · dự kiến cần {items.length * 2}{" "}
               credit
             </p>
@@ -112,8 +112,8 @@ export default function ImportSentencesPage() {
             <p
               className={`mt-4 text-sm ${
                 messageType === "success"
-                  ? "text-teal-700"
-                  : "text-red-700"
+                  ? "text-teal-700 dark:text-teal-300"
+                  : "text-red-700 dark:text-red-300"
               }`}
             >
               {message}

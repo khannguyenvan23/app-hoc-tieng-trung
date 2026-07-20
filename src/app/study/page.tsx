@@ -1182,7 +1182,7 @@ export default function StudyPage() {
       <AppShell>
         <div className="study-page-shell mx-auto min-w-0 w-full max-w-2xl">
           {creditNotice ? (
-            <div className="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800">
+            <div className="mb-5 rounded-md border border-red-200 dark:border-red-500/40 bg-red-50 dark:bg-red-500/15 px-4 py-3 text-sm leading-6 text-red-800 dark:text-red-300">
               <div>{creditNotice}</div>
               <Link
                 className="mt-2 inline-flex font-medium text-red-900 dark:text-red-200 underline"
@@ -1249,7 +1249,7 @@ export default function StudyPage() {
                       <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                         Gõ chữ Hán bạn đoán
                         <input
-                          className="mt-2 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-3 text-center text-2xl outline-none focus:border-teal-700 sm:text-3xl"
+                          className="mt-2 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-3 py-3 text-center text-2xl outline-none focus:border-teal-700 sm:text-3xl"
                           onChange={(event) => {
                             setWritingAnswer(event.target.value);
                             setWritingResult("");
@@ -1274,7 +1274,7 @@ export default function StudyPage() {
                         </p>
                       ) : null}
                       {writingResult === "wrong" ? (
-                        <p className="mt-3 text-sm font-medium text-red-700">
+                        <p className="mt-3 text-sm font-medium text-red-700 dark:text-red-300">
                           Chưa đúng, thử lại hoặc hiện đáp án.
                         </p>
                       ) : null}
@@ -1411,7 +1411,7 @@ export default function StudyPage() {
             <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <select
                 aria-label="Chọn bộ thẻ ôn từ"
-                className="col-span-2 h-10 w-full rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
+                className="col-span-2 h-10 w-full rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
                 onChange={(event) => changeDeck(event.target.value)}
                 value={selectedDeckId}
               >

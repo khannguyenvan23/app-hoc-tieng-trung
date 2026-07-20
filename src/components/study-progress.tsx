@@ -22,7 +22,7 @@ export function StudyProgress({
         <span className="font-medium text-zinc-600 dark:text-zinc-400">
           {itemName} {safeCurrent} / {safeTotal}
         </span>
-        <span className="rounded-full bg-teal-50 px-2 py-1 text-xs font-semibold text-teal-800 dark:bg-teal-500/15 dark:text-teal-300">
+        <span className="rounded-full bg-teal-50 dark:bg-teal-500/15 px-2 py-1 text-xs font-semibold text-teal-800 dark:text-teal-300">
           {progressPercent}%
         </span>
       </div>

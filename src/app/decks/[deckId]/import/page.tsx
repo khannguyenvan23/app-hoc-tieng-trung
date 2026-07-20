@@ -153,32 +153,32 @@ export default function ImportPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h1 className="text-2xl font-semibold">Import từ vựng</h1>
-                <p className="mt-1 text-sm text-zinc-600">
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                   Dán từ tiếng Trung, tạo preview bằng AI, sửa lại nội dung rồi
                   mới lưu thẻ.
                 </p>
               </div>
               <Link
-                className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                className="rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                 href={`/decks/${params.deckId}`}
               >
                 Quay lại bộ thẻ
               </Link>
             </div>
 
-            <div className="mt-4 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-950">
+            <div className="mt-4 rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm leading-6 text-teal-950">
               Nên import 10-30 từ/lần để tạo AI và audio nhanh hơn. Tối đa
               100 từ/lần. Mỗi từ đặt trên một dòng.
             </div>
 
             <textarea
-              className="mt-6 h-56 w-full rounded-lg border border-zinc-300 bg-white p-4 font-mono text-sm outline-none focus:border-teal-700"
+              className="mt-6 h-56 w-full rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] p-4 font-mono text-sm outline-none focus:border-teal-700"
               onChange={(event) => setText(event.target.value)}
               value={text}
             />
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-zinc-600">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 {items.length} từ sẵn sàng gửi AI · tạo preview cần{" "}
                 {items.length} credit
               </p>
@@ -197,7 +197,7 @@ export default function ImportPage() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold">Preview trước khi lưu</h2>
-                  <p className="mt-1 text-sm text-zinc-600">
+                  <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                     Sửa nghĩa, pinyin hoặc câu ví dụ trực tiếp trong bảng. Khi lưu,
                     app tạo audio và cần {previewCards.length * 2} credit.
                   </p>
@@ -212,9 +212,9 @@ export default function ImportPage() {
                 </button>
               </div>
 
-              <div className="mt-4 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
+              <div className="mt-4 overflow-x-auto rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
                 <table className="min-w-[1100px] divide-y divide-zinc-200 text-sm">
-                  <thead className="bg-zinc-50 text-left text-xs uppercase text-zinc-500">
+                  <thead className="bg-zinc-50 dark:bg-white/5 text-left text-xs uppercase text-zinc-500 dark:text-zinc-400">
                     <tr>
                       {previewFields.map((field) => (
                         <th className="px-3 py-3" key={field.key}>
@@ -231,7 +231,7 @@ export default function ImportPage() {
                           <td className="min-w-36 align-top" key={field.key}>
                             {field.multiline ? (
                               <textarea
-                                className="h-24 w-full resize-y border-0 bg-transparent px-3 py-3 outline-none focus:bg-teal-50"
+                                className="h-24 w-full resize-y border-0 bg-transparent px-3 py-3 outline-none focus:bg-teal-50 dark:focus:bg-teal-500/15"
                                 onChange={(event) =>
                                   updatePreviewCard(
                                     cardIndex,
@@ -243,7 +243,7 @@ export default function ImportPage() {
                               />
                             ) : (
                               <input
-                                className="w-full border-0 bg-transparent px-3 py-3 outline-none focus:bg-teal-50"
+                                className="w-full border-0 bg-transparent px-3 py-3 outline-none focus:bg-teal-50 dark:focus:bg-teal-500/15"
                                 onChange={(event) =>
                                   updatePreviewCard(
                                     cardIndex,
@@ -258,7 +258,7 @@ export default function ImportPage() {
                         ))}
                         <td className="align-top">
                           <button
-                            className="m-2 rounded-md border border-zinc-300 px-3 py-2 text-sm hover:bg-zinc-100"
+                            className="m-2 rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-white/10"
                             onClick={() => removePreviewCard(cardIndex)}
                             type="button"
                           >
@@ -277,8 +277,8 @@ export default function ImportPage() {
             <p
               className={`mt-4 text-sm ${
                 messageType === "success"
-                  ? "text-teal-700"
-                  : "text-red-700"
+                  ? "text-teal-700 dark:text-teal-300"
+                  : "text-red-700 dark:text-red-300"
               }`}
             >
               {message}

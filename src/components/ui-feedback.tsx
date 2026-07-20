@@ -16,7 +16,7 @@ type ToastInput = Omit<ToastMessage, "id">;
 const toastToneClasses: Record<ToastTone, string> = {
   success: "border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 text-teal-950",
   error: "border-red-200 dark:border-red-500/40 bg-red-50 dark:bg-red-500/15 text-red-950",
-  info: "border-sky-200 bg-sky-50 dark:bg-sky-500/15 text-sky-950",
+  info: "border-sky-200 dark:border-sky-500/40 bg-sky-50 dark:bg-sky-500/15 text-sky-950",
 };
 
 export function useToast() {
@@ -137,12 +137,12 @@ export function ConfirmDialog({
       className="fixed inset-0 z-[80] grid place-items-center bg-zinc-950/35 px-4 py-6 backdrop-blur-sm"
       role="dialog"
     >
-      <div className="w-full max-w-md rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 p-5 shadow-2xl">
+      <div className="w-full max-w-md rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5 p-5 shadow-2xl">
         <h2 className="text-lg font-semibold">{title}</h2>
         <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{body}</p>
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
-            className="min-h-10 rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
+            className="min-h-10 rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
             disabled={loading}
             onClick={onCancel}
             type="button"

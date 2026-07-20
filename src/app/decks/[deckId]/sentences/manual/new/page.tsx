@@ -88,13 +88,13 @@ export default function NewManualSentencePage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h1 className="text-2xl font-semibold">Thêm câu thủ công</h1>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 Tự nhập câu luyện tập. Khi lưu, app sẽ tự tạo audio nếu bạn để
                 trống ô audio. Tạo audio tự động cần 1 credit.
               </p>
             </div>
             <Link
-              className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+              className="rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
               href={`/decks/${params.deckId}`}
             >
               Quay lại
@@ -105,7 +105,7 @@ export default function NewManualSentencePage() {
             <label className="block text-sm font-medium">
               Câu tiếng Trung
               <textarea
-                className="mt-2 h-24 w-full rounded-md border border-zinc-300 px-3 py-2 text-lg outline-none focus:border-teal-700"
+                className="mt-2 h-24 w-full rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 text-lg outline-none focus:border-teal-700"
                 onChange={(event) =>
                   updateField("sentence_cn", event.target.value)
                 }
@@ -118,7 +118,7 @@ export default function NewManualSentencePage() {
             <label className="block text-sm font-medium">
               Pinyin
               <input
-                className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
+                className="mt-2 w-full rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 outline-none focus:border-teal-700"
                 onChange={(event) =>
                   updateField("sentence_pinyin", event.target.value)
                 }
@@ -130,7 +130,7 @@ export default function NewManualSentencePage() {
             <label className="block text-sm font-medium">
               Nghĩa tiếng Việt
               <textarea
-                className="mt-2 h-24 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
+                className="mt-2 h-24 w-full rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 outline-none focus:border-teal-700"
                 onChange={(event) =>
                   updateField("sentence_vi", event.target.value)
                 }
@@ -143,7 +143,7 @@ export default function NewManualSentencePage() {
             <label className="block text-sm font-medium">
               Từ vựng trong câu
               <textarea
-                className="mt-2 h-40 w-full rounded-md border border-zinc-300 px-3 py-2 font-mono text-sm outline-none focus:border-teal-700"
+                className="mt-2 h-40 w-full rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 font-mono text-sm outline-none focus:border-teal-700"
                 onChange={(event) =>
                   updateField("vocab_text", event.target.value)
                 }
@@ -157,7 +157,7 @@ export default function NewManualSentencePage() {
             <label className="block text-sm font-medium">
               Audio câu URL
               <input
-                className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
+                className="mt-2 w-full rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 outline-none focus:border-teal-700"
                 onChange={(event) =>
                   updateField("sentence_audio_url", event.target.value)
                 }
@@ -167,7 +167,7 @@ export default function NewManualSentencePage() {
             </label>
           </div>
 
-          {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
+          {error ? <p className="mt-4 text-sm text-red-700 dark:text-red-300">{error}</p> : null}
 
           <button
             className="mt-6 min-h-11 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"

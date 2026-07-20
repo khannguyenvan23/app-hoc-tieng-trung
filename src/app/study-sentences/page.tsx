@@ -67,13 +67,13 @@ const sentenceDiffLabels: Record<SentenceDiffStatus, string> = {
 
 const sentenceDiffStyles: Record<SentenceDiffStatus, string> = {
   correct:
-    "border-teal-200 bg-teal-50 text-teal-900 dark:border-teal-500/40 dark:bg-teal-500/15 dark:text-teal-200",
+    "border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 text-teal-900 dark:text-teal-200",
   wrong:
-    "border-red-200 bg-red-50 text-red-900 dark:border-red-500/40 dark:bg-red-500/15 dark:text-red-200",
+    "border-red-200 dark:border-red-500/40 bg-red-50 dark:bg-red-500/15 text-red-900 dark:text-red-200",
   missing:
-    "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200",
+    "border-amber-200 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/15 text-amber-900 dark:text-amber-200",
   extra:
-    "border-zinc-300 bg-zinc-100 text-zinc-700 dark:border-white/15 dark:bg-white/10 dark:text-zinc-300",
+    "border-zinc-300 dark:border-white/15 bg-zinc-100 dark:bg-white/10 text-zinc-700 dark:text-zinc-300",
 };
 
 const audioSpeeds = {
@@ -1565,7 +1565,7 @@ export default function StudySentencesPage() {
                           ? "Gõ lại câu tiếng Trung vừa nghe"
                           : "Gõ câu tiếng Trung"}
                         <textarea
-                          className="mt-2 h-20 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-24 sm:text-2xl"
+                          className="mt-2 h-20 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-3 py-2 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-24 sm:text-2xl"
                           ref={sentenceAnswerRef}
                           onChange={(event) => {
                             setSentenceAnswer(event.target.value);
@@ -1602,7 +1602,7 @@ export default function StudySentencesPage() {
                         </p>
                       ) : null}
                       {writingResult === "wrong" ? (
-                        <p className="mt-3 text-sm font-medium text-red-700">
+                        <p className="mt-3 text-sm font-medium text-red-700 dark:text-red-300">
                           Chưa đúng, thử lại hoặc hiện đáp án.
                         </p>
                       ) : null}
@@ -1756,14 +1756,14 @@ export default function StudySentencesPage() {
           ) : null}
 
           {dailyLimitError ? (
-            <p className="mt-3 text-sm text-red-700">{dailyLimitError}</p>
+            <p className="mt-3 text-sm text-red-700 dark:text-red-300">{dailyLimitError}</p>
           ) : null}
 
           <div className="study-controls">
             <div className="grid min-w-0 w-full grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <select
                 aria-label="Chọn bộ thẻ luyện câu"
-                className="col-span-3 h-10 w-full rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
+                className="col-span-3 h-10 w-full rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
                 onChange={(event) => changeDeck(event.target.value)}
                 value={selectedDeckId}
               >
@@ -1835,7 +1835,7 @@ export default function StudySentencesPage() {
                 Pinyin
               </button>
               {audioNotice ? (
-                <p className="col-span-3 text-left text-xs text-red-700 sm:basis-full sm:text-right">
+                <p className="col-span-3 text-left text-xs text-red-700 dark:text-red-300 sm:basis-full sm:text-right">
                   {audioNotice}{" "}
                   <Link className="font-medium underline" href="/pricing">
                     Nạp credit

@@ -52,14 +52,14 @@ export default function NewDeckPage() {
             Tên bộ thẻ
           </label>
           <input
-            className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
+            className="mt-2 w-full rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 outline-none focus:border-teal-700"
             id="name"
             onChange={(event) => setName(event.target.value)}
             placeholder="HSK2, Ăn uống, Giao tiếp..."
             required
             value={name}
           />
-          {error ? <p className="mt-3 text-sm text-red-700">{error}</p> : null}
+          {error ? <p className="mt-3 text-sm text-red-700 dark:text-red-300">{error}</p> : null}
           <button
             className="mt-5 min-h-10 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
             disabled={loading}

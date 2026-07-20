@@ -88,7 +88,7 @@ export function HskProgressSkeleton() {
     <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 3 }).map((_, index) => (
         <div
-          className="rounded-md border border-zinc-200 dark:border-white/10 bg-stone-50 p-4"
+          className="rounded-md border border-zinc-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 p-4"
           key={index}
         >
           <div className="flex items-center justify-between gap-3">

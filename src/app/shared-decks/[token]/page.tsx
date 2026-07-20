@@ -117,22 +117,22 @@ export default function SharedDeckPage() {
   }
 
   return (
-    <main className="min-h-screen bg-stone-50 text-zinc-950">
-      <header className="border-b border-zinc-200 bg-white">
+    <main className="min-h-screen bg-stone-50 dark:bg-white/5 text-zinc-950 dark:text-zinc-50">
+      <header className="border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
           <Link className="font-semibold" href="/">
             Tiếng Trung Hihi
           </Link>
           {signedIn ? (
             <Link
-              className="text-sm font-medium text-teal-800 hover:underline"
+              className="text-sm font-medium text-teal-800 dark:text-teal-300 hover:underline"
               href="/dashboard"
             >
               Về dashboard
             </Link>
           ) : signedIn === false ? (
             <Link
-              className="text-sm font-medium text-teal-800 hover:underline"
+              className="text-sm font-medium text-teal-800 dark:text-teal-300 hover:underline"
               href={`/login?next=${encodeURIComponent(`/shared-decks/${params.token}`)}`}
             >
               Đăng nhập
@@ -147,18 +147,18 @@ export default function SharedDeckPage() {
         {loading ? (
           <SharedDeckPreviewSkeleton />
         ) : !preview ? (
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 text-center">
+          <div className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-6 text-center">
             <h1 className="text-xl font-semibold">Không thể mở bộ thẻ</h1>
-            <p className="mt-2 text-sm text-red-700">{message}</p>
+            <p className="mt-2 text-sm text-red-700 dark:text-red-300">{message}</p>
           </div>
         ) : (
           <>
-            <section className="border-b border-zinc-200 pb-7">
-              <p className="text-xs font-medium uppercase tracking-wide text-teal-700">
+            <section className="border-b border-zinc-200 dark:border-white/10 pb-7">
+              <p className="text-xs font-medium uppercase tracking-wide text-teal-700 dark:text-teal-300">
                 Bộ thẻ được chia sẻ
               </p>
               <h1 className="mt-2 text-3xl font-semibold">{preview.deck.name}</h1>
-              <p className="mt-3 text-sm text-zinc-600">
+              <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
                 {preview.cardCount} thẻ từ vựng · {preview.sentenceCount} câu luyện tập
               </p>
               <button
@@ -173,21 +173,21 @@ export default function SharedDeckPage() {
                     ? "Đăng nhập để thêm"
                     : "Thêm vào tài khoản"}
               </button>
-              {message ? <p className="mt-3 text-sm text-red-700">{message}</p> : null}
+              {message ? <p className="mt-3 text-sm text-red-700 dark:text-red-300">{message}</p> : null}
             </section>
 
             {preview.cards.length > 0 ? (
               <section className="mt-7">
                 <h2 className="text-lg font-semibold">Xem trước từ vựng</h2>
-                <div className="mt-3 divide-y divide-zinc-200 border-y border-zinc-200">
+                <div className="mt-3 divide-y divide-zinc-200 border-y border-zinc-200 dark:border-white/10">
                   {preview.cards.map((card, index) => (
                     <div
                       className="grid gap-1 py-3 sm:grid-cols-[1fr_1fr_2fr] sm:items-center"
                       key={`${card.chinese}-${index}`}
                     >
                       <div className="text-xl font-semibold">{card.chinese}</div>
-                      <div className="text-sm text-teal-800">{card.pinyin}</div>
-                      <div className="text-sm text-zinc-700">{card.meaning_vi}</div>
+                      <div className="text-sm text-teal-800 dark:text-teal-300">{card.pinyin}</div>
+                      <div className="text-sm text-zinc-700 dark:text-zinc-300">{card.meaning_vi}</div>
                     </div>
                   ))}
                 </div>
@@ -197,19 +197,19 @@ export default function SharedDeckPage() {
             {preview.sentences.length > 0 ? (
               <section className="mt-8">
                 <h2 className="text-lg font-semibold">Xem trước câu luyện tập</h2>
-                <div className="mt-3 divide-y divide-zinc-200 border-y border-zinc-200">
+                <div className="mt-3 divide-y divide-zinc-200 border-y border-zinc-200 dark:border-white/10">
                   {preview.sentences.map((sentence, index) => (
                     <div className="py-3" key={`${sentence.sentence_cn}-${index}`}>
                       <div className="font-medium">{sentence.sentence_vi}</div>
                       <div className="mt-1 text-lg">{sentence.sentence_cn}</div>
-                      <div className="text-sm text-teal-800">{sentence.sentence_pinyin}</div>
+                      <div className="text-sm text-teal-800 dark:text-teal-300">{sentence.sentence_pinyin}</div>
                     </div>
                   ))}
                 </div>
               </section>
             ) : null}
 
-            <p className="mt-8 text-sm leading-6 text-zinc-600">
+            <p className="mt-8 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
               Khi thêm bộ này, bạn nhận một bản sao riêng. Mọi chỉnh sửa và tiến độ SRS của bạn không ảnh hưởng người chia sẻ.
             </p>
           </>

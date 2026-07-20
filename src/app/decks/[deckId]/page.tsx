@@ -356,7 +356,7 @@ export default function DeckPage() {
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <input
                       autoFocus
-                      className="min-h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-lg font-semibold outline-none focus:border-teal-700 sm:w-72"
+                      className="min-h-10 w-full rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-3 text-lg font-semibold outline-none focus:border-teal-700 sm:w-72"
                       maxLength={100}
                       onChange={(event) => setDeckName(event.target.value)}
                       onKeyDown={(event) => {
@@ -380,7 +380,7 @@ export default function DeckPage() {
                         {savingName ? "Đang lưu..." : "Lưu"}
                       </button>
                       <button
-                        className="min-h-10 rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100"
+                        className="min-h-10 rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                         disabled={savingName}
                         onClick={cancelEditingName}
                         type="button"
@@ -393,7 +393,7 @@ export default function DeckPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <h1 className="text-2xl font-semibold">{deck.name}</h1>
                     <button
-                      className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium hover:bg-zinc-100"
+                      className="rounded-md border border-zinc-300 dark:border-white/15 px-2 py-1 text-xs font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                       onClick={() => {
                         setDeckName(deck.name);
                         setEditingName(true);
@@ -405,15 +405,15 @@ export default function DeckPage() {
                     </button>
                   </div>
                 )}
-                <p className="mt-1 text-sm text-zinc-600">
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                   {cards.length} thẻ từ vựng · {sentenceCards.length} câu luyện tập
                 </p>
                 {nameMessage ? (
                   <p
                     className={`mt-2 text-sm ${
                       nameMessage.startsWith("Đã")
-                        ? "text-teal-700"
-                        : "text-red-700"
+                        ? "text-teal-700 dark:text-teal-300"
+                        : "text-red-700 dark:text-red-300"
                     }`}
                   >
                     {nameMessage}
@@ -422,19 +422,19 @@ export default function DeckPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                   href="/study"
                 >
                   Ôn tập
                 </Link>
                 <Link
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                   href="/study-sentences"
                 >
                   Luyện câu
                 </Link>
                 <button
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
+                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
                   disabled={shareLoading}
                   onClick={createShareLink}
                   type="button"
@@ -442,21 +442,21 @@ export default function DeckPage() {
                   {shareLoading ? "Đang tạo..." : "Chia sẻ"}
                 </button>
                 <Link
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                   href={`/decks/${deck.id}/cards/new`}
                   prefetch={false}
                 >
                   Thêm thẻ
                 </Link>
                 <Link
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                   href={`/decks/${deck.id}/sentences/new`}
                   prefetch={false}
                 >
                   Tạo câu từ từ vựng
                 </Link>
                 <Link
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                   href={`/decks/${deck.id}/sentences/manual/new`}
                   prefetch={false}
                 >
@@ -481,7 +481,7 @@ export default function DeckPage() {
             </div>
 
             {shareToken || shareMessage ? (
-              <section className="mt-5 rounded-lg border border-teal-200 bg-teal-50 p-4">
+              <section className="mt-5 rounded-lg border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h2 className="font-semibold text-teal-950">Chia sẻ bộ thẻ</h2>
@@ -491,7 +491,7 @@ export default function DeckPage() {
                   </div>
                   {shareToken ? (
                     <button
-                      className="text-sm font-medium text-red-700 hover:underline disabled:opacity-60"
+                      className="text-sm font-medium text-red-700 dark:text-red-300 hover:underline disabled:opacity-60"
                       disabled={shareLoading}
                       onClick={disableShareLink}
                       type="button"
@@ -505,7 +505,7 @@ export default function DeckPage() {
                   <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                     <input
                       aria-label="Liên kết chia sẻ bộ thẻ"
-                      className="min-h-10 min-w-0 flex-1 rounded-md border border-teal-300 bg-white px-3 text-sm"
+                      className="min-h-10 min-w-0 flex-1 rounded-md border border-teal-300 bg-white dark:bg-[#171a19] px-3 text-sm"
                       onFocus={(event) => event.currentTarget.select()}
                       readOnly
                       value={`${window.location.origin}/shared-decks/${shareToken}`}
@@ -538,21 +538,21 @@ export default function DeckPage() {
                         Thêm thẻ thủ công
                       </PrimaryLink>
                       <Link
-                        className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                        className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                         href={`/decks/${deck.id}/sentences/new`}
                         prefetch={false}
                       >
                         Tạo câu từ từ vựng
                       </Link>
                       <Link
-                        className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                        className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                         href={`/decks/${deck.id}/sentences/manual/new`}
                         prefetch={false}
                       >
                         Thêm câu thủ công
                       </Link>
                       <Link
-                        className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                        className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                         href={`/decks/${deck.id}/import-words-to-sentences`}
                         prefetch={false}
                       >
@@ -568,32 +568,32 @@ export default function DeckPage() {
                   {cards.length > 0 ? (
                     <div>
                       <h2 className="mb-3 text-lg font-semibold">Thẻ từ vựng</h2>
-                      <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
+                      <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
                         {cards.map((card) => (
                           <div
-                            className="grid gap-2 border-b border-zinc-100 p-4 last:border-b-0 lg:grid-cols-[1fr_1fr_2fr_auto]"
+                            className="grid gap-2 border-b border-zinc-100 dark:border-white/10 p-4 last:border-b-0 lg:grid-cols-[1fr_1fr_2fr_auto]"
                             key={card.id}
                           >
                             <div className="text-2xl font-semibold">
                               {card.chinese}
                             </div>
-                            <div className="text-sm text-zinc-600">
+                            <div className="text-sm text-zinc-600 dark:text-zinc-400">
                               {card.pinyin}
                             </div>
                             <div className="text-sm">
                               <p className="font-medium">{card.meaning_vi}</p>
-                              <p className="mt-1 text-zinc-600">
+                              <p className="mt-1 text-zinc-600 dark:text-zinc-400">
                                 {card.example_cn}
                               </p>
                               {card.example_pinyin ? (
-                                <p className="text-teal-800">
+                                <p className="text-teal-800 dark:text-teal-300">
                                   {card.example_pinyin}
                                 </p>
                               ) : null}
-                              <p className="text-zinc-500">{card.example_vi}</p>
+                              <p className="text-zinc-500 dark:text-zinc-400">{card.example_vi}</p>
                             </div>
                             <Link
-                              className="inline-flex min-h-9 items-center justify-center rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100"
+                              className="inline-flex min-h-9 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                               href={`/decks/${deck.id}/cards/${card.id}/edit`}
                               prefetch={false}
                             >
@@ -610,16 +610,16 @@ export default function DeckPage() {
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <h2 className="text-lg font-semibold">Câu luyện tập</h2>
                         <Link
-                          className="text-sm font-medium text-teal-700 hover:text-teal-900"
+                          className="text-sm font-medium text-teal-700 dark:text-teal-300 hover:text-teal-900"
                           href="/study-sentences"
                         >
                           Vào luyện câu
                         </Link>
                       </div>
-                      <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
+                      <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
                         {sentenceCards.map((sentenceCard) => (
                           <div
-                            className="grid gap-2 border-b border-zinc-100 p-4 last:border-b-0 lg:grid-cols-[2fr_2fr_3fr_auto]"
+                            className="grid gap-2 border-b border-zinc-100 dark:border-white/10 p-4 last:border-b-0 lg:grid-cols-[2fr_2fr_3fr_auto]"
                             key={sentenceCard.id}
                           >
                             <div className="font-medium">
@@ -629,11 +629,11 @@ export default function DeckPage() {
                               <p className="text-lg font-semibold">
                                 {sentenceCard.sentence_cn}
                               </p>
-                              <p className="text-sm text-teal-800">
+                              <p className="text-sm text-teal-800 dark:text-teal-300">
                                 {sentenceCard.sentence_pinyin}
                               </p>
                             </div>
-                            <div className="text-sm text-zinc-600">
+                            <div className="text-sm text-zinc-600 dark:text-zinc-400">
                               {Array.isArray(sentenceCard.vocab_json)
                                 ? sentenceCard.vocab_json
                                     .map((item) => `${item.chinese}: ${item.meaning_vi}`)
@@ -641,7 +641,7 @@ export default function DeckPage() {
                                 : null}
                             </div>
                             <Link
-                              className="inline-flex min-h-9 items-center justify-center rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100"
+                              className="inline-flex min-h-9 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                               href={`/decks/${deck.id}/sentences/${sentenceCard.id}/edit`}
                               prefetch={false}
                             >
@@ -656,11 +656,11 @@ export default function DeckPage() {
               )}
             </section>
 
-            <section className="mt-8 rounded-lg border border-red-200 bg-red-50 p-5">
+            <section className="mt-8 rounded-lg border border-red-200 dark:border-red-500/40 bg-red-50 dark:bg-red-500/15 p-5">
               <h2 className="text-lg font-semibold text-red-900 dark:text-red-200">
                 Quản lý bộ thẻ
               </h2>
-              <p className="mt-1 text-sm text-red-800">
+              <p className="mt-1 text-sm text-red-800 dark:text-red-300">
                 Các thao tác này ảnh hưởng trực tiếp đến nội dung hoặc tiến độ
                 học của bộ thẻ hiện tại.
               </p>
@@ -669,8 +669,8 @@ export default function DeckPage() {
                 <p
                   className={`mt-3 text-sm ${
                     actionMessage.startsWith("Đã")
-                      ? "text-teal-800"
-                      : "text-red-700"
+                      ? "text-teal-800 dark:text-teal-300"
+                      : "text-red-700 dark:text-red-300"
                   }`}
                 >
                   {actionMessage}
@@ -679,7 +679,7 @@ export default function DeckPage() {
 
               <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 <button
-                  className="min-h-10 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
+                  className="min-h-10 rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
                   disabled={Boolean(actionLoading)}
                   onClick={() => setPendingAction("reset-progress")}
                   type="button"
@@ -689,7 +689,7 @@ export default function DeckPage() {
                     : "Reset tiến độ"}
                 </button>
                 <button
-                  className="min-h-10 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
+                  className="min-h-10 rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
                   disabled={Boolean(actionLoading) || cards.length === 0}
                   onClick={() => setPendingAction("delete-vocabulary")}
                   type="button"
@@ -699,7 +699,7 @@ export default function DeckPage() {
                     : "Xóa thẻ từ"}
                 </button>
                 <button
-                  className="min-h-10 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
+                  className="min-h-10 rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
                   disabled={Boolean(actionLoading) || sentenceCards.length === 0}
                   onClick={() => setPendingAction("delete-sentences")}
                   type="button"

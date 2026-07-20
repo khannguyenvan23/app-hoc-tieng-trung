@@ -305,7 +305,7 @@ export default function StatisticsPage() {
           </div>
         ) : null}
 
-        <section className="mt-6 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 p-5 shadow-sm">
+        <section className="mt-6 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5 p-5 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
@@ -413,7 +413,7 @@ export default function StatisticsPage() {
             },
           ].map((item) => (
             <div
-              className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 p-4 shadow-sm"
+              className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5 p-4 shadow-sm"
               key={item.label}
             >
               <div className="text-sm text-zinc-500 dark:text-zinc-400">{item.label}</div>
@@ -438,7 +438,7 @@ export default function StatisticsPage() {
             <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Xem tháng
               <select
-                className="mt-1 min-h-10 w-full rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 text-sm outline-none focus:border-teal-700 sm:w-48"
+                className="mt-1 min-h-10 w-full rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-3 text-sm outline-none focus:border-teal-700 sm:w-48"
                 onChange={(event) => setSelectedMonth(event.target.value)}
                 value={selectedMonth}
               >

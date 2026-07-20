@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const base = mobile ? "rounded-lg px-3 py-2" : "rounded-lg px-3 py-2";
     return active
       ? `${base} bg-teal-50 dark:bg-teal-500/15 font-semibold text-teal-800 dark:text-teal-300 shadow-sm`
-      : `${base} text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 hover:text-zinc-950 dark:hover:bg-white/10 dark:hover:text-white`;
+      : `${base} text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 hover:text-zinc-950 dark:hover:bg-white/10 dark:hover:text-white`;
   }
 
   async function signOut() {
@@ -92,7 +92,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             })}
             <ThemeToggle />
             <button
-              className="rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
+              className="rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-3 py-2 font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
               onClick={signOut}
               type="button"
             >
@@ -100,10 +100,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </button>
           </nav>
           <details className="relative sm:hidden">
-            <summary className="cursor-pointer list-none rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm font-semibold shadow-sm hover:bg-zinc-100 dark:hover:bg-white/10">
+            <summary className="cursor-pointer list-none rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-3 py-2 text-sm font-semibold shadow-sm hover:bg-zinc-100 dark:hover:bg-white/10">
               Menu
             </summary>
-            <nav className="absolute right-0 z-50 mt-2 grid w-52 gap-1 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#1b1f1e] p-2 text-sm shadow-xl">
+            <nav className="absolute right-0 z-50 mt-2 grid w-52 gap-1 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-[#1b1f1e] p-2 text-sm shadow-xl">
               {navItems.map((item) => {
                 const active = isActivePath(item.paths);
 

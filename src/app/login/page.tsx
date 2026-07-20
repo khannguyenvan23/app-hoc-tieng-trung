@@ -135,20 +135,20 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-stone-50 px-4 py-10">
+    <main className="flex min-h-screen items-center justify-center bg-stone-50 dark:bg-white/5 px-4 py-10">
       <form
-        className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-6 shadow-sm"
+        className="w-full max-w-md rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-6 shadow-sm"
         onSubmit={submit}
       >
         <h1 className="text-2xl font-semibold">Tiếng Trung Hihi</h1>
-        <p className="mt-2 text-sm text-zinc-600">
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           Học từ vựng tiếng Trung bằng flashcard và lặp lại ngắt quãng.
         </p>
 
-        <div className="mt-6 grid grid-cols-2 rounded-md border border-zinc-200 p-1 text-sm">
+        <div className="mt-6 grid grid-cols-2 rounded-md border border-zinc-200 dark:border-white/10 p-1 text-sm">
           <button
             className={`rounded px-3 py-2 ${
-              mode === "login" ? "bg-teal-700 text-white" : "hover:bg-zinc-100"
+              mode === "login" ? "bg-teal-700 text-white" : "hover:bg-zinc-100 dark:hover:bg-white/10"
             }`}
             onClick={() => changeMode("login")}
             type="button"
@@ -157,7 +157,7 @@ export default function LoginPage() {
           </button>
           <button
             className={`rounded px-3 py-2 ${
-              mode === "signup" ? "bg-teal-700 text-white" : "hover:bg-zinc-100"
+              mode === "signup" ? "bg-teal-700 text-white" : "hover:bg-zinc-100 dark:hover:bg-white/10"
             }`}
             onClick={() => changeMode("signup")}
             type="button"
@@ -167,7 +167,7 @@ export default function LoginPage() {
         </div>
 
         {mode === "forgot" ? (
-          <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:text-amber-200">
+          <div className="mt-5 rounded-md border border-amber-200 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/15 px-3 py-2 text-sm text-amber-900 dark:text-amber-200">
             Nhập email tài khoản. App sẽ gửi link để bạn tạo mật khẩu mới.
           </div>
         ) : null}
@@ -176,7 +176,7 @@ export default function LoginPage() {
           Email
         </label>
         <input
-          className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
+          className="mt-2 w-full rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 outline-none focus:border-teal-700"
           id="email"
           onChange={(event) => setEmail(event.target.value)}
           required
@@ -190,7 +190,7 @@ export default function LoginPage() {
               Mật khẩu
             </label>
             <input
-              className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
+              className="mt-2 w-full rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 outline-none focus:border-teal-700"
               id="password"
               minLength={6}
               onChange={(event) => setPassword(event.target.value)}
@@ -210,7 +210,7 @@ export default function LoginPage() {
               Nhập lại mật khẩu
             </label>
             <input
-              className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 outline-none focus:border-teal-700"
+              className="mt-2 w-full rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 outline-none focus:border-teal-700"
               id="confirm-password"
               minLength={6}
               onChange={(event) => setConfirmPassword(event.target.value)}
@@ -224,7 +224,7 @@ export default function LoginPage() {
         {message ? (
           <p
             className={`mt-4 text-sm ${
-              isError ? "text-red-700" : "text-teal-700"
+              isError ? "text-red-700 dark:text-red-300" : "text-teal-700 dark:text-teal-300"
             }`}
           >
             {message}
@@ -233,7 +233,7 @@ export default function LoginPage() {
 
         {canResendConfirmation ? (
           <button
-            className="mt-3 min-h-10 w-full rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60"
+            className="mt-3 min-h-10 w-full rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
             disabled={loading || !email}
             onClick={resendConfirmation}
             type="button"
@@ -258,7 +258,7 @@ export default function LoginPage() {
 
         {mode === "login" ? (
           <button
-            className="mt-4 w-full text-sm font-medium text-teal-800 hover:underline"
+            className="mt-4 w-full text-sm font-medium text-teal-800 dark:text-teal-300 hover:underline"
             onClick={() => changeMode("forgot")}
             type="button"
           >
@@ -268,7 +268,7 @@ export default function LoginPage() {
 
         {mode === "forgot" ? (
           <button
-            className="mt-4 w-full text-sm font-medium text-teal-800 hover:underline"
+            className="mt-4 w-full text-sm font-medium text-teal-800 dark:text-teal-300 hover:underline"
             onClick={() => changeMode("login")}
             type="button"
           >
@@ -276,13 +276,13 @@ export default function LoginPage() {
           </button>
         ) : null}
 
-        <p className="mt-6 text-center text-xs leading-5 text-zinc-500">
+        <p className="mt-6 text-center text-xs leading-5 text-zinc-500 dark:text-zinc-400">
           Khi sử dụng Tiếng Trung Hihi, bạn đồng ý với{" "}
-          <Link className="font-medium text-teal-800 hover:underline" href="/terms">
+          <Link className="font-medium text-teal-800 dark:text-teal-300 hover:underline" href="/terms">
             Điều khoản sử dụng
           </Link>{" "}
           và{" "}
-          <Link className="font-medium text-teal-800 hover:underline" href="/privacy">
+          <Link className="font-medium text-teal-800 dark:text-teal-300 hover:underline" href="/privacy">
             Chính sách bảo mật
           </Link>
           .

@@ -44,13 +44,13 @@ export default function NewSentenceFromWordPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h1 className="text-2xl font-semibold">Tạo câu từ từ vựng</h1>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 Nhập một từ tiếng Trung. AI sẽ tự tạo câu ví dụ, nghĩa tiếng
                 Việt, pinyin, từ vựng trong câu và audio. Dự kiến cần 3 credit.
               </p>
             </div>
             <Link
-              className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+              className="rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
               href={`/decks/${params.deckId}`}
             >
               Quay lại
@@ -61,7 +61,7 @@ export default function NewSentenceFromWordPage() {
             Từ tiếng Trung
           </label>
           <input
-            className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-3 text-3xl outline-none focus:border-teal-700"
+            className="mt-2 w-full rounded-md border border-zinc-300 dark:border-white/15 px-3 py-3 text-3xl outline-none focus:border-teal-700"
             id="word"
             onChange={(event) => setWord(event.target.value)}
             placeholder="过"
@@ -69,7 +69,7 @@ export default function NewSentenceFromWordPage() {
             value={word}
           />
 
-          {message ? <p className="mt-4 text-sm text-red-700">{message}</p> : null}
+          {message ? <p className="mt-4 text-sm text-red-700 dark:text-red-300">{message}</p> : null}
 
           <button
             className="mt-6 min-h-11 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"

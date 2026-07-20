@@ -23,14 +23,14 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-stone-50 text-zinc-950">
-      <header className="border-b border-zinc-200 bg-white">
+    <main className="min-h-screen bg-stone-50 dark:bg-white/5 text-zinc-950 dark:text-zinc-50">
+      <header className="border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5">
           <Link className="text-lg font-semibold" href="/">
             Tiếng Trung Hihi
           </Link>
           <Link
-            className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+            className="rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
             href="/login"
           >
             Đăng nhập
@@ -39,17 +39,17 @@ export default function TermsPage() {
       </header>
 
       <article className="mx-auto max-w-4xl px-5 py-10">
-        <p className="text-sm font-medium uppercase tracking-wide text-teal-800">
+        <p className="text-sm font-medium uppercase tracking-wide text-teal-800 dark:text-teal-300">
           Điều khoản sử dụng
         </p>
         <h1 className="mt-3 text-3xl font-semibold">Điều khoản sử dụng</h1>
-        <p className="mt-3 text-sm text-zinc-600">
+        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
           Cập nhật lần cuối: {lastUpdated}
         </p>
 
-        <div className="mt-8 space-y-8 text-sm leading-7 text-zinc-700">
+        <div className="mt-8 space-y-8 text-sm leading-7 text-zinc-700 dark:text-zinc-300">
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               1. Chấp nhận điều khoản
             </h2>
             <p className="mt-3">
@@ -60,7 +60,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               2. Mục đích dịch vụ
             </h2>
             <p className="mt-3">
@@ -71,7 +71,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               3. Tài khoản của bạn
             </h2>
             <p className="mt-3">
@@ -82,7 +82,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               4. Nội dung do bạn nhập
             </h2>
             <p className="mt-3">
@@ -94,7 +94,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               5. Nội dung AI và độ chính xác
             </h2>
             <p className="mt-3">
@@ -106,7 +106,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               6. Sử dụng hợp lý
             </h2>
             <p className="mt-3">
@@ -119,7 +119,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               7. Thay đổi và gián đoạn dịch vụ
             </h2>
             <p className="mt-3">
@@ -131,7 +131,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               8. Sở hữu trí tuệ
             </h2>
             <p className="mt-3">
@@ -143,7 +143,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               9. Miễn trừ trách nhiệm
             </h2>
             <p className="mt-3">
@@ -156,12 +156,12 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               10. Liên hệ
             </h2>
             <p className="mt-3">
               Nếu có câu hỏi về điều khoản sử dụng, vui lòng liên hệ:{" "}
-              <a className="font-medium text-teal-800 underline" href={`mailto:${contactEmail}`}>
+              <a className="font-medium text-teal-800 dark:text-teal-300 underline" href={`mailto:${contactEmail}`}>
                 {contactEmail}
               </a>
               .

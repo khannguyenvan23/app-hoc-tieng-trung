@@ -94,14 +94,14 @@ export default function TrialPage() {
   const finished = completed.length >= trialCards.length;
 
   return (
-    <main className="min-h-screen bg-stone-50 text-zinc-950">
-      <header className="border-b border-zinc-200 bg-white">
+    <main className="min-h-screen bg-stone-50 dark:bg-white/5 text-zinc-950 dark:text-zinc-50">
+      <header className="border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
           <Link className="font-semibold" href="/">
             Tiếng Trung Hihi
           </Link>
           <nav className="flex items-center gap-2 text-sm">
-            <Link className="rounded-md px-3 py-2 hover:bg-zinc-100" href="/login">
+            <Link className="rounded-md px-3 py-2 hover:bg-zinc-100 dark:hover:bg-white/10" href="/login">
               Đăng nhập
             </Link>
             <Link
@@ -117,13 +117,13 @@ export default function TrialPage() {
       <section className="mx-auto grid max-w-5xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:py-10">
         <div className="min-w-0">
           <div className="mb-5">
-            <p className="text-sm font-medium uppercase text-teal-800">
+            <p className="text-sm font-medium uppercase text-teal-800 dark:text-teal-300">
               Học thử miễn phí
             </p>
             <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">
               Thử 5 thẻ HSK cơ bản trước khi đăng ký
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400 sm:text-base">
               Làm một vòng flashcard ngắn để cảm nhận cách học: xem nghĩa tiếng
               Việt, đoán chữ Hán, bật pinyin khi cần, rồi tự đánh giá mức nhớ.
             </p>
@@ -137,14 +137,14 @@ export default function TrialPage() {
           </div>
 
           {finished ? (
-            <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-7">
-              <p className="text-sm font-medium text-teal-800">
+            <section className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-5 shadow-sm sm:p-7">
+              <p className="text-sm font-medium text-teal-800 dark:text-teal-300">
                 Bạn đã hoàn thành bài học thử
               </p>
               <h2 className="mt-2 text-2xl font-semibold">
                 Tạo tài khoản để lưu tiến độ và học tiếp mỗi ngày
               </h2>
-              <p className="mt-3 text-sm leading-6 text-zinc-600">
+              <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
                 Khi đăng ký, bạn có thể mở bộ HSK, lưu lịch ôn SRS, theo dõi
                 streak và tiếp tục từ đúng chỗ vừa học.
               </p>
@@ -156,7 +156,7 @@ export default function TrialPage() {
                   Tạo tài khoản miễn phí
                 </Link>
                 <button
-                  className="rounded-md border border-zinc-300 px-5 py-3 text-sm font-semibold hover:bg-zinc-100"
+                  className="rounded-md border border-zinc-300 dark:border-white/15 px-5 py-3 text-sm font-semibold hover:bg-zinc-100 dark:hover:bg-white/10"
                   onClick={restart}
                   type="button"
                 >
@@ -165,8 +165,8 @@ export default function TrialPage() {
               </div>
             </section>
           ) : (
-            <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
-              <div className="flex items-center justify-between gap-3 text-sm text-zinc-500">
+            <section className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-4 shadow-sm sm:p-6">
+              <div className="flex items-center justify-between gap-3 text-sm text-zinc-500 dark:text-zinc-400">
                 <span>
                   Thẻ {index + 1} / {trialCards.length}
                 </span>
@@ -174,8 +174,8 @@ export default function TrialPage() {
                   aria-pressed={showPinyin}
                   className={`rounded-md border px-3 py-1.5 font-medium ${
                     showPinyin
-                      ? "border-teal-700 bg-teal-50 text-teal-800"
-                      : "border-zinc-300 hover:bg-zinc-100"
+                      ? "border-teal-700 bg-teal-50 dark:bg-teal-500/15 text-teal-800 dark:text-teal-300"
+                      : "border-zinc-300 dark:border-white/15 hover:bg-zinc-100 dark:hover:bg-white/10"
                   }`}
                   onClick={() => setShowPinyin(!showPinyin)}
                   type="button"
@@ -185,7 +185,7 @@ export default function TrialPage() {
               </div>
 
               <div className="mt-8 text-center">
-                <div className="text-sm font-medium text-zinc-500">
+                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                   Nghĩa tiếng Việt
                 </div>
                 <div className="mt-3 text-3xl font-semibold">
@@ -203,26 +203,26 @@ export default function TrialPage() {
                 </button>
               ) : (
                 <div className="mt-8">
-                  <div className="rounded-lg bg-stone-50 p-4 text-center">
+                  <div className="rounded-lg bg-stone-50 dark:bg-white/5 p-4 text-center">
                     <div className="text-5xl font-semibold">{card.chinese}</div>
                     {showPinyin ? (
-                      <div className="mt-3 text-lg text-teal-800">
+                      <div className="mt-3 text-lg text-teal-800 dark:text-teal-300">
                         {card.pinyin}
                       </div>
                     ) : null}
-                    <div className="mt-5 border-t border-zinc-200 pt-4">
-                      <div className="text-sm font-medium uppercase text-zinc-500">
+                    <div className="mt-5 border-t border-zinc-200 dark:border-white/10 pt-4">
+                      <div className="text-sm font-medium uppercase text-zinc-500 dark:text-zinc-400">
                         Câu ví dụ
                       </div>
                       <div className="mt-2 text-xl font-medium">
                         {card.exampleCn}
                       </div>
                       {showPinyin ? (
-                        <div className="mt-1 text-sm text-teal-800">
+                        <div className="mt-1 text-sm text-teal-800 dark:text-teal-300">
                           {card.examplePinyin}
                         </div>
                       ) : null}
-                      <div className="mt-1 text-sm text-zinc-600">
+                      <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                         {card.exampleVi}
                       </div>
                     </div>
@@ -231,7 +231,7 @@ export default function TrialPage() {
                   <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {(Object.keys(ratingCopy) as Rating[]).map((rating) => (
                       <button
-                        className="min-h-12 rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100"
+                        className="min-h-12 rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                         key={rating}
                         onClick={() => rate(rating)}
                         type="button"
@@ -246,9 +246,9 @@ export default function TrialPage() {
           )}
         </div>
 
-        <aside className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm lg:sticky lg:top-6 lg:self-start">
+        <aside className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-5 shadow-sm lg:sticky lg:top-6 lg:self-start">
           <h2 className="text-base font-semibold">Sau khi đăng ký</h2>
-          <ul className="mt-4 space-y-3 text-sm leading-6 text-zinc-600">
+          <ul className="mt-4 space-y-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
             <li>Lưu tiến độ từng thẻ và lịch ôn tiếp theo.</li>
             <li>Học bộ HSK1/HSK2 có sẵn hoặc tạo bộ riêng.</li>
             <li>Luyện câu, nghe chép chính tả và bật/tắt pinyin.</li>

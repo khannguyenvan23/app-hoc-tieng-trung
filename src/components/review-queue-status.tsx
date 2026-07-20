@@ -18,8 +18,8 @@ const queueItems = [
     key: "new",
     label: "Mới",
     numberClassName: "text-sky-700 dark:text-sky-300",
-    panelClassName: "border-zinc-200/70 bg-white dark:border-white/10 dark:bg-white/[0.03]",
-    activePanelClassName: "border-sky-300 bg-sky-50 dark:border-sky-500/60 dark:bg-sky-500/15",
+    panelClassName: "border-zinc-200/70 bg-white dark:bg-[#171a19] dark:border-white/10 dark:bg-white/[0.03]",
+    activePanelClassName: "border-sky-300 bg-sky-50 dark:bg-sky-500/15 dark:border-sky-500/60",
     dotClassName: "bg-sky-500",
   },
   {
@@ -27,8 +27,8 @@ const queueItems = [
     label: "Đang ôn",
     numberClassName: "text-red-700 dark:text-red-300",
     panelClassName:
-      "border-zinc-200/70 bg-white dark:border-white/10 dark:bg-white/[0.03]",
-    activePanelClassName: "border-red-300 bg-red-50 dark:border-red-500/60 dark:bg-red-500/15",
+      "border-zinc-200/70 bg-white dark:bg-[#171a19] dark:border-white/10 dark:bg-white/[0.03]",
+    activePanelClassName: "border-red-300 bg-red-50 dark:bg-red-500/15 dark:border-red-500/60",
     dotClassName: "bg-red-500",
   },
   {
@@ -36,8 +36,8 @@ const queueItems = [
     label: "Review",
     numberClassName: "text-emerald-700 dark:text-emerald-300",
     panelClassName:
-      "border-zinc-200/70 bg-white dark:border-white/10 dark:bg-white/[0.03]",
-    activePanelClassName: "border-emerald-300 bg-emerald-50 dark:border-emerald-500/60 dark:bg-emerald-500/15",
+      "border-zinc-200/70 bg-white dark:bg-[#171a19] dark:border-white/10 dark:bg-white/[0.03]",
+    activePanelClassName: "border-emerald-300 bg-emerald-50 dark:bg-emerald-500/15 dark:border-emerald-500/60",
     dotClassName: "bg-emerald-500",
   },
 ] as const;
@@ -69,7 +69,7 @@ export function ReviewQueueStatus({
               <div
                 className={`flex items-center justify-center gap-1.5 text-[11px] uppercase tracking-wide ${
                   isActive
-                    ? "font-bold text-zinc-900 dark:text-zinc-50"
+                    ? "font-bold text-zinc-900 dark:text-zinc-100 dark:text-zinc-50"
                     : "font-medium text-zinc-600 dark:text-zinc-400"
                 }`}
               >

@@ -23,14 +23,14 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-stone-50 text-zinc-950">
-      <header className="border-b border-zinc-200 bg-white">
+    <main className="min-h-screen bg-stone-50 dark:bg-white/5 text-zinc-950 dark:text-zinc-50">
+      <header className="border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5">
           <Link className="text-lg font-semibold" href="/">
             Tiếng Trung Hihi
           </Link>
           <Link
-            className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+            className="rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
             href="/login"
           >
             Đăng nhập
@@ -39,17 +39,17 @@ export default function PrivacyPage() {
       </header>
 
       <article className="mx-auto max-w-4xl px-5 py-10">
-        <p className="text-sm font-medium uppercase tracking-wide text-teal-800">
+        <p className="text-sm font-medium uppercase tracking-wide text-teal-800 dark:text-teal-300">
           Chính sách bảo mật
         </p>
         <h1 className="mt-3 text-3xl font-semibold">Chính sách bảo mật</h1>
-        <p className="mt-3 text-sm text-zinc-600">
+        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
           Cập nhật lần cuối: {lastUpdated}
         </p>
 
-        <div className="mt-8 space-y-8 text-sm leading-7 text-zinc-700">
+        <div className="mt-8 space-y-8 text-sm leading-7 text-zinc-700 dark:text-zinc-300">
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               1. Chúng tôi thu thập thông tin nào
             </h2>
             <p className="mt-3">
@@ -61,7 +61,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               2. Cách chúng tôi sử dụng thông tin
             </h2>
             <p className="mt-3">
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               3. AI và audio
             </h2>
             <p className="mt-3">
@@ -85,7 +85,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               4. Dịch vụ bên thứ ba
             </h2>
             <p className="mt-3">
@@ -98,7 +98,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               5. Cookie và lưu trữ trên trình duyệt
             </h2>
             <p className="mt-3">
@@ -111,7 +111,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               6. Chia sẻ dữ liệu
             </h2>
             <p className="mt-3">
@@ -122,7 +122,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               7. Bảo mật và lưu giữ dữ liệu
             </h2>
             <p className="mt-3">
@@ -134,7 +134,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               8. Quyền của bạn
             </h2>
             <p className="mt-3">
@@ -146,7 +146,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               9. Trẻ em
             </h2>
             <p className="mt-3">
@@ -157,12 +157,12 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               10. Liên hệ
             </h2>
             <p className="mt-3">
               Nếu có câu hỏi về chính sách bảo mật, vui lòng liên hệ:{" "}
-              <a className="font-medium text-teal-800 underline" href={`mailto:${contactEmail}`}>
+              <a className="font-medium text-teal-800 dark:text-teal-300 underline" href={`mailto:${contactEmail}`}>
                 {contactEmail}
               </a>
               .

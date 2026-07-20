@@ -621,7 +621,7 @@ export default function DashboardPage() {
                 {hasZaloGroupUrl ? "Vào nhóm Zalo" : "Nhắn Zalo nhận link"}
               </a>
               <Link
-                className="inline-flex min-h-10 items-center rounded-md border border-teal-200 dark:border-teal-500/40 bg-white dark:bg-white/5 px-4 py-2 text-sm font-semibold text-teal-800 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-500/25"
+                className="inline-flex min-h-10 items-center rounded-md border border-teal-200 dark:border-teal-500/40 bg-white dark:bg-[#171a19] dark:bg-white/5 px-4 py-2 text-sm font-semibold text-teal-800 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-500/25"
                 href="/community"
               >
                 Xem giới thiệu

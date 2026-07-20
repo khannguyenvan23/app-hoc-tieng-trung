@@ -32,15 +32,15 @@ const groupRules = [
 
 export default function CommunityPage() {
   return (
-    <main className="min-h-screen bg-stone-50">
-      <header className="border-b border-zinc-200 bg-white">
+    <main className="min-h-screen bg-stone-50 dark:bg-white/5">
+      <header className="border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
           <Link className="font-semibold" href="/">
             Tiếng Trung Hihi
           </Link>
           <div className="flex items-center gap-2 text-sm">
             <Link
-              className="rounded-md px-3 py-2 text-zinc-700 hover:bg-zinc-100"
+              className="rounded-md px-3 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10"
               href="/pricing"
             >
               Bảng giá
@@ -56,14 +56,14 @@ export default function CommunityPage() {
       </header>
 
       <section className="mx-auto grid max-w-5xl gap-6 px-5 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
-          <p className="text-sm font-medium uppercase tracking-wide text-teal-700">
+        <div className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-6 shadow-sm sm:p-8">
+          <p className="text-sm font-medium uppercase tracking-wide text-teal-700 dark:text-teal-300">
             Cộng đồng học viên
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             Vào nhóm Zalo Tiếng Trung Hihi
           </h1>
-          <p className="mt-4 text-base leading-7 text-zinc-600">
+          <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-400">
             Tham gia nhóm để học cùng mọi người, nhận gợi ý bộ thẻ, hỏi bài khi
             bí từ/câu và duy trì thói quen ôn tập mỗi ngày.
           </p>
@@ -78,7 +78,7 @@ export default function CommunityPage() {
               {hasZaloGroupUrl ? "Tham gia nhóm Zalo" : "Nhắn Zalo để nhận link nhóm"}
             </a>
             <Link
-              className="inline-flex min-h-11 items-center rounded-md border border-zinc-300 px-5 py-3 text-sm font-semibold hover:bg-zinc-100"
+              className="inline-flex min-h-11 items-center rounded-md border border-zinc-300 dark:border-white/15 px-5 py-3 text-sm font-semibold hover:bg-zinc-100 dark:hover:bg-white/10"
               href="/trial"
             >
               Học thử miễn phí
@@ -86,9 +86,9 @@ export default function CommunityPage() {
           </div>
 
           {!hasZaloGroupUrl ? (
-            <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
+            <p className="mt-4 rounded-md border border-amber-200 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/15 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
               Chưa cấu hình link nhóm. Thêm{" "}
-              <code className="rounded bg-white px-1 py-0.5">
+              <code className="rounded bg-white dark:bg-[#171a19] px-1 py-0.5">
                 NEXT_PUBLIC_ZALO_GROUP_URL
               </code>{" "}
               trong Vercel để nút này mở thẳng nhóm Zalo.
@@ -96,23 +96,23 @@ export default function CommunityPage() {
           ) : null}
         </div>
 
-        <aside className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <aside className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-6 shadow-sm">
           <h2 className="text-lg font-semibold">Trong nhóm có gì?</h2>
-          <div className="mt-4 grid gap-3 text-sm text-zinc-700">
-            <div className="rounded-xl bg-teal-50 p-4">
+          <div className="mt-4 grid gap-3 text-sm text-zinc-700 dark:text-zinc-300">
+            <div className="rounded-xl bg-teal-50 dark:bg-teal-500/15 p-4">
               <div className="font-semibold text-teal-900 dark:text-teal-200">Hỏi bài nhanh</div>
               <p className="mt-1 leading-6">
                 Gửi từ, câu hoặc ảnh màn hình đang vướng để được hỗ trợ.
               </p>
             </div>
-            <div className="rounded-xl bg-sky-50 p-4">
+            <div className="rounded-xl bg-sky-50 dark:bg-sky-500/15 p-4">
               <div className="font-semibold text-sky-900 dark:text-sky-200">Nhắc học mỗi ngày</div>
               <p className="mt-1 leading-6">
                 Cùng nhau giữ streak và nhắc nhau ôn đúng phần đến hạn.
               </p>
             </div>
             <div className="rounded-xl bg-stone-100 p-4">
-              <div className="font-semibold text-zinc-900">Chia sẻ bộ thẻ</div>
+              <div className="font-semibold text-zinc-900 dark:text-zinc-100">Chia sẻ bộ thẻ</div>
               <p className="mt-1 leading-6">
                 Gợi ý bộ HSK, câu thường ngày và bộ thẻ do học viên chia sẻ.
               </p>
@@ -122,9 +122,9 @@ export default function CommunityPage() {
       </section>
 
       <section className="mx-auto grid max-w-5xl gap-6 px-5 pb-14 lg:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-6 shadow-sm">
           <h2 className="text-lg font-semibold">Quy định nhóm</h2>
-          <ul className="mt-4 space-y-3 text-sm leading-6 text-zinc-700">
+          <ul className="mt-4 space-y-3 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
             {groupRules.map((rule) => (
               <li className="flex gap-3" key={rule}>
                 <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-teal-700" />
@@ -134,22 +134,22 @@ export default function CommunityPage() {
           </ul>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-6 shadow-sm">
           <h2 className="text-lg font-semibold">Liên hệ hỗ trợ</h2>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">
+          <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
             Nếu link nhóm lỗi hoặc cần hỗ trợ nạp credit, bạn có thể nhắn trực
             tiếp qua Zalo.
           </p>
           <div className="mt-4 grid gap-2">
             {defaultZaloContacts.map((contact) => (
               <a
-                className="rounded-md border border-zinc-200 px-4 py-3 text-sm hover:border-blue-300 hover:bg-blue-50"
+                className="rounded-md border border-zinc-200 dark:border-white/10 px-4 py-3 text-sm hover:border-blue-300 hover:bg-blue-50"
                 href={`https://zalo.me/${contact.phone}`}
                 key={contact.phone}
                 rel="noreferrer"
                 target="_blank"
               >
-                <span className="text-zinc-500">{contact.label}: </span>
+                <span className="text-zinc-500 dark:text-zinc-400">{contact.label}: </span>
                 <span className="font-semibold text-blue-700">
                   {contact.phone}
                 </span>
