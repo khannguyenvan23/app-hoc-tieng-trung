@@ -111,7 +111,7 @@ function BarChart({
   return (
     <div className="overflow-x-auto pb-2">
       <div
-        className="grid h-64 grid-flow-col auto-cols-fr items-end gap-2 border-b border-zinc-200 px-2 pt-3"
+        className="grid h-64 grid-flow-col auto-cols-fr items-end gap-2 border-b border-zinc-200 dark:border-white/10 px-2 pt-3"
         style={{ minWidth }}
       >
         {data.map((item) => {
@@ -127,7 +127,7 @@ function BarChart({
               key={item.key}
               title={`${item.label}: ${item.count} từ`}
             >
-              <span className="mb-1 h-5 text-xs font-medium text-zinc-600">
+              <span className="mb-1 h-5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
                 {item.count}
               </span>
               <div className="flex h-44 items-end justify-center">
@@ -138,7 +138,7 @@ function BarChart({
                   style={{ height: barHeight }}
                 />
               </div>
-              <span className="mt-2 truncate text-[11px] text-zinc-500">
+              <span className="mt-2 truncate text-[11px] text-zinc-500 dark:text-zinc-400">
                 {item.label}
               </span>
             </div>
@@ -291,24 +291,24 @@ export default function StatisticsPage() {
         <AdminAnalytics />
         <div>
           <h1 className="text-2xl font-semibold">Thống kê học từ vựng</h1>
-          <p className="mt-1 text-sm text-zinc-600">
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             Mỗi từ chỉ được tính một lần vào ngày bạn học lần đầu.
           </p>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
             Với thẻ cũ chưa lưu ngày học đầu tiên, app dùng ngày ôn gần nhất.
           </p>
         </div>
 
         {errorMessage ? (
-          <div className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800">
+          <div className="mt-6 rounded-md border border-red-200 dark:border-red-500/40 bg-red-50 dark:bg-red-500/15 px-4 py-3 text-sm leading-6 text-red-800 dark:text-red-300">
             {errorMessage}
           </div>
         ) : null}
 
-        <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <section className="mt-6 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 p-5 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-medium uppercase text-teal-800">
+              <p className="text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
                 Chứng chỉ & cấp độ
               </p>
               <h2 className="mt-1 text-xl font-semibold">
@@ -316,11 +316,11 @@ export default function StatisticsPage() {
                   ? "Đang tính tiến độ HSK"
                   : `Đã học ${progress.totalLearned} từ HSK`}
               </h2>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 Theo dõi HSK1 đến HSK5 theo số từ đã ôn ít nhất một lần.
               </p>
             </div>
-            <div className="rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900">
+            <div className="rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm text-teal-900">
               Hoàn thành{" "}
               <span className="text-lg font-semibold">
                 {progressLoading
@@ -332,11 +332,11 @@ export default function StatisticsPage() {
           </div>
 
           {progressLoading ? (
-            <p className="mt-5 text-sm text-zinc-600">
+            <p className="mt-5 text-sm text-zinc-600 dark:text-zinc-400">
               Đang tải tiến độ HSK...
             </p>
           ) : progress.levels.length === 0 ? (
-            <p className="mt-5 text-sm text-zinc-600">
+            <p className="mt-5 text-sm text-zinc-600 dark:text-zinc-400">
               Chưa có dữ liệu HSK. Hãy thêm bộ HSK mẫu và ôn ít nhất một thẻ.
             </p>
           ) : (
@@ -353,17 +353,17 @@ export default function StatisticsPage() {
 
                 return (
                   <div
-                    className="rounded-md border border-zinc-200 bg-stone-50 p-4"
+                    className="rounded-md border border-zinc-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 p-4"
                     key={level.slug}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <h3 className="font-semibold">{level.level}</h3>
-                        <p className="mt-1 text-xs text-zinc-500">
+                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                           {level.name}
                         </p>
                       </div>
-                      <span className="text-2xl font-semibold text-teal-800">
+                      <span className="text-2xl font-semibold text-teal-800 dark:text-teal-300">
                         {level.percent}%
                       </span>
                     </div>
@@ -373,16 +373,16 @@ export default function StatisticsPage() {
                         style={{ width: `${level.percent}%` }}
                       />
                     </div>
-                    <p className="mt-3 text-sm text-zinc-700">
+                    <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">
                       {level.learnedCards}/{level.totalCards} từ đã học
                     </p>
-                    <p className="mt-1 text-xs text-zinc-500">
+                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                       {remainingCards === 0
                         ? "Đã hoàn thành cấp này."
                         : `Còn ${remainingCards} từ để đạt 100%.`}
                     </p>
                     {copiedButNotStudied > 0 ? (
-                      <p className="mt-1 text-xs text-teal-800">
+                      <p className="mt-1 text-xs text-teal-800 dark:text-teal-300">
                         {copiedButNotStudied} từ đã có trong bộ, chưa ôn.
                       </p>
                     ) : null}
@@ -413,32 +413,32 @@ export default function StatisticsPage() {
             },
           ].map((item) => (
             <div
-              className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm"
+              className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 p-4 shadow-sm"
               key={item.label}
             >
-              <div className="text-sm text-zinc-500">{item.label}</div>
-              <div className="mt-2 text-3xl font-semibold text-teal-800">
+              <div className="text-sm text-zinc-500 dark:text-zinc-400">{item.label}</div>
+              <div className="mt-2 text-3xl font-semibold text-teal-800 dark:text-teal-300">
                 {loading ? "..." : item.value}
               </div>
-              <div className="mt-1 text-xs text-zinc-500">{item.note}</div>
+              <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{item.note}</div>
             </div>
           ))}
         </section>
 
-        <section className="mt-8 border-t border-zinc-200 pt-6">
+        <section className="mt-8 border-t border-zinc-200 dark:border-white/10 pt-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold">Từ đã học theo ngày</h2>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 {loading
                   ? "Đang tải dữ liệu..."
                   : `${statistics.selectedMonthCount} từ trong ${selectedMonthLabel}.`}
               </p>
             </div>
-            <label className="text-sm font-medium text-zinc-700">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Xem tháng
               <select
-                className="mt-1 min-h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-teal-700 sm:w-48"
+                className="mt-1 min-h-10 w-full rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 text-sm outline-none focus:border-teal-700 sm:w-48"
                 onChange={(event) => setSelectedMonth(event.target.value)}
                 value={selectedMonth}
               >
@@ -455,9 +455,9 @@ export default function StatisticsPage() {
           </div>
         </section>
 
-        <section className="mt-8 border-t border-zinc-200 pt-6">
+        <section className="mt-8 border-t border-zinc-200 dark:border-white/10 pt-6">
           <h2 className="text-xl font-semibold">Từ đã học theo tháng</h2>
-          <p className="mt-1 text-sm text-zinc-600">
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             Tổng số từ học lần đầu trong 12 tháng gần nhất.
           </p>
           <div className="mt-5">

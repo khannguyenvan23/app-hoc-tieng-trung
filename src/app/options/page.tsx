@@ -258,14 +258,14 @@ export default function OptionsPage() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h1 className="text-2xl font-semibold">Cài đặt ôn tập</h1>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 Điều chỉnh giới hạn học mỗi ngày và lịch lặp lại cho từ vựng,
                 câu luyện tập.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
-                className="min-h-10 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
+                className="min-h-10 rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-4 py-2 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-white/5"
                 onClick={resetDefaults}
                 type="button"
               >
@@ -285,20 +285,20 @@ export default function OptionsPage() {
           {message ? (
             <p
               className={`mt-4 text-sm ${
-                message.startsWith("Đã") ? "text-teal-700" : "text-red-700"
+                message.startsWith("Đã") ? "text-teal-700 dark:text-teal-300" : "text-red-700 dark:text-red-300"
               }`}
             >
               {message}
             </p>
           ) : null}
 
-          <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+          <section className="mt-6 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 p-5 shadow-sm">
             <h2 className="text-xl font-semibold">Giới hạn học mỗi ngày</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {dailySettings.map((setting) => (
                 <label className="block text-sm font-medium" key={setting.key}>
                   {setting.label}
-                  <div className="mt-2 flex overflow-hidden rounded-md border border-zinc-300 bg-white focus-within:border-teal-700">
+                  <div className="mt-2 flex overflow-hidden rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 focus-within:border-teal-700">
                     <input
                       className="min-h-10 w-full px-3 py-2 outline-none"
                       disabled={loading}
@@ -311,7 +311,7 @@ export default function OptionsPage() {
                       type="number"
                       value={settings[setting.key]}
                     />
-                    <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-500">
+                    <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 text-sm text-zinc-500 dark:text-zinc-400">
                       {setting.suffix}
                     </span>
                   </div>
@@ -320,10 +320,10 @@ export default function OptionsPage() {
             </div>
           </section>
 
-          <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between gap-3 border-b border-zinc-200 pb-3">
+          <section className="mt-6 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3 border-b border-zinc-200 dark:border-white/10 pb-3">
               <h2 className="text-xl font-semibold">New Cards</h2>
-              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-300 text-sm font-semibold text-zinc-600">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-300 dark:border-white/15 text-sm font-semibold text-zinc-600 dark:text-zinc-400">
                 ?
               </span>
             </div>
@@ -334,7 +334,7 @@ export default function OptionsPage() {
                 <input
                   className={`mt-2 w-full rounded-md border px-3 py-2 outline-none focus:border-teal-700 ${
                     isValidLearningSteps(settings.learning_steps)
-                      ? "border-zinc-300"
+                      ? "border-zinc-300 dark:border-white/15"
                       : "border-red-400"
                   }`}
                   disabled={loading}
@@ -348,7 +348,7 @@ export default function OptionsPage() {
                 {newCardSettings.map((setting) => (
                   <label className="block text-sm font-medium" key={setting.key}>
                     {setting.label}
-                    <div className="mt-2 flex overflow-hidden rounded-md border border-zinc-300 bg-white focus-within:border-teal-700">
+                    <div className="mt-2 flex overflow-hidden rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 focus-within:border-teal-700">
                       <input
                         className="min-h-10 w-full px-3 py-2 outline-none"
                         disabled={loading}
@@ -361,7 +361,7 @@ export default function OptionsPage() {
                         type="number"
                         value={settings[setting.key]}
                       />
-                      <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-500">
+                      <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 text-sm text-zinc-500 dark:text-zinc-400">
                         {setting.suffix}
                       </span>
                     </div>
@@ -372,7 +372,7 @@ export default function OptionsPage() {
               <label className="block text-sm font-medium">
                 Insertion order
                 <select
-                  className="mt-2 min-h-10 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:border-teal-700"
+                  className="mt-2 min-h-10 w-full rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 outline-none focus:border-teal-700"
                   disabled={loading}
                   onChange={(event) =>
                     setSettings((current) => ({
@@ -394,13 +394,13 @@ export default function OptionsPage() {
             </div>
           </section>
 
-          <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+          <section className="mt-6 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 p-5 shadow-sm">
             <h2 className="text-xl font-semibold">Review Cards</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {reviewSettings.map((setting) => (
                 <label className="block text-sm font-medium" key={setting.key}>
                   {setting.label}
-                  <div className="mt-2 flex overflow-hidden rounded-md border border-zinc-300 bg-white focus-within:border-teal-700">
+                  <div className="mt-2 flex overflow-hidden rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 focus-within:border-teal-700">
                     <input
                       className="min-h-10 w-full px-3 py-2 outline-none"
                       disabled={loading}
@@ -413,7 +413,7 @@ export default function OptionsPage() {
                       type="number"
                       value={settings[setting.key]}
                     />
-                    <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-500">
+                    <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 text-sm text-zinc-500 dark:text-zinc-400">
                       {setting.suffix}
                     </span>
                   </div>
@@ -422,7 +422,7 @@ export default function OptionsPage() {
             </div>
           </section>
 
-          <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+          <section className="mt-6 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 p-5 shadow-sm">
             <h2 className="text-xl font-semibold">Lapses</h2>
             <div className="mt-4 grid gap-4">
               <label className="block text-sm font-medium">
@@ -430,7 +430,7 @@ export default function OptionsPage() {
                 <input
                   className={`mt-2 w-full rounded-md border px-3 py-2 outline-none focus:border-teal-700 ${
                     isValidLearningSteps(settings.relearning_steps)
-                      ? "border-zinc-300"
+                      ? "border-zinc-300 dark:border-white/15"
                       : "border-red-400"
                   }`}
                   disabled={loading}
@@ -446,7 +446,7 @@ export default function OptionsPage() {
                 {lapseSettings.map((setting) => (
                   <label className="block text-sm font-medium" key={setting.key}>
                     {setting.label}
-                    <div className="mt-2 flex overflow-hidden rounded-md border border-zinc-300 bg-white focus-within:border-teal-700">
+                    <div className="mt-2 flex overflow-hidden rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 focus-within:border-teal-700">
                       <input
                         className="min-h-10 w-full px-3 py-2 outline-none"
                         disabled={loading}
@@ -459,7 +459,7 @@ export default function OptionsPage() {
                         type="number"
                         value={settings[setting.key]}
                       />
-                      <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-500">
+                      <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 text-sm text-zinc-500 dark:text-zinc-400">
                         {setting.suffix}
                       </span>
                     </div>

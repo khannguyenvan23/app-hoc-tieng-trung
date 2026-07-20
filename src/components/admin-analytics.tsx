@@ -117,19 +117,19 @@ export function AdminAnalytics() {
     : stages;
 
   return (
-    <section className="mb-8 rounded-lg border border-teal-200 bg-white p-4 shadow-sm sm:p-5">
+    <section className="mb-8 rounded-lg border border-teal-200 dark:border-teal-500/40 bg-white dark:bg-white/5 p-4 shadow-sm sm:p-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase text-teal-800">Dành cho quản trị</p>
+          <p className="text-xs font-medium uppercase text-teal-800 dark:text-teal-300">Dành cho quản trị</p>
           <h2 className="mt-1 text-xl font-semibold">Funnel khách hàng</h2>
-          <p className="mt-1 text-sm text-zinc-600">
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             Theo dõi từ lượt truy cập đến khi người học quay lại vào ngày kế tiếp.
           </p>
         </div>
         <label className="text-sm font-medium">
           Khoảng thời gian
           <select
-            className="ml-2 min-h-10 rounded-md border border-zinc-300 bg-white px-3 outline-none focus:border-teal-700"
+            className="ml-2 min-h-10 rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 outline-none focus:border-teal-700"
             onChange={(event) => {
               setError("");
               setLoading(true);
@@ -145,21 +145,21 @@ export function AdminAnalytics() {
       </div>
 
       {error ? (
-        <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="mt-4 rounded-md border border-red-200 dark:border-red-500/40 bg-red-50 dark:bg-red-500/15 px-4 py-3 text-sm text-red-800 dark:text-red-300">
           {error}
         </div>
       ) : null}
 
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-5">
         {displayStages.map((stage) => (
-          <div className="rounded-md border border-zinc-200 p-4" key={stage.label}>
+          <div className="rounded-md border border-zinc-200 dark:border-white/10 p-4" key={stage.label}>
             {loading ? (
-              <div className="h-16 animate-pulse rounded bg-zinc-100" />
+              <div className="h-16 animate-pulse rounded bg-zinc-100 dark:bg-white/10" />
             ) : (
               <>
-                <div className="text-sm text-zinc-600">{stage.label}</div>
-                <div className="mt-2 text-3xl font-semibold text-teal-800">{stage.value}</div>
-                <div className="mt-1 text-xs text-zinc-500">Chuyển đổi {stage.rate}</div>
+                <div className="text-sm text-zinc-600 dark:text-zinc-400">{stage.label}</div>
+                <div className="mt-2 text-3xl font-semibold text-teal-800 dark:text-teal-300">{stage.value}</div>
+                <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Chuyển đổi {stage.rate}</div>
               </>
             )}
           </div>
@@ -169,10 +169,10 @@ export function AdminAnalytics() {
       {report ? (
         <div className="mt-6">
           <h3 className="text-sm font-semibold">Khách truy cập theo ngày</h3>
-          <div className="mt-3 flex h-36 items-end gap-1 overflow-x-auto border-b border-zinc-200 pb-1">
+          <div className="mt-3 flex h-36 items-end gap-1 overflow-x-auto border-b border-zinc-200 dark:border-white/10 pb-1">
             {report.daily.map((item) => (
               <div className="flex min-w-4 flex-1 flex-col items-center justify-end" key={item.date} title={`${item.date}: ${item.visitors} khách`}>
-                <span className="mb-1 text-[10px] text-zinc-500">{item.visitors || ""}</span>
+                <span className="mb-1 text-[10px] text-zinc-500 dark:text-zinc-400">{item.visitors || ""}</span>
                 <div
                   className="w-full max-w-8 rounded-t bg-teal-700"
                   style={{ height: Math.max(3, Math.round((item.visitors / maxDaily) * 94)) }}
@@ -180,7 +180,7 @@ export function AdminAnalytics() {
               </div>
             ))}
           </div>
-          <div className="mt-2 flex justify-between text-xs text-zinc-500">
+          <div className="mt-2 flex justify-between text-xs text-zinc-500 dark:text-zinc-400">
             <span>{report.daily[0]?.date}</span>
             <span>{report.daily.at(-1)?.date}</span>
           </div>

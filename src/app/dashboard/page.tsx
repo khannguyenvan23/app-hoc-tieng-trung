@@ -489,7 +489,7 @@ export default function DashboardPage() {
       <AppShell>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm text-zinc-500">Xin chào,</p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">Xin chào,</p>
             <h1 className="mt-1 text-2xl font-semibold">
               {accountName || "bạn"}
             </h1>
@@ -502,12 +502,12 @@ export default function DashboardPage() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold">Bắt đầu học trong 3 bước</h2>
-                <p className="mt-1 text-sm text-zinc-600">
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                   Tài khoản mới chưa có thẻ. Làm nhanh 3 bước này để có HSK1, mục tiêu học
                   mỗi ngày và chế độ pinyin/audio sẵn sàng.
                 </p>
               </div>
-              <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-800">
+              <span className="rounded-full bg-teal-50 dark:bg-teal-500/15 px-3 py-1 text-xs font-medium text-teal-800 dark:text-teal-300">
                 Gợi ý cho người mới
               </span>
             </div>
@@ -520,7 +520,7 @@ export default function DashboardPage() {
                   </span>
                   <h3 className="font-semibold">Thêm HSK1 cơ bản</h3>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-zinc-600">
+                <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
                   Copy bộ HSK1 mẫu vào tài khoản để có từ vựng học ngay, không phải tự nhập
                   từ đầu.
                 </p>
@@ -545,14 +545,14 @@ export default function DashboardPage() {
                   </span>
                   <h3 className="font-semibold">Học 10 thẻ mỗi ngày</h3>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-zinc-600">
+                <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
                   Đặt nhịp học nhẹ: 10 từ mới và 5 câu mới mỗi ngày. Thẻ cũ đến hạn vẫn
                   được ôn bình thường.
                 </p>
                 <button
                   className={`mt-4 min-h-10 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-60 ${
                     starterPlanReady
-                      ? "border border-teal-700 bg-teal-50 text-teal-800"
+                      ? "border border-teal-700 bg-teal-50 dark:bg-teal-500/15 text-teal-800 dark:text-teal-300"
                       : "bg-teal-700 text-white hover:bg-teal-800"
                   }`}
                   disabled={savingSettings || starterPlanReady}
@@ -570,7 +570,7 @@ export default function DashboardPage() {
                   </span>
                   <h3 className="font-semibold">Bật pinyin và audio</h3>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-zinc-600">
+                <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
                   Pinyin sẽ hiện khi ôn tập. Audio tự phát khi bấm hiện đáp án, giúp nghe
                   phát âm ngay từ buổi đầu.
                 </p>
@@ -588,8 +588,8 @@ export default function DashboardPage() {
               <p
                 className={`mt-4 text-sm ${
                   onboardingMessage.startsWith("Đã")
-                    ? "text-teal-700"
-                    : "text-red-700"
+                    ? "text-teal-700 dark:text-teal-300"
+                    : "text-red-700 dark:text-red-300"
                 }`}
               >
                 {onboardingMessage}
@@ -598,16 +598,16 @@ export default function DashboardPage() {
           </section>
         ) : null}
 
-        <section className="mt-6 rounded-2xl border border-teal-100 bg-teal-50 p-5">
+        <section className="mt-6 rounded-2xl border border-teal-100 bg-teal-50 dark:bg-teal-500/15 p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-teal-800">
+              <p className="text-xs font-medium uppercase tracking-wide text-teal-800 dark:text-teal-300">
                 Cộng đồng học viên
               </p>
               <h2 className="mt-1 text-xl font-semibold">
                 Vào nhóm Zalo Tiếng Trung Hihi
               </h2>
-              <p className="mt-1 text-sm leading-6 text-zinc-700">
+              <p className="mt-1 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
                 Hỏi bài, nhận gợi ý bộ thẻ và học cùng mọi người mỗi ngày.
               </p>
             </div>
@@ -621,7 +621,7 @@ export default function DashboardPage() {
                 {hasZaloGroupUrl ? "Vào nhóm Zalo" : "Nhắn Zalo nhận link"}
               </a>
               <Link
-                className="inline-flex min-h-10 items-center rounded-md border border-teal-200 bg-white px-4 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-100"
+                className="inline-flex min-h-10 items-center rounded-md border border-teal-200 dark:border-teal-500/40 bg-white dark:bg-white/5 px-4 py-2 text-sm font-semibold text-teal-800 dark:text-teal-300 hover:bg-teal-100"
                 href="/community"
               >
                 Xem giới thiệu
@@ -634,7 +634,7 @@ export default function DashboardPage() {
         <section className="app-surface mt-6 rounded-xl p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-medium uppercase text-teal-800">
+              <p className="text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
                 Chứng chỉ & cấp độ
               </p>
               <h2 className="mt-1 text-xl font-semibold">
@@ -642,11 +642,11 @@ export default function DashboardPage() {
                   ? "Đang tính tiến độ HSK"
                   : `Đã học ${progress.totalLearned} từ HSK`}
               </h2>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 Theo dõi tiến độ từng cấp để thấy mình đang đi tới đâu.
               </p>
             </div>
-            <div className="rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900">
+            <div className="rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm text-teal-900">
               Hoàn thành{" "}
               <span className="text-lg font-semibold">
                 {progressLoading
@@ -660,7 +660,7 @@ export default function DashboardPage() {
           {progressLoading ? (
             <HskProgressSkeleton />
           ) : progress.levels.length === 0 ? (
-            <p className="mt-5 text-sm text-zinc-600">
+            <p className="mt-5 text-sm text-zinc-600 dark:text-zinc-400">
               Chưa có dữ liệu HSK. Hãy thêm bộ HSK mẫu và ôn ít nhất một thẻ.
             </p>
           ) : (
@@ -677,17 +677,17 @@ export default function DashboardPage() {
 
                 return (
                   <div
-                    className="rounded-md border border-zinc-200 bg-stone-50 p-4"
+                    className="rounded-md border border-zinc-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 p-4"
                     key={level.slug}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <h3 className="font-semibold">{level.level}</h3>
-                        <p className="mt-1 text-xs text-zinc-500">
+                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                           {level.name}
                         </p>
                       </div>
-                      <span className="text-2xl font-semibold text-teal-800">
+                      <span className="text-2xl font-semibold text-teal-800 dark:text-teal-300">
                         {level.percent}%
                       </span>
                     </div>
@@ -697,16 +697,16 @@ export default function DashboardPage() {
                         style={{ width: `${level.percent}%` }}
                       />
                     </div>
-                    <p className="mt-3 text-sm text-zinc-700">
+                    <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">
                       {level.learnedCards}/{level.totalCards} từ đã học
                     </p>
-                    <p className="mt-1 text-xs text-zinc-500">
+                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                       {remainingCards === 0
                         ? "Đã hoàn thành cấp này."
                         : `Còn ${remainingCards} từ để đạt 100%.`}
                     </p>
                     {copiedButNotStudied > 0 ? (
-                      <p className="mt-1 text-xs text-teal-800">
+                      <p className="mt-1 text-xs text-teal-800 dark:text-teal-300">
                         {copiedButNotStudied} từ đã có trong bộ, chưa ôn.
                       </p>
                     ) : null}
@@ -722,17 +722,17 @@ export default function DashboardPage() {
           <section className="app-surface mt-6 rounded-xl p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-xs font-medium uppercase text-teal-800">
+                <p className="text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
                   Chứng chỉ & cấp độ
                 </p>
                 <h2 className="mt-1 text-xl font-semibold">
                   Đã học {progress.totalLearned} từ HSK
                 </h2>
-                <p className="mt-1 text-sm text-zinc-600">
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                   Theo dõi tiến độ từng cấp để thấy mình đang đi tới đâu.
                 </p>
               </div>
-              <div className="rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900">
+              <div className="rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm text-teal-900">
                 Hoàn thành{" "}
                 <span className="text-lg font-semibold">
                   {progress.completedLevels}/{progress.levels.length}
@@ -754,17 +754,17 @@ export default function DashboardPage() {
 
                 return (
                   <div
-                    className="rounded-md border border-zinc-200 bg-stone-50 p-4"
+                    className="rounded-md border border-zinc-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 p-4"
                     key={level.slug}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <h3 className="font-semibold">{level.level}</h3>
-                        <p className="mt-1 text-xs text-zinc-500">
+                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                           {level.name}
                         </p>
                       </div>
-                      <span className="text-2xl font-semibold text-teal-800">
+                      <span className="text-2xl font-semibold text-teal-800 dark:text-teal-300">
                         {level.percent}%
                       </span>
                     </div>
@@ -774,16 +774,16 @@ export default function DashboardPage() {
                         style={{ width: `${level.percent}%` }}
                       />
                     </div>
-                    <p className="mt-3 text-sm text-zinc-700">
+                    <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">
                       {level.learnedCards}/{level.totalCards} từ đã học
                     </p>
-                    <p className="mt-1 text-xs text-zinc-500">
+                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                       {remainingCards === 0
                         ? "Đã hoàn thành cấp này."
                         : `Còn ${remainingCards} từ để đạt 100%.`}
                     </p>
                     {copiedButNotStudied > 0 ? (
-                      <p className="mt-1 text-xs text-teal-800">
+                      <p className="mt-1 text-xs text-teal-800 dark:text-teal-300">
                         {copiedButNotStudied} từ đã có trong bộ, chưa ôn.
                       </p>
                     ) : null}
@@ -795,23 +795,23 @@ export default function DashboardPage() {
         )}
 
         <section className="mt-8">
-          <div className="flex flex-col gap-4 border-y border-zinc-200 py-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 border-y border-zinc-200 dark:border-white/10 py-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-medium uppercase text-teal-800">
+              <p className="text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
                 Tủ học cá nhân
               </p>
               <h2 className="mt-1 text-2xl font-semibold">Bộ thẻ của bạn</h2>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 Chọn một bộ thẻ để thêm nội dung, chỉnh sửa hoặc bắt đầu học.
               </p>
             </div>
-            <div className="flex min-w-40 items-center justify-between gap-4 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 sm:block sm:text-center">
+            <div className="flex min-w-40 items-center justify-between gap-4 rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 sm:block sm:text-center">
               <div className="text-sm font-medium text-teal-900">Streak học</div>
               <div>
-                <span className="text-3xl font-semibold text-teal-800">
+                <span className="text-3xl font-semibold text-teal-800 dark:text-teal-300">
                   {loading ? "..." : stats.streakDays}
                 </span>
-                <span className="ml-2 text-xs text-teal-800 sm:ml-0 sm:block">
+                <span className="ml-2 text-xs text-teal-800 dark:text-teal-300 sm:ml-0 sm:block">
                   ngày liên tiếp
                 </span>
               </div>
@@ -836,7 +836,7 @@ export default function DashboardPage() {
                     key={deck.id}
                   >
                     <h3 className="font-semibold">{deck.name}</h3>
-                    <p className="mt-2 text-sm text-zinc-500">
+                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
                       Tạo ngày{" "}
                       {new Date(deck.created_at).toLocaleDateString("vi-VN")}
                     </p>
@@ -850,11 +850,11 @@ export default function DashboardPage() {
         <section className="mt-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-medium uppercase text-teal-800">
+              <p className="text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
                 Chia sẻ từ học viên
               </p>
               <h2 className="mt-1 text-xl font-semibold">Bộ thẻ cộng đồng</h2>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 Xem trước và thêm bản sao riêng từ các bộ thẻ đang được chia sẻ.
               </p>
             </div>
@@ -863,7 +863,7 @@ export default function DashboardPage() {
           {loading ? (
             <CommunityDeckSkeleton />
           ) : sharedDecks.length === 0 ? (
-            <p className="mt-4 text-sm text-zinc-600">
+            <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
               Chưa có học viên nào chia sẻ bộ thẻ.
             </p>
           ) : (
@@ -876,16 +876,16 @@ export default function DashboardPage() {
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="font-semibold">{sharedDeck.name}</h3>
                     {sharedDeck.isOwner ? (
-                      <span className="shrink-0 rounded-full bg-teal-50 px-2 py-1 text-xs font-medium text-teal-800">
+                      <span className="shrink-0 rounded-full bg-teal-50 dark:bg-teal-500/15 px-2 py-1 text-xs font-medium text-teal-800 dark:text-teal-300">
                         Bạn chia sẻ
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-3 text-sm text-zinc-600">
+                  <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
                     {sharedDeck.cardCount} từ vựng · {sharedDeck.sentenceCount} câu
                   </p>
                   <Link
-                    className="mt-4 inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                    className="mt-4 inline-flex min-h-10 items-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                     href={`/shared-decks/${sharedDeck.token}`}
                   >
                     Xem bộ thẻ
@@ -900,7 +900,7 @@ export default function DashboardPage() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold">Cần học lại</h2>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 Thẻ bấm Quên nhiều lần sẽ tự vào nhóm yếu để ôn gấp.
               </p>
             </div>
@@ -912,7 +912,7 @@ export default function DashboardPage() {
                 Ôn từ yếu
               </Link>
               <Link
-                className="inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                className="inline-flex min-h-10 items-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                 href="/study-sentences?weak=1"
               >
                 Ôn câu yếu
@@ -923,7 +923,7 @@ export default function DashboardPage() {
           {loading ? (
             <WeakItemsSkeleton />
           ) : weakItems.length === 0 ? (
-            <p className="mt-4 text-sm text-zinc-600">
+            <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
               Chưa có thẻ nào bị quên nhiều lần.
             </p>
           ) : (
@@ -934,10 +934,10 @@ export default function DashboardPage() {
                   key={`${item.type}-${item.id}`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700">
+                    <span className="rounded-full bg-red-50 dark:bg-red-500/15 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-300">
                       {item.type === "word" ? "Từ vựng" : "Câu"}
                     </span>
-                    <span className="text-xs text-zinc-500">
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
                       Quên {item.lapseCount} lần
                     </span>
                   </div>
@@ -945,9 +945,9 @@ export default function DashboardPage() {
                     {item.title}
                   </div>
                   {item.detail ? (
-                    <p className="mt-1 text-sm text-zinc-600">{item.detail}</p>
+                    <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{item.detail}</p>
                   ) : null}
-                  <p className="mt-3 text-xs text-zinc-500">
+                  <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
                     {item.deckName} · điểm yếu {item.weakScore}
                   </p>
                 </div>
@@ -960,7 +960,7 @@ export default function DashboardPage() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold">Bộ thẻ mẫu</h2>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 Thêm bộ mẫu vào tài khoản của bạn. Mỗi user sẽ có bản copy và
                 tiến độ ôn riêng.
               </p>
@@ -968,7 +968,7 @@ export default function DashboardPage() {
           </div>
 
           {templateMessage ? (
-            <p className="mt-3 text-sm text-red-700">{templateMessage}</p>
+            <p className="mt-3 text-sm text-red-700 dark:text-red-300">{templateMessage}</p>
           ) : null}
 
           {templates.length > 0 ? (
@@ -985,24 +985,24 @@ export default function DashboardPage() {
                     <div>
                       <h3 className="font-semibold">{template.name}</h3>
                       {template.level ? (
-                        <p className="mt-1 text-xs font-medium uppercase text-teal-800">
+                        <p className="mt-1 text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
                           {template.level}
                         </p>
                       ) : null}
                     </div>
-                    <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
+                    <span className="rounded-full bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs text-zinc-600 dark:text-zinc-400">
                       {template.card_count} thẻ
                     </span>
                   </div>
                   {template.description ? (
-                    <p className="mt-3 text-sm text-zinc-600">
+                    <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
                       {template.description}
                     </p>
                   ) : null}
                   <button
                     className={`mt-4 min-h-10 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-70 ${
                       alreadyAdded
-                        ? "border border-zinc-300 bg-zinc-100 text-zinc-600"
+                        ? "border border-zinc-300 dark:border-white/15 bg-zinc-100 dark:bg-white/10 text-zinc-600 dark:text-zinc-400"
                         : "bg-teal-700 text-white hover:bg-teal-800"
                     }`}
                     disabled={Boolean(copyingTemplateId) || alreadyAdded}
@@ -1017,7 +1017,7 @@ export default function DashboardPage() {
                   </button>
                   {alreadyAdded && template.user_deck_id ? (
                     <Link
-                      className="mt-2 inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                      className="mt-2 inline-flex min-h-10 items-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                       href={`/decks/${template.user_deck_id}`}
                     >
                       Mở bộ
@@ -1030,7 +1030,7 @@ export default function DashboardPage() {
           ) : loading ? (
             <DeckGridSkeleton />
           ) : (
-            <p className="mt-3 text-sm text-zinc-600">
+            <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
               Chưa có bộ thẻ mẫu. Hãy chạy migration template trong Supabase.
             </p>
           )}

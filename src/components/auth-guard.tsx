@@ -28,15 +28,15 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (!configured) {
     return (
-      <div className="min-h-screen bg-stone-50 px-4 py-10 text-zinc-950">
-        <div className="mx-auto max-w-2xl rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-medium text-red-700">
+      <div className="min-h-screen bg-stone-50 dark:bg-white/5 px-4 py-10 text-zinc-950 dark:text-zinc-50">
+        <div className="mx-auto max-w-2xl rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 p-6 shadow-sm">
+          <p className="text-sm font-medium text-red-700 dark:text-red-300">
             Supabase is not configured
           </p>
           <h1 className="mt-2 text-2xl font-semibold">Add your env variables</h1>
-          <p className="mt-3 text-sm leading-6 text-zinc-600">
-            Create <code className="rounded bg-zinc-100 px-1">.env.local</code>{" "}
-            from <code className="rounded bg-zinc-100 px-1">.env.example</code>,
+          <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+            Create <code className="rounded bg-zinc-100 dark:bg-white/10 px-1">.env.local</code>{" "}
+            from <code className="rounded bg-zinc-100 dark:bg-white/10 px-1">.env.example</code>,
             then fill these values and restart the dev server.
           </p>
           <pre className="mt-5 overflow-x-auto rounded-lg bg-zinc-950 p-4 text-sm text-zinc-50">
@@ -52,7 +52,7 @@ OPENAI_API_KEY=`}
 
   if (!ready) {
     return (
-      <div className="min-h-screen bg-stone-50 px-4 py-10 text-center text-sm text-zinc-600">
+      <div className="min-h-screen bg-stone-50 dark:bg-white/5 px-4 py-10 text-center text-sm text-zinc-600 dark:text-zinc-400">
         Loading...
       </div>
     );

@@ -14,8 +14,8 @@ export function ZaloFloatingContact() {
         <span>Zalo CSKH</span>
         
       </summary>
-      <div className="absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-zinc-200 bg-white p-2 text-sm shadow-xl">
-        <div className="px-2 pb-2 pt-1 font-semibold text-zinc-900">
+      <div className="absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 p-2 text-sm shadow-xl">
+        <div className="px-2 pb-2 pt-1 font-semibold text-zinc-900 dark:text-zinc-100">
           Liên hệ Zalo
         </div>
         <div className="grid gap-1">
@@ -32,13 +32,13 @@ export function ZaloFloatingContact() {
           </a>
           {defaultZaloContacts.map((contact) => (
             <a
-              className="rounded-md px-3 py-2 text-zinc-800 hover:bg-blue-50 hover:text-blue-700"
+              className="rounded-md px-3 py-2 text-zinc-800 dark:text-zinc-100 hover:bg-blue-50 hover:text-blue-700"
               href={`https://zalo.me/${contact.phone}`}
               key={contact.phone}
               rel="noreferrer"
               target="_blank"
             >
-              <span className="block text-xs text-zinc-500">
+              <span className="block text-xs text-zinc-500 dark:text-zinc-400">
                 {contact.label}
               </span>
               <span className="font-semibold">{contact.phone}</span>
