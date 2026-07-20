@@ -1521,7 +1521,7 @@ export default function StudySentencesPage() {
                         <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                           Nghĩa tiếng Việt
                         </div>
-                        <div className="mt-0.5 text-base font-medium text-zinc-800 dark:text-zinc-100">
+                        <div className="mt-1 text-lg font-semibold leading-snug text-zinc-800 dark:text-zinc-100 sm:text-xl">
                           {card.sentence_vi}
                         </div>
                       </div>
