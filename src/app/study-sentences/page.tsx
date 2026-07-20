@@ -194,10 +194,10 @@ function SentenceDiffToken({
 }) {
   return (
     <div
-      className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border px-3 py-2 text-left sm:block sm:min-w-16 sm:text-center ${sentenceDiffStyles[item.status]}`}
+      className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border px-2.5 py-1.5 text-left sm:block sm:min-w-14 sm:text-center ${sentenceDiffStyles[item.status]}`}
     >
       {pinyin ? (
-        <div className="mb-1 text-xs font-medium leading-tight text-teal-800">
+        <div className="text-[11px] font-medium leading-tight text-teal-800">
           {pinyin}
         </div>
       ) : null}
@@ -215,7 +215,7 @@ function SentenceDiffToken({
         )}
       </div>
       {item.status !== "missing" ? (
-        <div className="text-right text-xs font-medium sm:mt-1 sm:text-center">
+        <div className="text-right text-[11px] font-medium sm:mt-0.5 sm:text-center">
           {sentenceDiffLabels[item.status]}
         </div>
       ) : null}
@@ -1484,15 +1484,12 @@ export default function StudySentencesPage() {
               <div className="mt-4 text-center sm:mt-5">
                 {dictationMode && !showAnswer ? (
                   <div>
-                    <div className="text-sm font-medium text-zinc-500">
-                      Luyện chính tả
-                    </div>
-                    <div className="mt-3 text-xl font-semibold leading-tight sm:text-2xl">
-                      Nghe và chép lại câu tiếng Trung
-                    </div>
-                    <div className="mt-5 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center">
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <span className="rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-teal-800">
+                        Luyện chính tả
+                      </span>
                       <button
-                        className="btn-secondary px-3 py-2 text-sm disabled:opacity-60 sm:px-4"
+                        className="btn-secondary px-3 py-1.5 text-sm disabled:opacity-60"
                         disabled={creatingAudioId === card.id}
                         onClick={() => void playSentenceAudio()}
                         type="button"
@@ -1502,7 +1499,7 @@ export default function StudySentencesPage() {
                           : "Phát lại audio"}
                       </button>
                       <button
-                        className={`min-h-10 rounded-md border px-3 py-2 text-sm font-medium sm:px-4 ${
+                        className={`rounded-md border px-3 py-1.5 text-sm font-medium ${
                           showDictationMeaning
                             ? "border-teal-700 bg-teal-50 text-teal-800"
                             : "border-zinc-300 hover:bg-zinc-100"
@@ -1516,11 +1513,11 @@ export default function StudySentencesPage() {
                       </button>
                     </div>
                     {showDictationMeaning ? (
-                      <div className="mx-auto mt-5 max-w-xl rounded-md bg-stone-50 px-3 py-3 sm:px-4">
-                        <div className="text-xs font-medium uppercase text-zinc-500">
+                      <div className="mx-auto mt-3 max-w-xl rounded-lg bg-stone-50 px-3 py-2">
+                        <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">
                           Nghĩa tiếng Việt
                         </div>
-                        <div className="mt-1 text-lg font-medium text-zinc-800">
+                        <div className="mt-0.5 text-base font-medium text-zinc-800">
                           {card.sentence_vi}
                         </div>
                       </div>
@@ -1536,15 +1533,15 @@ export default function StudySentencesPage() {
               </div>
 
               {!showAnswer ? (
-                <div className="mt-7 sm:mt-10">
+                <div className="mt-4 sm:mt-5">
                   {writingMode || dictationMode ? (
-                    <div className="app-surface-muted rounded-xl p-3 sm:p-4">
+                    <div className="app-surface-muted rounded-xl p-3">
                       <label className="block text-sm font-medium text-zinc-700">
                         {dictationMode
                           ? "Gõ lại câu tiếng Trung vừa nghe"
                           : "Gõ câu tiếng Trung"}
                         <textarea
-                          className="mt-2 h-24 w-full rounded-xl border border-zinc-300 bg-white px-3 py-3 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-28 sm:text-2xl"
+                          className="mt-2 h-20 w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-24 sm:text-2xl"
                           ref={sentenceAnswerRef}
                           onChange={(event) => {
                             setSentenceAnswer(event.target.value);
@@ -1587,7 +1584,7 @@ export default function StudySentencesPage() {
                       ) : null}
 
                       {writingResult === "wrong" && sentenceDiff ? (
-                        <div className="app-surface mt-4 rounded-xl p-3 sm:p-4">
+                        <div className="app-surface mt-3 rounded-xl p-3">
                           <div className="flex flex-col items-start gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2">
                             <h3 className="text-sm font-semibold text-zinc-900">
                               Kết quả từng từ
@@ -1599,7 +1596,7 @@ export default function StudySentencesPage() {
                               {sentenceDiff.counts.extra}
                             </p>
                           </div>
-                          <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
+                          <div className="mt-2 grid gap-1.5 sm:flex sm:flex-wrap">
                             {(() => {
                               const pinyinByItem = getSentenceDiffPinyin(
                                 sentenceDiff.items,
@@ -1619,7 +1616,7 @@ export default function StudySentencesPage() {
                         </div>
                       ) : null}
 
-                      <div className="mt-4 grid grid-cols-2 gap-2">
+                      <div className="mt-3 grid grid-cols-2 gap-2">
                         <button
                           className="btn-primary px-4 py-2 text-sm"
                           onClick={checkSentenceAnswer}
