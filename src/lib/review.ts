@@ -76,10 +76,15 @@ function graduate(
         )
       : clampInterval(pendingInterval, settings);
   } else {
-    interval = clampInterval(
-      isEasy ? settings.easy_interval_days : settings.graduating_interval_days,
-      settings,
-    );
+    // Graduating out of learning. Easy must never schedule sooner than Good,
+    // even if the user configured a shorter easy interval than graduating one.
+    const goodInterval = clampInterval(settings.graduating_interval_days, settings);
+    interval = isEasy
+      ? clampInterval(
+          Math.max(goodInterval + 1, settings.easy_interval_days),
+          settings,
+        )
+      : goodInterval;
   }
 
   return {

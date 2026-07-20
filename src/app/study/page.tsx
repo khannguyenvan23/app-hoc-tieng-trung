@@ -8,6 +8,7 @@ import { StudyCardSkeleton } from "@/components/loading-skeletons";
 import { RatingButtons } from "@/components/rating-buttons";
 import { ReviewQueueStatus } from "@/components/review-queue-status";
 import { StudyProgress } from "@/components/study-progress";
+import { fetchDueReviewRows } from "@/lib/due-reviews";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
@@ -375,25 +376,15 @@ export default function StudyPage() {
       });
     }
 
-    let query = supabase.from("reviews").select("*, cards!inner(*)").limit(200);
-
-    if (weakOnly) {
-      query = query
-        .gte("weak_score", 2)
-        .order("weak_score", { ascending: false })
-        .order("next_review_at", { ascending: true });
-    } else {
-      query = query
-        .lte("next_review_at", dueReviewCutoff())
-        .order("next_review_at", { ascending: true });
-    }
-
-    if (deckId !== allDecksValue) {
-      query = query.eq("cards.deck_id", deckId);
-    }
-
-    const { data } = await query;
-    const reviewRows = (data || []) as DueReview[];
+    const reviewRows = await fetchDueReviewRows<DueReview>(
+      supabase,
+      { table: "reviews", cardsRelation: "cards" },
+      {
+        deckId: deckId === allDecksValue ? null : deckId,
+        weakOnly,
+        dueCutoff: dueReviewCutoff(),
+      },
+    );
 
     setNewCardsStudiedToday(studiedToday);
     setNewCardsWaiting(countWaitingNewCards(reviewRows, remainingNewCards));
@@ -537,22 +528,16 @@ export default function StudyPage() {
 
     let active = true;
     const supabase = createSupabaseBrowserClient();
-    let query = supabase.from("reviews").select("*, cards!inner(*)").limit(200);
-
-    if (weakOnly) {
-      query = query
-        .gte("weak_score", 2)
-        .order("weak_score", { ascending: false })
-        .order("next_review_at", { ascending: true });
-    } else {
-      query = query
-        .lte("next_review_at", dueReviewCutoff())
-        .order("next_review_at", { ascending: true });
-    }
-
-    if (selectedDeckId !== allDecksValue) {
-      query = query.eq("cards.deck_id", selectedDeckId);
-    }
+    const loadDueRows = () =>
+      fetchDueReviewRows<DueReview>(
+        supabase,
+        { table: "reviews", cardsRelation: "cards" },
+        {
+          deckId: selectedDeckId === allDecksValue ? null : selectedDeckId,
+          weakOnly,
+          dueCutoff: dueReviewCutoff(),
+        },
+      );
 
     const repairSelectedDeck =
       !weakOnly && selectedDeckId !== allDecksValue
@@ -565,7 +550,7 @@ export default function StudyPage() {
         : Promise.resolve();
 
     repairSelectedDeck.then(() =>
-      Promise.all([query, getNewCardsStudiedToday(selectedDeckId)]).then(async ([{ data }, studiedToday]) => {
+      Promise.all([loadDueRows(), getNewCardsStudiedToday(selectedDeckId)]).then(async ([data, studiedToday]) => {
       if (!active) {
         return;
       }
@@ -598,20 +583,12 @@ export default function StudyPage() {
           const repairData = await repairResponse.json();
 
           if ((repairData.created || 0) + (repairData.updated || 0) > 0) {
-            const retryQuery = supabase
-              .from("reviews")
-              .select("*, cards!inner(*)")
-              .lte("next_review_at", dueReviewCutoff())
-              .eq("cards.deck_id", selectedDeckId)
-              .order("next_review_at", { ascending: true })
-              .limit(200);
-            const retryResult = await retryQuery;
+            const retryRows = await loadDueRows();
 
             if (!active) {
               return;
             }
 
-            const retryRows = (retryResult.data || []) as DueReview[];
             const storageKey = getStudySessionKey(
               "word",
               selectedDeckId,
@@ -648,7 +625,7 @@ export default function StudyPage() {
         }
       }
 
-      const reviewRows = (data || []) as DueReview[];
+      const reviewRows = data;
       const storageKey = getStudySessionKey(
         "word",
         selectedDeckId,

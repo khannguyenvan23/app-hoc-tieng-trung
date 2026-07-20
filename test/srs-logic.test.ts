@@ -185,6 +185,146 @@ test("lapsing a review card sends it through relearning and restores an interval
   assert.equal(daysUntil(relearned.next_review_at), lapsed.interval_days);
 });
 
+test("relearning walks through every relearning step before restoring", () => {
+  const multiStep = { ...settings, relearning_steps: "10m 1h" };
+  const mature = {
+    review_count: 9,
+    interval_days: 20,
+    ease_factor: 2.5,
+    learning_step: -1,
+  };
+
+  // Lapse drops ease once and enters relearning step 0.
+  const lapsed = getNextReview("again", mature, baseNow, multiStep);
+  assert.equal(lapsed.ease_factor, 2.3);
+  assert.equal(lapsed.learning_step, 0);
+  assert.equal(lapsed.interval_days, multiStep.minimum_lapse_interval_days);
+  assert.equal(minutesUntil(lapsed.next_review_at), 10);
+
+  // Failing again inside relearning must NOT punish ease a second time.
+  const failedAgain = getNextReview(
+    "again",
+    { review_count: 10, interval_days: 1, ease_factor: 2.3, learning_step: 0 },
+    baseNow,
+    multiStep,
+  );
+  assert.equal(failedAgain.ease_factor, 2.3);
+  assert.equal(failedAgain.learning_step, 0);
+  assert.equal(failedAgain.interval_days, 1);
+
+  // Good advances to the second relearning step, still not a review card.
+  const secondStep = getNextReview(
+    "good",
+    { review_count: 10, interval_days: 1, ease_factor: 2.3, learning_step: 0 },
+    baseNow,
+    multiStep,
+  );
+  assert.equal(secondStep.learning_step, 1);
+  assert.equal(minutesUntil(secondStep.next_review_at), 60);
+  assert.equal(secondStep.interval_days, 1);
+
+  // Good on the last relearning step restores the pending interval.
+  const restored = getNextReview(
+    "good",
+    { review_count: 11, interval_days: 1, ease_factor: 2.3, learning_step: 1 },
+    baseNow,
+    multiStep,
+  );
+  assert.equal(restored.learning_step, -1);
+  assert.equal(restored.interval_days, 1);
+  assert.equal(daysUntil(restored.next_review_at), 1);
+});
+
+test("again from a later learning step resets to the first step", () => {
+  const atSecondStep = {
+    review_count: 2,
+    interval_days: 0,
+    ease_factor: 2.5,
+    learning_step: 1,
+  };
+
+  const again = getNextReview("again", atSecondStep, baseNow, settings);
+  assert.equal(again.learning_step, 0);
+  assert.equal(minutesUntil(again.next_review_at), 3);
+  assert.equal(again.interval_days, 0);
+
+  // Hard on the final step has no next step to average with, so it uses 1.5x.
+  const hard = getNextReview("hard", atSecondStep, baseNow, settings);
+  assert.equal(hard.learning_step, 1);
+  assert.equal(minutesUntil(hard.next_review_at), 15);
+});
+
+test("easy stays ahead of good even when the intervals are misconfigured", () => {
+  // A user can set Easy interval (2d) shorter than Graduating interval (5d) in
+  // the options page; Easy must still not schedule sooner than Good.
+  const inverted = {
+    ...settings,
+    learning_steps: "10m",
+    graduating_interval_days: 5,
+    easy_interval_days: 2,
+  };
+  const newCard = {
+    review_count: 0,
+    interval_days: 0,
+    ease_factor: null,
+    learning_step: 0,
+  };
+
+  const good = getNextReview("good", newCard, baseNow, inverted);
+  const easy = getNextReview("easy", newCard, baseNow, inverted);
+
+  assert.equal(good.interval_days, 5);
+  assert.ok(
+    easy.interval_days > good.interval_days,
+    `easy (${easy.interval_days}d) must be longer than good (${good.interval_days}d)`,
+  );
+});
+
+test("ease never falls below the configured floor", () => {
+  const nearFloor = {
+    review_count: 20,
+    interval_days: 10,
+    ease_factor: 1.35,
+    learning_step: -1,
+  };
+
+  const lapsed = getNextReview("again", nearFloor, baseNow, settings);
+  assert.equal(lapsed.ease_factor, settings.minimum_ease_factor);
+  assert.ok(lapsed.ease_factor >= settings.minimum_ease_factor);
+});
+
+test("intervals never exceed the maximum, and stay ordered below it", () => {
+  const capped = getNextReview(
+    "easy",
+    { review_count: 30, interval_days: 360, ease_factor: 2.5, learning_step: -1 },
+    baseNow,
+    settings,
+  );
+  assert.equal(capped.interval_days, settings.maximum_interval_days);
+
+  // Property sweep: hard <= good <= easy always, strict while below the cap.
+  for (const interval of [1, 3, 10, 50, 200]) {
+    for (const ease of [1.3, 2.0, 2.5, 3.0]) {
+      const state = {
+        review_count: 5,
+        interval_days: interval,
+        ease_factor: ease,
+        learning_step: -1,
+      };
+      const hard = getNextReview("hard", state, baseNow, settings).interval_days;
+      const good = getNextReview("good", state, baseNow, settings).interval_days;
+      const easy = getNextReview("easy", state, baseNow, settings).interval_days;
+      const label = `interval=${interval} ease=${ease}`;
+
+      assert.ok(hard <= good && good <= easy, `ordering broken at ${label}`);
+      assert.ok(easy <= settings.maximum_interval_days, `cap broken at ${label}`);
+      if (easy < settings.maximum_interval_days) {
+        assert.ok(hard < good && good < easy, `not strict at ${label}`);
+      }
+    }
+  }
+});
+
 test("interval fuzz stays within Anki's widening window", () => {
   // Tiny intervals are never fuzzed so previews stay exact.
   assert.equal(fuzzInterval(0), 0);

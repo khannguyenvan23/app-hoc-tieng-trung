@@ -8,6 +8,7 @@ import { StudyCardSkeleton } from "@/components/loading-skeletons";
 import { RatingButtons } from "@/components/rating-buttons";
 import { ReviewQueueStatus } from "@/components/review-queue-status";
 import { StudyProgress } from "@/components/study-progress";
+import { fetchDueReviewRows } from "@/lib/due-reviews";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
@@ -496,29 +497,15 @@ export default function StudySentencesPage() {
       });
     }
 
-    let query = supabase
-      .from("sentence_reviews")
-      .select("*, sentence_cards!inner(*)")
-      .limit(200);
-
-    if (weakOnly) {
-      query = query
-        .gte("weak_score", 2)
-        .order("weak_score", { ascending: false })
-        .order("next_review_at", { ascending: true });
-    } else {
-      query = query
-        .lte("next_review_at", dueReviewCutoff())
-        .order("next_review_at", { ascending: true });
-    }
-
-    if (deckId !== allDecksValue) {
-      query = query.eq("sentence_cards.deck_id", deckId);
-    }
-
-    const { data } = await query;
-
-    const reviewRows = (data || []) as DueSentenceReview[];
+    const reviewRows = await fetchDueReviewRows<DueSentenceReview>(
+      supabase,
+      { table: "sentence_reviews", cardsRelation: "sentence_cards" },
+      {
+        deckId: deckId === allDecksValue ? null : deckId,
+        weakOnly,
+        dueCutoff: dueReviewCutoff(),
+      },
+    );
     setNewSentencesStudiedToday(studiedToday);
     setNewSentencesWaiting(
       countWaitingNewSentences(reviewRows, remainingNewSentences),
@@ -667,25 +654,16 @@ export default function StudySentencesPage() {
 
     let active = true;
     const supabase = createSupabaseBrowserClient();
-    let query = supabase
-      .from("sentence_reviews")
-      .select("*, sentence_cards!inner(*)")
-      .limit(200);
-
-    if (weakOnly) {
-      query = query
-        .gte("weak_score", 2)
-        .order("weak_score", { ascending: false })
-        .order("next_review_at", { ascending: true });
-    } else {
-      query = query
-        .lte("next_review_at", dueReviewCutoff())
-        .order("next_review_at", { ascending: true });
-    }
-
-    if (selectedDeckId !== allDecksValue) {
-      query = query.eq("sentence_cards.deck_id", selectedDeckId);
-    }
+    const loadDueRows = () =>
+      fetchDueReviewRows<DueSentenceReview>(
+        supabase,
+        { table: "sentence_reviews", cardsRelation: "sentence_cards" },
+        {
+          deckId: selectedDeckId === allDecksValue ? null : selectedDeckId,
+          weakOnly,
+          dueCutoff: dueReviewCutoff(),
+        },
+      );
 
     const repairSelectedDeck =
       !weakOnly && selectedDeckId !== allDecksValue
@@ -698,8 +676,8 @@ export default function StudySentencesPage() {
         : Promise.resolve();
 
     repairSelectedDeck.then(() =>
-      Promise.all([query, getNewSentencesStudiedToday(selectedDeckId)]).then(
-        async ([{ data }, studiedToday]) => {
+      Promise.all([loadDueRows(), getNewSentencesStudiedToday(selectedDeckId)]).then(
+        async ([data, studiedToday]) => {
       if (!active) {
         return;
       }
@@ -735,19 +713,12 @@ export default function StudySentencesPage() {
           const repairData = await repairResponse.json();
 
           if ((repairData.created || 0) + (repairData.updated || 0) > 0) {
-            const retryResult = await supabase
-              .from("sentence_reviews")
-              .select("*, sentence_cards!inner(*)")
-              .lte("next_review_at", dueReviewCutoff())
-              .eq("sentence_cards.deck_id", selectedDeckId)
-              .order("next_review_at", { ascending: true })
-              .limit(200);
+            const retryRows = await loadDueRows();
 
             if (!active) {
               return;
             }
 
-            const retryRows = (retryResult.data || []) as DueSentenceReview[];
             const storageKey = getStudySessionKey(
               "sentence",
               selectedDeckId,
@@ -785,7 +756,7 @@ export default function StudySentencesPage() {
         }
       }
 
-      const reviewRows = (data || []) as DueSentenceReview[];
+      const reviewRows = data;
       const storageKey = getStudySessionKey(
         "sentence",
         selectedDeckId,
