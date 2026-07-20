@@ -616,6 +616,12 @@ export default function StudyPage() {
             setNewCardsWaiting(
               countWaitingNewCards(retryRows, remainingNewCards),
             );
+            const retryQueueProgress = getStoredStudyProgress(
+              storageKey,
+              retryQueue.length,
+            );
+            setSessionTotal(retryQueueProgress.total);
+            setSessionAnswered(retryQueueProgress.answered);
             setReviews(retryQueue);
             setScheduledReloadAt(getPendingCardStudyAt(retryQueue));
             setIndex(getRestoredCardStudyIndex(retryQueue, storageKey));
@@ -649,8 +655,16 @@ export default function StudyPage() {
         remainingNewCards,
         studySettings,
       );
+      // This effect is the path a page load / F5 takes, so the saved session
+      // progress has to be restored here too — not only in loadReviews().
+      const sessionProgress = getStoredStudyProgress(
+        storageKey,
+        reviewQueue.length,
+      );
       setNewCardsStudiedToday(studiedToday);
       setNewCardsWaiting(countWaitingNewCards(reviewRows, remainingNewCards));
+      setSessionTotal(sessionProgress.total);
+      setSessionAnswered(sessionProgress.answered);
       setReviews(reviewQueue);
       setScheduledReloadAt(getPendingCardStudyAt(reviewQueue));
       setIndex(getRestoredCardStudyIndex(reviewQueue, storageKey));

@@ -748,6 +748,12 @@ export default function StudySentencesPage() {
             setNewSentencesWaiting(
               countWaitingNewSentences(retryRows, remainingNewSentences),
             );
+            const retryQueueProgress = getStoredStudyProgress(
+              storageKey,
+              retryQueue.length,
+            );
+            setSessionTotal(retryQueueProgress.total);
+            setSessionAnswered(retryQueueProgress.answered);
             setReviews(retryQueue);
             setScheduledReloadAt(getPendingSentenceStudyAt(retryQueue));
             setIndex(getRestoredSentenceStudyIndex(retryQueue, storageKey));
@@ -782,10 +788,18 @@ export default function StudySentencesPage() {
         remainingNewSentences,
         studySettings,
       );
+      // This effect is the path a page load / F5 takes, so the saved session
+      // progress has to be restored here too — not only in loadReviews().
+      const sessionProgress = getStoredStudyProgress(
+        storageKey,
+        reviewQueue.length,
+      );
       setNewSentencesStudiedToday(studiedToday);
       setNewSentencesWaiting(
         countWaitingNewSentences(reviewRows, remainingNewSentences),
       );
+      setSessionTotal(sessionProgress.total);
+      setSessionAnswered(sessionProgress.answered);
       setReviews(reviewQueue);
       setScheduledReloadAt(getPendingSentenceStudyAt(reviewQueue));
       setIndex(getRestoredSentenceStudyIndex(reviewQueue, storageKey));
