@@ -9,6 +9,7 @@ import { RatingButtons } from "@/components/rating-buttons";
 import { ReviewQueueStatus } from "@/components/review-queue-status";
 import { StudyProgress } from "@/components/study-progress";
 import { fetchDueReviewRows } from "@/lib/due-reviews";
+import { alignPinyinToCharacters } from "@/lib/pinyin-align";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
@@ -144,13 +145,6 @@ type SentenceAudioData = {
   sentenceAudioUrl: string | null;
 };
 
-function normalizePinyinSyllable(value: string) {
-  return value
-    .replace(/^[\s,.;:!?'"“”‘’()[\]{}，。！？；：、]+/u, "")
-    .replace(/[\s,.;:!?'"“”‘’()[\]{}，。！？；：、]+$/u, "")
-    .trim();
-}
-
 function countChineseTokenCharacters(token: string | null | undefined) {
   if (!token) {
     return 0;
@@ -163,14 +157,18 @@ function countChineseTokenCharacters(token: string | null | undefined) {
 
 function getSentenceDiffPinyin(
   items: SentenceDiffItem[],
+  sentenceCn: string | null | undefined,
   sentencePinyin: string | null | undefined,
 ) {
-  const syllables =
-    sentencePinyin
-      ?.split(/\s+/)
-      .map(normalizePinyinSyllable)
-      .filter(Boolean) || [];
-  let syllableIndex = 0;
+  // One syllable per Han character, or null when the pinyin cannot be split to
+  // match the sentence — in that case show nothing rather than a wrong reading.
+  const characterPinyin = alignPinyinToCharacters(sentenceCn, sentencePinyin);
+
+  if (!characterPinyin) {
+    return items.map(() => "");
+  }
+
+  let characterIndex = 0;
 
   return items.map((item) => {
     if (!item.expected) {
@@ -178,11 +176,11 @@ function getSentenceDiffPinyin(
     }
 
     const characterCount = countChineseTokenCharacters(item.expected);
-    const tokenPinyin = syllables.slice(
-      syllableIndex,
-      syllableIndex + characterCount,
+    const tokenPinyin = characterPinyin.slice(
+      characterIndex,
+      characterIndex + characterCount,
     );
-    syllableIndex += characterCount;
+    characterIndex += characterCount;
     return tokenPinyin.join(" ");
   });
 }
@@ -1605,6 +1603,7 @@ export default function StudySentencesPage() {
                             {(() => {
                               const pinyinByItem = getSentenceDiffPinyin(
                                 sentenceDiff.items,
+                                card.sentence_cn,
                                 card.sentence_pinyin,
                               );
 
