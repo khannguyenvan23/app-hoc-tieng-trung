@@ -26,22 +26,24 @@ export type ReviewQueueStats = {
   review: number;
 };
 
+export type ReviewQueueKey = keyof ReviewQueueStats;
+
+// Which bucket a single card belongs to, so the UI can highlight the counter
+// matching the card currently on screen.
+export function getReviewQueueKey(review: ReviewQueueItem): ReviewQueueKey {
+  if (Number(review.review_count || 0) === 0) {
+    return "new";
+  }
+
+  return isInLearningPhase(review) ? "learning" : "review";
+}
+
 export function getReviewQueueStats(
   reviews: ReviewQueueItem[],
 ): ReviewQueueStats {
   return reviews.reduce<ReviewQueueStats>(
     (stats, review) => {
-      if (Number(review.review_count || 0) === 0) {
-        stats.new += 1;
-        return stats;
-      }
-
-      if (isInLearningPhase(review)) {
-        stats.learning += 1;
-        return stats;
-      }
-
-      stats.review += 1;
+      stats[getReviewQueueKey(review)] += 1;
       return stats;
     },
     { learning: 0, new: 0, review: 0 },

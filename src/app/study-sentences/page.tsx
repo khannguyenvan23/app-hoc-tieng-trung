@@ -14,7 +14,10 @@ import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
 import { sortDecksByRecentContent } from "@/lib/deck-activity";
 import { getNextReview } from "@/lib/review";
-import { getReviewQueueStats } from "@/lib/review-queue-stats";
+import {
+  getReviewQueueKey,
+  getReviewQueueStats,
+} from "@/lib/review-queue-stats";
 import {
   compareChineseSentences,
   type SentenceDiffItem,
@@ -1409,6 +1412,7 @@ export default function StudySentencesPage() {
     Boolean(scheduledReloadAt) &&
     new Date(scheduledReloadAt || 0).getTime() > Date.now();
   const queueStats = getReviewQueueStats(reviews);
+  const activeQueueKey = current ? getReviewQueueKey(current) : null;
   const progressTotal = Math.max(sessionTotal, reviews.length);
   const progressCurrent = Math.min(
     Math.max(1, progressTotal - reviews.length + 1),
@@ -1724,7 +1728,11 @@ export default function StudySentencesPage() {
           )}
 
           {reviews.length > 0 ? (
-            <ReviewQueueStatus itemName="Câu" stats={queueStats} />
+            <ReviewQueueStatus
+              active={activeQueueKey}
+              itemName="Câu"
+              stats={queueStats}
+            />
           ) : null}
 
           {dailyLimitError ? (
