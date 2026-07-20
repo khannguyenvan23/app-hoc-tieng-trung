@@ -110,7 +110,7 @@ export default function ShortcutsPage() {
             <ShortcutTable shortcuts={sentenceShortcuts} />
           </section>
 
-          <div className="mt-8 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+          <div className="mt-8 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900 dark:text-amber-200">
             Khi đang gõ trong ô nhập, các phím chữ và số sẽ không kích hoạt chế độ học. Space và Enter vẫn thực hiện chức năng riêng của bài luyện viết.
           </div>
         </div>

@@ -1167,7 +1167,7 @@ export default function StudyPage() {
             <div className="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800">
               <div>{creditNotice}</div>
               <Link
-                className="mt-2 inline-flex font-medium text-red-900 underline"
+                className="mt-2 inline-flex font-medium text-red-900 dark:text-red-200 underline"
                 href="/pricing"
               >
                 Xem bảng giá và nạp credit

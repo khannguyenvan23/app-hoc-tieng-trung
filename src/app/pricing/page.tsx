@@ -102,7 +102,7 @@ function PricingContent({
                   Gọi {contactPhone}
                 </a>
               ) : (
-                <span className="inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-700">
+                <span className="inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-200 dark:bg-white/15 px-5 py-3 text-sm font-semibold text-zinc-700">
                   Chưa cấu hình số điện thoại
                 </span>
               )}
@@ -127,7 +127,7 @@ function PricingContent({
 
           <div className="rounded-lg border border-zinc-200 bg-stone-50 p-5">
             {signedIn ? (
-              <div className="mb-4 rounded-md border border-teal-100 bg-teal-50 p-4">
+              <div className="mb-4 rounded-md border border-teal-100 dark:border-teal-500/30 bg-teal-50 p-4">
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
                     <div className="text-xs font-medium uppercase text-teal-800">
@@ -137,7 +137,7 @@ function PricingContent({
                       {credits ? credits.credit_balance : "..."}
                     </div>
                   </div>
-                  <div className="text-right text-sm text-teal-900">
+                  <div className="text-right text-sm text-teal-900 dark:text-teal-200">
                     <div>Gói {credits?.plan || "free"}</div>
                     <div className="mt-1 text-xs">
                       Tổng đã nhận {credits?.lifetime_credits || 0} credit

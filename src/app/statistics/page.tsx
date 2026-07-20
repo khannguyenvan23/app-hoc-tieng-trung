@@ -133,7 +133,7 @@ function BarChart({
               <div className="flex h-44 items-end justify-center">
                 <div
                   className={`w-3/4 min-w-2 max-w-10 rounded-t ${
-                    item.count > 0 ? "bg-teal-700" : "bg-zinc-200"
+                    item.count > 0 ? "bg-teal-700" : "bg-zinc-200 dark:bg-white/15"
                   }`}
                   style={{ height: barHeight }}
                 />
@@ -320,7 +320,7 @@ export default function StatisticsPage() {
                 Theo dõi HSK1 đến HSK5 theo số từ đã ôn ít nhất một lần.
               </p>
             </div>
-            <div className="rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm text-teal-900">
+            <div className="rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm text-teal-900 dark:text-teal-200">
               Hoàn thành{" "}
               <span className="text-lg font-semibold">
                 {progressLoading
@@ -367,7 +367,7 @@ export default function StatisticsPage() {
                         {level.percent}%
                       </span>
                     </div>
-                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200">
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/15">
                       <div
                         className="h-full rounded-full bg-teal-700"
                         style={{ width: `${level.percent}%` }}

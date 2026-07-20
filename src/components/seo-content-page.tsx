@@ -97,7 +97,7 @@ export function SeoContentPage({ page }: { page: SeoPageContent }) {
           <div className="mt-8 flex flex-wrap gap-2 text-sm text-zinc-700 dark:text-zinc-300">
             {page.highlights.slice(0, 4).map((highlight) => (
               <span
-                className="rounded-md border border-teal-100 bg-teal-50 dark:bg-teal-500/15 px-3 py-2 text-teal-900"
+                className="rounded-md border border-teal-100 dark:border-teal-500/30 bg-teal-50 dark:bg-teal-500/15 px-3 py-2 text-teal-900 dark:text-teal-200"
                 key={highlight}
               >
                 {highlight}

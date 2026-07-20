@@ -598,7 +598,7 @@ export default function DashboardPage() {
           </section>
         ) : null}
 
-        <section className="mt-6 rounded-2xl border border-teal-100 bg-teal-50 dark:bg-teal-500/15 p-5">
+        <section className="mt-6 rounded-2xl border border-teal-100 dark:border-teal-500/30 bg-teal-50 dark:bg-teal-500/15 p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-teal-800 dark:text-teal-300">
@@ -621,7 +621,7 @@ export default function DashboardPage() {
                 {hasZaloGroupUrl ? "Vào nhóm Zalo" : "Nhắn Zalo nhận link"}
               </a>
               <Link
-                className="inline-flex min-h-10 items-center rounded-md border border-teal-200 dark:border-teal-500/40 bg-white dark:bg-white/5 px-4 py-2 text-sm font-semibold text-teal-800 dark:text-teal-300 hover:bg-teal-100"
+                className="inline-flex min-h-10 items-center rounded-md border border-teal-200 dark:border-teal-500/40 bg-white dark:bg-white/5 px-4 py-2 text-sm font-semibold text-teal-800 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-500/25"
                 href="/community"
               >
                 Xem giới thiệu
@@ -646,7 +646,7 @@ export default function DashboardPage() {
                 Theo dõi tiến độ từng cấp để thấy mình đang đi tới đâu.
               </p>
             </div>
-            <div className="rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm text-teal-900">
+            <div className="rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm text-teal-900 dark:text-teal-200">
               Hoàn thành{" "}
               <span className="text-lg font-semibold">
                 {progressLoading
@@ -691,7 +691,7 @@ export default function DashboardPage() {
                         {level.percent}%
                       </span>
                     </div>
-                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200">
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/15">
                       <div
                         className="h-full rounded-full bg-teal-700"
                         style={{ width: `${level.percent}%` }}
@@ -732,7 +732,7 @@ export default function DashboardPage() {
                   Theo dõi tiến độ từng cấp để thấy mình đang đi tới đâu.
                 </p>
               </div>
-              <div className="rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm text-teal-900">
+              <div className="rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm text-teal-900 dark:text-teal-200">
                 Hoàn thành{" "}
                 <span className="text-lg font-semibold">
                   {progress.completedLevels}/{progress.levels.length}
@@ -768,7 +768,7 @@ export default function DashboardPage() {
                         {level.percent}%
                       </span>
                     </div>
-                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200">
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/15">
                       <div
                         className="h-full rounded-full bg-teal-700"
                         style={{ width: `${level.percent}%` }}
@@ -806,7 +806,7 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="flex min-w-40 items-center justify-between gap-4 rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 sm:block sm:text-center">
-              <div className="text-sm font-medium text-teal-900">Streak học</div>
+              <div className="text-sm font-medium text-teal-900 dark:text-teal-200">Streak học</div>
               <div>
                 <span className="text-3xl font-semibold text-teal-800 dark:text-teal-300">
                   {loading ? "..." : stats.streakDays}

@@ -485,7 +485,7 @@ export default function DeckPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h2 className="font-semibold text-teal-950">Chia sẻ bộ thẻ</h2>
-                    <p className="mt-1 text-sm leading-6 text-teal-900">
+                    <p className="mt-1 text-sm leading-6 text-teal-900 dark:text-teal-200">
                       Người nhận sẽ có bản sao và tiến độ học riêng.
                     </p>
                   </div>
@@ -521,7 +521,7 @@ export default function DeckPage() {
                 ) : null}
 
                 {shareMessage ? (
-                  <p className="mt-3 text-sm text-teal-900">{shareMessage}</p>
+                  <p className="mt-3 text-sm text-teal-900 dark:text-teal-200">{shareMessage}</p>
                 ) : null}
               </section>
             ) : null}
@@ -657,7 +657,7 @@ export default function DeckPage() {
             </section>
 
             <section className="mt-8 rounded-lg border border-red-200 bg-red-50 p-5">
-              <h2 className="text-lg font-semibold text-red-900">
+              <h2 className="text-lg font-semibold text-red-900 dark:text-red-200">
                 Quản lý bộ thẻ
               </h2>
               <p className="mt-1 text-sm text-red-800">

@@ -86,7 +86,7 @@ export default function CommunityPage() {
           </div>
 
           {!hasZaloGroupUrl ? (
-            <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
               Chưa cấu hình link nhóm. Thêm{" "}
               <code className="rounded bg-white px-1 py-0.5">
                 NEXT_PUBLIC_ZALO_GROUP_URL
@@ -100,13 +100,13 @@ export default function CommunityPage() {
           <h2 className="text-lg font-semibold">Trong nhóm có gì?</h2>
           <div className="mt-4 grid gap-3 text-sm text-zinc-700">
             <div className="rounded-xl bg-teal-50 p-4">
-              <div className="font-semibold text-teal-900">Hỏi bài nhanh</div>
+              <div className="font-semibold text-teal-900 dark:text-teal-200">Hỏi bài nhanh</div>
               <p className="mt-1 leading-6">
                 Gửi từ, câu hoặc ảnh màn hình đang vướng để được hỗ trợ.
               </p>
             </div>
             <div className="rounded-xl bg-sky-50 p-4">
-              <div className="font-semibold text-sky-900">Nhắc học mỗi ngày</div>
+              <div className="font-semibold text-sky-900 dark:text-sky-200">Nhắc học mỗi ngày</div>
               <p className="mt-1 leading-6">
                 Cùng nhau giữ streak và nhắc nhau ôn đúng phần đến hạn.
               </p>

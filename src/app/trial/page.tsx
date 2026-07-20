@@ -129,7 +129,7 @@ export default function TrialPage() {
             </p>
           </div>
 
-          <div className="mb-4 h-2 overflow-hidden rounded-full bg-zinc-200">
+          <div className="mb-4 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/15">
             <div
               className="h-full rounded-full bg-teal-700 transition-all"
               style={{ width: `${progressPercent}%` }}
