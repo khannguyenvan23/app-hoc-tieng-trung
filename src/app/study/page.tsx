@@ -1150,10 +1150,11 @@ export default function StudyPage() {
   const queueStats = getReviewQueueStats(reviews);
   const activeQueueKey = current ? getReviewQueueKey(current) : null;
   const progressTotal = Math.max(sessionTotal, reviews.length);
-  const progressCurrent = Math.min(
-    Math.max(1, progressTotal - reviews.length + 1),
-    progressTotal,
-  );
+  // Count from the answered tally (which is persisted) rather than from how
+  // much of the queue is left: a card rated Quên/Khó goes straight back into
+  // the queue for its learning step, so the remaining length barely moves and
+  // the bar would snap back to 1 on every reload.
+  const progressCurrent = Math.min(sessionAnswered + 1, progressTotal);
   const dailyLimitReached =
     !weakOnly &&
     newCardsWaiting > 0 &&
