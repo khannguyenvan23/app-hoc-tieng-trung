@@ -26,7 +26,8 @@ const queueItems = [
     key: "learning",
     label: "Đang ôn",
     numberClassName: "text-red-700 dark:text-red-300",
-    panelClassName: "border-zinc-200/70 bg-white",
+    panelClassName:
+      "border-zinc-200/70 bg-white dark:border-white/10 dark:bg-white/[0.03]",
     activePanelClassName: "border-red-300 bg-red-50 dark:border-red-500/60 dark:bg-red-500/15",
     dotClassName: "bg-red-500",
   },
@@ -34,7 +35,8 @@ const queueItems = [
     key: "review",
     label: "Review",
     numberClassName: "text-emerald-700 dark:text-emerald-300",
-    panelClassName: "border-zinc-200/70 bg-white",
+    panelClassName:
+      "border-zinc-200/70 bg-white dark:border-white/10 dark:bg-white/[0.03]",
     activePanelClassName: "border-emerald-300 bg-emerald-50 dark:border-emerald-500/60 dark:bg-emerald-500/15",
     dotClassName: "bg-emerald-500",
   },

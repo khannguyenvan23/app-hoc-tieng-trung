@@ -1216,7 +1216,7 @@ export default function StudyPage() {
               />
 
               <div className="mt-4 text-center sm:mt-5">
-                <div className="text-sm font-medium text-zinc-500">
+                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                   Nghĩa tiếng Việt
                 </div>
                 <div className="mt-3 text-2xl font-semibold sm:text-3xl">
@@ -1228,10 +1228,10 @@ export default function StudyPage() {
                 <div className="mt-7 sm:mt-10">
                   {writingMode ? (
                     <div className="app-surface-muted rounded-xl p-3 sm:p-4">
-                      <label className="block text-sm font-medium text-zinc-700">
+                      <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                         Gõ chữ Hán bạn đoán
                         <input
-                          className="mt-2 w-full rounded-xl border border-zinc-300 bg-white px-3 py-3 text-center text-2xl outline-none focus:border-teal-700 sm:text-3xl"
+                          className="mt-2 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-3 text-center text-2xl outline-none focus:border-teal-700 sm:text-3xl"
                           onChange={(event) => {
                             setWritingAnswer(event.target.value);
                             setWritingResult("");
@@ -1251,7 +1251,7 @@ export default function StudyPage() {
                       </label>
 
                       {writingResult === "correct" ? (
-                        <p className="mt-3 text-sm font-medium text-teal-700">
+                        <p className="mt-3 text-sm font-medium text-teal-700 dark:text-teal-300">
                           Đúng rồi.
                         </p>
                       ) : null}
@@ -1293,27 +1293,27 @@ export default function StudyPage() {
                   <div className="study-answer-panel p-3 text-center sm:p-4">
                     <div className="text-4xl font-semibold sm:text-5xl">{card.chinese}</div>
                     {showPinyinHint && card?.pinyin ? (
-                      <div className="mt-3 text-lg text-teal-800">
+                      <div className="mt-3 text-lg text-teal-800 dark:text-teal-300">
                         {card?.pinyin}
                       </div>
                     ) : null}
                     {card.example_cn || card.example_pinyin || card.example_vi ? (
                       <div className="mt-4">
-                        <div className="text-sm font-medium uppercase tracking-wide text-zinc-500">
+                        <div className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                           Câu ví dụ
                         </div>
                         {card.example_cn ? (
-                          <div className="mt-2 text-lg text-zinc-900 sm:text-xl">
+                          <div className="mt-2 text-lg text-zinc-900 dark:text-zinc-100 sm:text-xl">
                             {card.example_cn}
                           </div>
                         ) : null}
                         {showPinyinHint && card.example_pinyin ? (
-                          <div className="mt-1 text-sm text-teal-800">
+                          <div className="mt-1 text-sm text-teal-800 dark:text-teal-300">
                             {card.example_pinyin}
                           </div>
                         ) : null}
                         {card.example_vi ? (
-                          <div className="mt-1 text-sm text-zinc-600">
+                          <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                             {card.example_vi}
                           </div>
                         ) : null}
@@ -1393,7 +1393,7 @@ export default function StudyPage() {
             <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <select
                 aria-label="Chọn bộ thẻ ôn từ"
-                className="col-span-2 h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
+                className="col-span-2 h-10 w-full rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
                 onChange={(event) => changeDeck(event.target.value)}
                 value={selectedDeckId}
               >
@@ -1462,7 +1462,7 @@ export default function StudyPage() {
           <div className="study-shortcuts-hint">
             <span>Space đáp án · R audio · 1-4 đánh giá · P/W chế độ</span>
             <Link
-              className="font-medium text-teal-800 hover:underline"
+              className="font-medium text-teal-800 dark:text-teal-300 hover:underline"
               href="/shortcuts"
             >
               Hướng dẫn phím tắt

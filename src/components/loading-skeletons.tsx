@@ -88,7 +88,7 @@ export function HskProgressSkeleton() {
     <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 3 }).map((_, index) => (
         <div
-          className="rounded-md border border-zinc-200 bg-stone-50 p-4"
+          className="rounded-md border border-zinc-200 dark:border-white/10 bg-stone-50 p-4"
           key={index}
         >
           <div className="flex items-center justify-between gap-3">
@@ -110,7 +110,7 @@ export function HskProgressSkeleton() {
 export function SharedDeckPreviewSkeleton() {
   return (
     <div className="space-y-8">
-      <section className="border-b border-zinc-200 pb-7">
+      <section className="border-b border-zinc-200 dark:border-white/10 pb-7">
         <SkeletonBlock className="h-4 w-40" />
         <SkeletonBlock className="mt-4 h-9 w-64 max-w-full" />
         <SkeletonBlock className="mt-4 h-4 w-48" />
@@ -120,7 +120,7 @@ export function SharedDeckPreviewSkeleton() {
         <SkeletonBlock className="h-6 w-44" />
         <div className="mt-4 space-y-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div className="border-b border-zinc-200 pb-4" key={index}>
+            <div className="border-b border-zinc-200 dark:border-white/10 pb-4" key={index}>
               <SkeletonBlock className="h-5 w-4/5" />
               <SkeletonBlock className="mt-3 h-5 w-3/5" />
               <SkeletonBlock className="mt-2 h-4 w-2/5" />

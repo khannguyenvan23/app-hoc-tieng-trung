@@ -66,10 +66,14 @@ const sentenceDiffLabels: Record<SentenceDiffStatus, string> = {
 };
 
 const sentenceDiffStyles: Record<SentenceDiffStatus, string> = {
-  correct: "border-teal-200 bg-teal-50 text-teal-900",
-  wrong: "border-red-200 bg-red-50 text-red-900",
-  missing: "border-amber-200 bg-amber-50 text-amber-900",
-  extra: "border-zinc-300 bg-zinc-100 text-zinc-700",
+  correct:
+    "border-teal-200 bg-teal-50 text-teal-900 dark:border-teal-500/40 dark:bg-teal-500/15 dark:text-teal-200",
+  wrong:
+    "border-red-200 bg-red-50 text-red-900 dark:border-red-500/40 dark:bg-red-500/15 dark:text-red-200",
+  missing:
+    "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200",
+  extra:
+    "border-zinc-300 bg-zinc-100 text-zinc-700 dark:border-white/15 dark:bg-white/10 dark:text-zinc-300",
 };
 
 const audioSpeeds = {
@@ -197,7 +201,7 @@ function SentenceDiffToken({
       className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border px-2.5 py-1.5 text-left sm:block sm:min-w-14 sm:text-center ${sentenceDiffStyles[item.status]}`}
     >
       {pinyin ? (
-        <div className="text-[11px] font-medium leading-tight text-teal-800">
+        <div className="text-[11px] font-medium leading-tight text-teal-800 dark:text-teal-300">
           {pinyin}
         </div>
       ) : null}
@@ -1485,7 +1489,7 @@ export default function StudySentencesPage() {
                 {dictationMode && !showAnswer ? (
                   <div>
                     <div className="flex flex-wrap items-center justify-center gap-2">
-                      <span className="rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-teal-800">
+                      <span className="rounded-full bg-teal-50 dark:bg-teal-500/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-teal-800 dark:text-teal-300">
                         Luyện chính tả
                       </span>
                       <button
@@ -1501,8 +1505,8 @@ export default function StudySentencesPage() {
                       <button
                         className={`rounded-md border px-3 py-1.5 text-sm font-medium ${
                           showDictationMeaning
-                            ? "border-teal-700 bg-teal-50 text-teal-800"
-                            : "border-zinc-300 hover:bg-zinc-100"
+                            ? "border-teal-700 bg-teal-50 dark:bg-teal-500/15 text-teal-800 dark:text-teal-300"
+                            : "border-zinc-300 dark:border-white/15 hover:bg-zinc-100 dark:hover:bg-white/10"
                         }`}
                         onClick={toggleDictationMeaning}
                         type="button"
@@ -1513,11 +1517,11 @@ export default function StudySentencesPage() {
                       </button>
                     </div>
                     {showDictationMeaning ? (
-                      <div className="mx-auto mt-3 max-w-xl rounded-lg bg-stone-50 px-3 py-2">
-                        <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+                      <div className="mx-auto mt-3 max-w-xl rounded-lg bg-stone-50 dark:bg-white/5 px-3 py-2">
+                        <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                           Nghĩa tiếng Việt
                         </div>
-                        <div className="mt-0.5 text-base font-medium text-zinc-800">
+                        <div className="mt-0.5 text-base font-medium text-zinc-800 dark:text-zinc-100">
                           {card.sentence_vi}
                         </div>
                       </div>
@@ -1536,12 +1540,12 @@ export default function StudySentencesPage() {
                 <div className="mt-4 sm:mt-5">
                   {writingMode || dictationMode ? (
                     <div className="app-surface-muted rounded-xl p-3">
-                      <label className="block text-sm font-medium text-zinc-700">
+                      <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                         {dictationMode
                           ? "Gõ lại câu tiếng Trung vừa nghe"
                           : "Gõ câu tiếng Trung"}
                         <textarea
-                          className="mt-2 h-20 w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-24 sm:text-2xl"
+                          className="mt-2 h-20 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-24 sm:text-2xl"
                           ref={sentenceAnswerRef}
                           onChange={(event) => {
                             setSentenceAnswer(event.target.value);
@@ -1573,7 +1577,7 @@ export default function StudySentencesPage() {
                       </label>
 
                       {writingResult === "correct" ? (
-                        <p className="mt-3 text-sm font-medium text-teal-700">
+                        <p className="mt-3 text-sm font-medium text-teal-700 dark:text-teal-300">
                           Đúng rồi.
                         </p>
                       ) : null}
@@ -1586,10 +1590,10 @@ export default function StudySentencesPage() {
                       {writingResult === "wrong" && sentenceDiff ? (
                         <div className="app-surface mt-3 rounded-xl p-3">
                           <div className="flex flex-col items-start gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2">
-                            <h3 className="text-sm font-semibold text-zinc-900">
+                            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                               Kết quả từng từ
                             </h3>
-                            <p className="text-xs text-zinc-500">
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
                               Đúng {sentenceDiff.counts.correct} · Sai{" "}
                               {sentenceDiff.counts.wrong} · Thiếu{" "}
                               {sentenceDiff.counts.missing} · Gõ dư{" "}
@@ -1646,7 +1650,7 @@ export default function StudySentencesPage() {
               ) : (
                 <div className="mt-4 sm:mt-5">
                   {writingResult === "correct" ? (
-                    <div className="mb-3 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm font-medium text-teal-800">
+                    <div className="mb-3 rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm font-medium text-teal-800 dark:text-teal-300">
                       Đúng rồi. Đây là câu chính xác:
                     </div>
                   ) : null}
@@ -1655,7 +1659,7 @@ export default function StudySentencesPage() {
                       {card.sentence_cn}
                     </div>
                     {showPinyinHint && card.sentence_pinyin ? (
-                      <div className="mt-3 text-base text-teal-800">
+                      <div className="mt-3 text-base text-teal-800 dark:text-teal-300">
                         {card.sentence_pinyin}
                       </div>
                     ) : null}
@@ -1681,7 +1685,7 @@ export default function StudySentencesPage() {
                         />
                       </div>
                     ) : creatingAudioId === card.id ? (
-                      <p className="mt-5 text-sm text-zinc-500">
+                      <p className="mt-5 text-sm text-zinc-500 dark:text-zinc-400">
                         Đang tạo audio câu...
                       </p>
                     ) : null}
@@ -1689,7 +1693,7 @@ export default function StudySentencesPage() {
 
                   {vocabItems.length > 0 ? (
                     <div className="app-surface mt-3 rounded-xl">
-                      <div className="border-b border-zinc-100 px-4 py-3 text-sm font-semibold">
+                      <div className="border-b border-zinc-100 dark:border-white/10 px-4 py-3 text-sm font-semibold">
                         Từ vựng trong câu
                       </div>
                       <div className="divide-y divide-zinc-100">
@@ -1701,10 +1705,10 @@ export default function StudySentencesPage() {
                             <div className="text-lg font-semibold">
                               {item.chinese}
                             </div>
-                            <div className="text-teal-800">
+                            <div className="text-teal-800 dark:text-teal-300">
                               {showPinyinHint ? item.pinyin : ""}
                             </div>
-                            <div className="text-zinc-700">
+                            <div className="text-zinc-700 dark:text-zinc-300">
                               {item.meaning_vi}
                             </div>
                           </div>
@@ -1739,7 +1743,7 @@ export default function StudySentencesPage() {
             <div className="grid min-w-0 w-full grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <select
                 aria-label="Chọn bộ thẻ luyện câu"
-                className="col-span-3 h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
+                className="col-span-3 h-10 w-full rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
                 onChange={(event) => changeDeck(event.target.value)}
                 value={selectedDeckId}
               >
@@ -1828,7 +1832,7 @@ export default function StudySentencesPage() {
           <div className="study-shortcuts-hint">
             <span>Space đáp án · R audio · 1-4 đánh giá · P/W/D chế độ</span>
             <Link
-              className="font-medium text-teal-800 hover:underline"
+              className="font-medium text-teal-800 dark:text-teal-300 hover:underline"
               href="/shortcuts"
             >
               Hướng dẫn phím tắt
