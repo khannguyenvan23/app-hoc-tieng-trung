@@ -1415,11 +1415,14 @@ export default function StudySentencesPage() {
     new Date(scheduledReloadAt || 0).getTime() > Date.now();
   const queueStats = getReviewQueueStats(reviews);
   const activeQueueKey = current ? getReviewQueueKey(current) : null;
-  const progressTotal = Math.max(sessionTotal, reviews.length);
-  // Count from the answered tally (which is persisted) rather than from how
-  // much of the queue is left: a card rated Quên/Khó goes straight back into
-  // the queue for its learning step, so the remaining length barely moves and
-  // the bar would snap back to 1 on every reload.
+  // Total work = what you have already answered plus what the three queues
+  // still hold (Mới + Đang ôn + Review), so the percentage always reflects the
+  // real remaining workload. Counting from the answered tally — which is
+  // persisted — keeps the bar correct after a reload and still advances when a
+  // card rated Quên/Khó goes back into the queue for its learning step.
+  const queueRemaining =
+    queueStats.new + queueStats.learning + queueStats.review;
+  const progressTotal = Math.max(1, sessionAnswered + queueRemaining);
   const progressCurrent = Math.min(sessionAnswered + 1, progressTotal);
   const dailyLimitReached =
     !weakOnly &&

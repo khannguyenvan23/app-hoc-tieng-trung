@@ -14,7 +14,10 @@ export function StudyProgress({
   const progressPercent = Math.round((safeCurrent / safeTotal) * 100);
 
   return (
-    <div className="study-progress" aria-label={`${itemName} ${safeCurrent} / ${safeTotal}`}>
+    <div
+      className="study-progress"
+      aria-label={`${itemName} ${safeCurrent} / ${safeTotal}`}
+    >
       <div className="flex items-center justify-between gap-3 text-sm">
         <span className="font-medium text-zinc-600 dark:text-zinc-400">
           {itemName} {safeCurrent} / {safeTotal}
