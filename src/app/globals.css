@@ -9,6 +9,49 @@
   --brand: #0f766e;
   --brand-strong: #0b5f59;
   --brand-soft: #e7f8f5;
+
+  /* One scale for corners and one for elevation. Every component picks from
+     these three steps so surfaces read as a single system rather than a pile
+     of one-off values. */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+
+  --shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.05);
+  --shadow-md:
+    0 1px 2px rgba(24, 24, 27, 0.04),
+    0 8px 20px rgba(24, 24, 27, 0.06);
+  --shadow-lg:
+    0 1px 2px rgba(24, 24, 27, 0.04),
+    0 16px 40px rgba(24, 24, 27, 0.08);
+  --shadow-brand: 0 6px 16px rgba(15, 118, 110, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #101312;
+    --foreground: #e8e8e6;
+    --surface: #171a19;
+    --surface-soft: #1b1f1e;
+    --border-soft: #2b302f;
+    --brand: #0d9488;
+    --brand-strong: #14b8a6;
+    --brand-soft: #0f2f2c;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md:
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 8px 20px rgba(0, 0, 0, 0.45);
+    --shadow-lg:
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 16px 40px rgba(0, 0, 0, 0.55);
+    --shadow-brand: 0 6px 16px rgba(13, 148, 136, 0.3);
+  }
+
+  ::selection {
+    background: #134e4a;
+    color: #ccfbf1;
+  }
 }
 
 @theme inline {
@@ -68,9 +111,7 @@ button:disabled {
     border: 1px solid var(--border-soft);
     background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(10px);
-    box-shadow:
-      0 1px 2px rgba(24, 24, 27, 0.04),
-      0 12px 30px rgba(24, 24, 27, 0.06);
+    box-shadow: var(--shadow-md);
   }
 
   .app-surface-muted {
@@ -81,11 +122,11 @@ button:disabled {
 
   .btn-primary {
     min-height: 2.75rem;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-sm);
     background: var(--brand);
     color: white;
     font-weight: 600;
-    box-shadow: 0 8px 18px rgba(15, 118, 110, 0.18);
+    box-shadow: var(--shadow-brand);
   }
 
   .btn-primary:hover {
@@ -95,7 +136,7 @@ button:disabled {
 
   .btn-secondary {
     min-height: 2.5rem;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-sm);
     border: 1px solid #d4d4d8;
     background: rgba(255, 255, 255, 0.92);
     font-weight: 600;
@@ -109,11 +150,11 @@ button:disabled {
 
   .btn-mode {
     min-height: 2.5rem;
-    border-radius: 0.75rem;
+    border-radius: var(--radius-md);
     border: 1px solid #d4d4d8;
     background: rgba(255, 255, 255, 0.94);
     font-weight: 600;
-    box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04);
+    box-shadow: var(--shadow-sm);
   }
 
   .btn-mode:hover {
@@ -126,7 +167,7 @@ button:disabled {
     border-color: var(--brand);
     background: var(--brand);
     color: white;
-    box-shadow: 0 8px 18px rgba(15, 118, 110, 0.18);
+    box-shadow: var(--shadow-brand);
   }
 
   .btn-primary:active,
@@ -142,18 +183,15 @@ button:disabled {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 0.25rem;
     border: 1px solid rgba(212, 212, 216, 0.9);
-    border-radius: 0.875rem;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 244, 245, 0.86));
+    border-radius: var(--radius-md);
+    background: rgba(250, 250, 249, 0.9);
     padding: 0.25rem;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.92),
-      0 1px 2px rgba(24, 24, 27, 0.04);
+    box-shadow: var(--shadow-sm);
   }
 
   .audio-speed-option {
     min-height: 2.25rem;
-    border-radius: 0.625rem;
+    border-radius: var(--radius-sm);
     padding: 0.25rem 0.5rem;
     color: #52525b;
     font-size: 0.875rem;
@@ -172,11 +210,9 @@ button:disabled {
   }
 
   .audio-speed-option-active {
-    background: #0f766e;
+    background: var(--brand);
     color: white;
-    box-shadow:
-      0 1px 2px rgba(15, 118, 110, 0.22),
-      0 8px 18px rgba(15, 118, 110, 0.2);
+    box-shadow: var(--shadow-brand);
   }
 
   .audio-speed-option-active:hover {
@@ -199,12 +235,10 @@ button:disabled {
   .study-card {
     position: relative;
     border: 1px solid var(--border-soft);
-    border-radius: 1rem;
+    border-radius: var(--radius-lg);
     background: rgba(255, 255, 255, 0.96);
     animation: study-card-enter 180ms ease-out both;
-    box-shadow:
-      0 1px 2px rgba(24, 24, 27, 0.04),
-      0 18px 44px rgba(24, 24, 27, 0.08);
+    box-shadow: var(--shadow-lg);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -217,12 +251,14 @@ button:disabled {
     content: "";
     position: absolute;
     inset: 0 0 auto;
-    height: 4px;
-    background: linear-gradient(90deg, #0f766e, #14b8a6, #38bdf8);
+    height: 3px;
+    /* Stay inside the brand family — the old teal-to-sky jump read as a third
+       accent colour competing with the rating buttons. */
+    background: linear-gradient(90deg, var(--brand), #14b8a6);
   }
 
   .study-progress {
-    border-radius: 0.875rem;
+    border-radius: var(--radius-md);
     border: 1px solid rgba(228, 228, 223, 0.8);
     background: rgba(250, 250, 249, 0.72);
     padding: 0.75rem;
@@ -247,7 +283,7 @@ button:disabled {
 
   .study-answer-panel {
     border: 1px solid rgba(228, 228, 223, 0.72);
-    border-radius: 0.875rem;
+    border-radius: var(--radius-md);
     background:
       linear-gradient(180deg, rgba(250, 250, 249, 0.92), rgba(244, 244, 242, 0.72));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
@@ -275,13 +311,11 @@ button:disabled {
 
   .rating-button {
     min-height: 3.7rem;
-    border-radius: 0.75rem;
+    border-radius: var(--radius-md);
     border: 1px solid #d4d4d8;
     background: rgba(255, 255, 255, 0.96);
     font-weight: 600;
-    box-shadow:
-      0 1px 2px rgba(24, 24, 27, 0.04),
-      0 8px 18px rgba(24, 24, 27, 0.05);
+    box-shadow: var(--shadow-sm);
     animation: rating-button-enter 260ms ease-out backwards;
   }
 
@@ -303,14 +337,12 @@ button:disabled {
 
   .rating-button:hover {
     transform: translateY(-1px);
-    box-shadow:
-      0 2px 4px rgba(24, 24, 27, 0.06),
-      0 12px 24px rgba(24, 24, 27, 0.08);
+    box-shadow: var(--shadow-md);
   }
 
   .rating-button:active {
     transform: translateY(0) scale(0.97);
-    box-shadow: 0 1px 2px rgba(24, 24, 27, 0.06);
+    box-shadow: var(--shadow-sm);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -378,17 +410,15 @@ button:disabled {
   .study-controls {
     margin-top: 1.25rem;
     border: 1px solid rgba(228, 228, 223, 0.92);
-    border-radius: 1rem;
+    border-radius: var(--radius-lg);
     background: rgba(255, 255, 255, 0.92);
     padding: 0.75rem;
-    box-shadow:
-      0 1px 2px rgba(24, 24, 27, 0.04),
-      0 14px 34px rgba(24, 24, 27, 0.08);
+    box-shadow: var(--shadow-lg);
   }
 
   .study-controls select {
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
   }
 
   .study-shortcuts-hint {
@@ -435,8 +465,145 @@ button:disabled {
       background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(14px);
       box-shadow:
-        0 1px 2px rgba(24, 24, 27, 0.05),
-        0 16px 40px rgba(24, 24, 27, 0.12);
+        var(--shadow-lg);
+    }
+  }
+
+  /* Dark theme. Surfaces, borders and tints are re-pointed here so every
+     component defined above follows automatically. */
+  @media (prefers-color-scheme: dark) {
+    .app-bg {
+      background:
+        linear-gradient(180deg, rgba(13, 148, 136, 0.09), transparent 390px),
+        var(--background);
+    }
+
+    .app-surface {
+      background: rgba(23, 26, 25, 0.92);
+    }
+
+    .app-surface-muted {
+      background: rgba(27, 31, 30, 0.9);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .btn-secondary,
+    .btn-mode {
+      border-color: #3f4442;
+      background: rgba(30, 34, 33, 0.94);
+      color: var(--foreground);
+    }
+
+    .btn-secondary:hover {
+      border-color: #5b615f;
+      background: #232726;
+    }
+
+    .btn-mode:hover {
+      border-color: #14b8a6;
+      background: rgba(20, 184, 166, 0.12);
+      color: #5eead4;
+    }
+
+    .study-card {
+      background: rgba(23, 26, 25, 0.96);
+    }
+
+    .study-progress {
+      border-color: rgba(63, 68, 66, 0.7);
+      background: rgba(27, 31, 30, 0.7);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .study-answer-panel {
+      border-color: rgba(63, 68, 66, 0.6);
+      background:
+        linear-gradient(180deg, rgba(27, 31, 30, 0.95), rgba(23, 26, 25, 0.8));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .rating-button {
+      border-color: #3f4442;
+      background: rgba(30, 34, 33, 0.96);
+    }
+
+    .rating-again {
+      border-color: rgba(248, 113, 113, 0.4);
+      background: rgba(127, 29, 29, 0.22);
+    }
+
+    .rating-again:hover {
+      border-color: #f87171;
+      background: rgba(127, 29, 29, 0.34);
+    }
+
+    .rating-hard {
+      border-color: rgba(251, 146, 60, 0.4);
+      background: rgba(124, 45, 18, 0.22);
+    }
+
+    .rating-hard:hover {
+      border-color: #fb923c;
+      background: rgba(124, 45, 18, 0.34);
+    }
+
+    .rating-good {
+      border-color: rgba(96, 165, 250, 0.4);
+      background: rgba(30, 58, 138, 0.22);
+    }
+
+    .rating-good:hover {
+      border-color: #60a5fa;
+      background: rgba(30, 58, 138, 0.34);
+    }
+
+    .rating-easy {
+      border-color: rgba(52, 211, 153, 0.4);
+      background: rgba(6, 78, 59, 0.22);
+    }
+
+    .rating-easy:hover {
+      border-color: #34d399;
+      background: rgba(6, 78, 59, 0.34);
+    }
+
+    .rating-kbd {
+      border-color: rgba(90, 96, 94, 0.7);
+      background: rgba(255, 255, 255, 0.05);
+      color: #a1a1aa;
+    }
+
+    .audio-speed-toggle {
+      border-color: rgba(63, 68, 66, 0.9);
+      background: rgba(27, 31, 30, 0.9);
+    }
+
+    .audio-speed-option {
+      color: #a1a1aa;
+    }
+
+    .audio-speed-option:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #5eead4;
+    }
+
+    .study-controls {
+      border-color: rgba(63, 68, 66, 0.9);
+      background: rgba(23, 26, 25, 0.94);
+    }
+
+    .study-shortcuts-hint {
+      color: #a1a1aa;
+    }
+
+    .study-shortcuts-hint a {
+      color: #5eead4;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) and (max-width: 640px) {
+    .study-controls {
+      background: rgba(23, 26, 25, 0.97);
     }
   }
 }

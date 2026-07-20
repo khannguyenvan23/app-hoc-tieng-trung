@@ -21,10 +21,34 @@ type RatingOption = {
 };
 
 const ratingOptions: RatingOption[] = [
-  { rating: "again", label: "Quên", tone: "rating-again", accent: "text-rose-600", shortcut: "1" },
-  { rating: "hard", label: "Khó", tone: "rating-hard", accent: "text-orange-600", shortcut: "2" },
-  { rating: "good", label: "Nhớ", tone: "rating-good", accent: "text-blue-600", shortcut: "3" },
-  { rating: "easy", label: "Dễ", tone: "rating-easy", accent: "text-emerald-600", shortcut: "4" },
+  {
+    rating: "again",
+    label: "Quên",
+    tone: "rating-again",
+    accent: "text-rose-600 dark:text-rose-300",
+    shortcut: "1",
+  },
+  {
+    rating: "hard",
+    label: "Khó",
+    tone: "rating-hard",
+    accent: "text-orange-600 dark:text-orange-300",
+    shortcut: "2",
+  },
+  {
+    rating: "good",
+    label: "Nhớ",
+    tone: "rating-good",
+    accent: "text-blue-600 dark:text-blue-300",
+    shortcut: "3",
+  },
+  {
+    rating: "easy",
+    label: "Dễ",
+    tone: "rating-easy",
+    accent: "text-emerald-600 dark:text-emerald-300",
+    shortcut: "4",
+  },
 ];
 
 function getRatingIntervalLabel(
@@ -73,7 +97,7 @@ export function RatingButtons({
               {option.shortcut}
             </kbd>
           </span>
-          <span className="mt-1.5 block text-left text-xs font-medium tabular-nums text-zinc-500">
+          <span className="mt-1.5 block text-left text-xs font-medium tabular-nums text-zinc-500 dark:text-zinc-400">
             {getRatingIntervalLabel(option.rating, review, settings)}
           </span>
         </button>

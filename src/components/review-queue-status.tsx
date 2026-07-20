@@ -10,30 +10,32 @@ type ReviewQueueStatusProps = {
   active?: ReviewQueueKey | null;
 };
 
+// Idle panels stay neutral so only the dot and the number carry colour; the
+// card in play is the one tinted. Three filled pastel panels next to four
+// tinted rating buttons made the screen read as noise.
 const queueItems = [
   {
     key: "new",
     label: "Mới",
-    numberClassName: "text-sky-700",
-    panelClassName: "border-sky-100 bg-sky-50",
-    activePanelClassName: "border-sky-400 bg-sky-100 ring-1 ring-sky-300",
+    numberClassName: "text-sky-700 dark:text-sky-300",
+    panelClassName: "border-zinc-200/70 bg-white dark:border-white/10 dark:bg-white/[0.03]",
+    activePanelClassName: "border-sky-300 bg-sky-50 dark:border-sky-500/60 dark:bg-sky-500/15",
     dotClassName: "bg-sky-500",
   },
   {
     key: "learning",
     label: "Đang ôn",
-    numberClassName: "text-red-700",
-    panelClassName: "border-red-100 bg-red-50",
-    activePanelClassName: "border-red-400 bg-red-100 ring-1 ring-red-300",
+    numberClassName: "text-red-700 dark:text-red-300",
+    panelClassName: "border-zinc-200/70 bg-white",
+    activePanelClassName: "border-red-300 bg-red-50 dark:border-red-500/60 dark:bg-red-500/15",
     dotClassName: "bg-red-500",
   },
   {
     key: "review",
     label: "Review",
-    numberClassName: "text-emerald-700",
-    panelClassName: "border-emerald-100 bg-emerald-50",
-    activePanelClassName:
-      "border-emerald-400 bg-emerald-100 ring-1 ring-emerald-300",
+    numberClassName: "text-emerald-700 dark:text-emerald-300",
+    panelClassName: "border-zinc-200/70 bg-white",
+    activePanelClassName: "border-emerald-300 bg-emerald-50 dark:border-emerald-500/60 dark:bg-emerald-500/15",
     dotClassName: "bg-emerald-500",
   },
 ] as const;
@@ -46,7 +48,7 @@ export function ReviewQueueStatus({
   return (
     <div
       aria-label={`${itemName} mới ${stats.new}, ${itemName} đang ôn ${stats.learning}, ${itemName} cần review ${stats.review}`}
-      className="mx-auto mt-3 w-full max-w-md rounded-2xl border border-white/80 bg-white/90 p-1 shadow-[0_10px_28px_rgba(24,24,27,0.08)] backdrop-blur"
+      className="mx-auto mt-3 w-full max-w-md rounded-[var(--radius-lg)] border border-zinc-200/70 bg-white/90 p-1 dark:border-white/10 dark:bg-white/[0.04] shadow-[var(--shadow-md)] backdrop-blur"
       role="status"
     >
       <div className="grid grid-cols-3 gap-1">
@@ -56,7 +58,7 @@ export function ReviewQueueStatus({
           return (
             <div
               aria-current={isActive ? "true" : undefined}
-              className={`min-w-0 rounded-xl border px-2 py-2 text-center transition-colors ${
+              className={`min-w-0 rounded-[var(--radius-md)] border px-2 py-2 text-center transition-colors ${
                 isActive ? item.activePanelClassName : item.panelClassName
               }`}
               key={item.key}
@@ -65,8 +67,8 @@ export function ReviewQueueStatus({
               <div
                 className={`flex items-center justify-center gap-1.5 text-[11px] uppercase tracking-wide ${
                   isActive
-                    ? "font-bold text-zinc-900"
-                    : "font-medium text-zinc-600"
+                    ? "font-bold text-zinc-900 dark:text-zinc-50"
+                    : "font-medium text-zinc-600 dark:text-zinc-400"
                 }`}
               >
                 <span
