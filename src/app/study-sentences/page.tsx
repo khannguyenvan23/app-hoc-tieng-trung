@@ -1529,7 +1529,9 @@ export default function StudySentencesPage() {
                   </div>
                 ) : (
                   <div>
-                    <div className="break-words text-2xl font-semibold leading-tight sm:text-3xl">
+                    {/* The Vietnamese is the prompt, not the material being
+                        learned — keep it a step below the Chinese sentence. */}
+                    <div className="break-words text-xl font-semibold leading-snug sm:text-2xl">
                       {card.sentence_vi}
                     </div>
                   </div>
