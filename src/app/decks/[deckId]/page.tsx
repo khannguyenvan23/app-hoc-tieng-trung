@@ -113,6 +113,15 @@ export default function DeckPage() {
   const [shareMessage, setShareMessage] = useState("");
   const { dismissToast, showToast, toasts } = useToast();
 
+  function rememberStudyDeck(kind: "word" | "sentence") {
+    const storageKey =
+      kind === "word"
+        ? "hanzi-study-deck-id"
+        : "hanzi-sentence-study-deck-id";
+
+    window.localStorage.setItem(storageKey, params.deckId);
+  }
+
   useEffect(() => {
     if (!configured) {
       return;
@@ -421,6 +430,8 @@ export default function DeckPage() {
                   <Link
                     className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                     href={`/study?deck=${params.deckId}`}
+                    onClick={() => rememberStudyDeck("word")}
+                    prefetch={false}
                   >
                     Ôn tập
                   </Link>
@@ -437,6 +448,8 @@ export default function DeckPage() {
                   <Link
                     className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                     href={`/study-sentences?deck=${params.deckId}`}
+                    onClick={() => rememberStudyDeck("sentence")}
+                    prefetch={false}
                   >
                     Luyện câu
                   </Link>
@@ -628,6 +641,8 @@ export default function DeckPage() {
                         <Link
                           className="text-sm font-medium text-teal-700 dark:text-teal-300 hover:text-teal-900"
                           href={`/study-sentences?deck=${params.deckId}`}
+                          onClick={() => rememberStudyDeck("sentence")}
+                          prefetch={false}
                         >
                           Vào luyện câu
                         </Link>
