@@ -67,6 +67,25 @@ function isWeakStudyRequest() {
   return new URLSearchParams(window.location.search).get("weak") === "1";
 }
 
+// Deck passed from the deck page (`/study?deck=<id>`). Read once on mount, then
+// stripped from the URL so changing decks later is not undone by a refresh.
+function takeRequestedDeckId() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  const requestedDeckId =
+    new URLSearchParams(window.location.search).get("deck") || "";
+
+  if (requestedDeckId) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("deck");
+    window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+  }
+
+  return requestedDeckId;
+}
+
 function startOfLocalDay(date: Date) {
   const nextDate = new Date(date);
   nextDate.setHours(0, 0, 0, 0);
@@ -165,6 +184,15 @@ export default function StudyPage() {
     if (isWeakStudyRequest()) {
       return allDecksValue;
     }
+
+    const requestedDeckId = takeRequestedDeckId();
+
+    if (requestedDeckId) {
+      // Remember it so coming back to /study later lands on the same deck.
+      window.localStorage.setItem("hanzi-study-deck-id", requestedDeckId);
+      return requestedDeckId;
+    }
+
     return window.localStorage.getItem("hanzi-study-deck-id") || allDecksValue;
   });
   const [reviews, setReviews] = useState<DueReview[]>([]);

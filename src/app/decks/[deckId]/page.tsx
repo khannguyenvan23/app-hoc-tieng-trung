@@ -417,18 +417,38 @@ export default function DeckPage() {
                 ) : null}
               </div>
               <div className="flex flex-wrap gap-2">
-                <Link
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
-                  href="/study"
-                >
-                  Ôn tập
-                </Link>
-                <Link
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
-                  href="/study-sentences"
-                >
-                  Luyện câu
-                </Link>
+                {cards.length > 0 ? (
+                  <Link
+                    className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
+                    href={`/study?deck=${params.deckId}`}
+                  >
+                    Ôn tập
+                  </Link>
+                ) : (
+                  <span
+                    aria-disabled="true"
+                    className="inline-flex min-h-10 cursor-not-allowed items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium opacity-50"
+                    title="Bộ này chưa có thẻ từ vựng"
+                  >
+                    Ôn tập
+                  </span>
+                )}
+                {sentenceCards.length > 0 ? (
+                  <Link
+                    className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
+                    href={`/study-sentences?deck=${params.deckId}`}
+                  >
+                    Luyện câu
+                  </Link>
+                ) : (
+                  <span
+                    aria-disabled="true"
+                    className="inline-flex min-h-10 cursor-not-allowed items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium opacity-50"
+                    title="Bộ này chưa có câu luyện tập"
+                  >
+                    Luyện câu
+                  </span>
+                )}
                 <button
                   className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
                   disabled={shareLoading}
@@ -607,7 +627,7 @@ export default function DeckPage() {
                         <h2 className="text-lg font-semibold">Câu luyện tập</h2>
                         <Link
                           className="text-sm font-medium text-teal-700 dark:text-teal-300 hover:text-teal-900"
-                          href="/study-sentences"
+                          href={`/study-sentences?deck=${params.deckId}`}
                         >
                           Vào luyện câu
                         </Link>
