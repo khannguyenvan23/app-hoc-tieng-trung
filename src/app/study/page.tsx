@@ -246,11 +246,35 @@ export default function StudyPage() {
   const [creditNotice, setCreditNotice] = useState("");
   const reloadReviewsRef = useRef<() => void>(() => {});
 
-  // The param has been applied to state above; drop it from the URL now so a
-  // later manual deck change survives a refresh.
+  // Re-apply the requested deck once the deck list has loaded. The state
+  // initializer already set it, but the validation that runs after the decks
+  // arrive can overwrite it, and effect ordering is not guaranteed. Doing it
+  // here — through the same path the dropdown uses — makes the deep link win
+  // regardless of ordering. Only then is the param dropped from the URL.
+  const requestedDeckIdRef = useRef(getRequestedDeckId());
+
   useEffect(() => {
+    if (!decksLoaded) {
+      return;
+    }
+
+    const requestedDeckId = requestedDeckIdRef.current;
+
+    if (!requestedDeckId) {
+      return;
+    }
+
+    requestedDeckIdRef.current = "";
+
+    if (
+      requestedDeckId !== selectedDeckId &&
+      decks.some((deck) => deck.id === requestedDeckId)
+    ) {
+      changeDeck(requestedDeckId);
+    }
+
     clearRequestedDeckParam();
-  }, []);
+  }, [decks, decksLoaded, selectedDeckId]);
 
   const cacheAudio = useCallback(
     (audioUrl: string | null | undefined) => {
