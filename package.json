@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test:srs": "tsx --test test/srs-logic.test.ts test/sentence-diff.test.ts test/pinyin-align.test.ts",
     "sim:srs": "tsx scripts/simulate-srs.ts",
-    "audio:templates": "tsx scripts/prepare-template-audio.ts"
+    "audio:templates": "tsx scripts/prepare-template-audio.ts",
+    "examples:hsk6": "tsx scripts/generate-hsk6-examples.ts"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.63.0",
