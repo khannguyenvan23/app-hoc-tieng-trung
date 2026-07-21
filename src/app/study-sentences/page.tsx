@@ -91,23 +91,32 @@ function isWeakStudyRequest() {
   return new URLSearchParams(window.location.search).get("weak") === "1";
 }
 
-// Deck passed from the deck page (`/study?deck=<id>`). Read once on mount, then
-// stripped from the URL so changing decks later is not undone by a refresh.
-function takeRequestedDeckId() {
+// Deck handed over by the deck page (`/study?deck=<id>`).
+// Pure on purpose: a useState initializer runs twice under StrictMode, so this
+// must not touch the URL. Stripping the param happens in an effect instead.
+function getRequestedDeckId() {
   if (typeof window === "undefined") {
     return "";
   }
 
-  const requestedDeckId =
-    new URLSearchParams(window.location.search).get("deck") || "";
+  return new URLSearchParams(window.location.search).get("deck") || "";
+}
 
-  if (requestedDeckId) {
-    const url = new URL(window.location.href);
-    url.searchParams.delete("deck");
-    window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+// Drop `?deck=` once it has been applied, so switching decks by hand is not
+// undone the next time the page is refreshed.
+function clearRequestedDeckParam() {
+  if (typeof window === "undefined") {
+    return;
   }
 
-  return requestedDeckId;
+  const url = new URL(window.location.href);
+
+  if (!url.searchParams.has("deck")) {
+    return;
+  }
+
+  url.searchParams.delete("deck");
+  window.history.replaceState({}, "", url.pathname + url.search + url.hash);
 }
 
 function startOfLocalDay(date: Date) {
@@ -284,7 +293,7 @@ export default function StudySentencesPage() {
       return allDecksValue;
     }
 
-    const requestedDeckId = takeRequestedDeckId();
+    const requestedDeckId = getRequestedDeckId();
 
     if (requestedDeckId) {
       // Remember it so coming back to /study-sentences later lands on the same deck.
@@ -577,6 +586,12 @@ export default function StudySentencesPage() {
     setSentenceDiff(null);
     setLoading(false);
   }
+
+  // The param has been applied to state above; drop it from the URL now so a
+  // later manual deck change survives a refresh.
+  useEffect(() => {
+    clearRequestedDeckParam();
+  }, []);
 
   useEffect(() => {
     reloadReviewsRef.current = () => {

@@ -109,7 +109,9 @@ function validateBatch(words: SourceWord[], raw: z.infer<typeof batchSchema>) {
     const examplePinyin = item.example_pinyin.trim();
     const exampleVi = item.example_vi.trim();
 
-    if (!exampleCn.includes(word.chinese)) {
+    const exampleTarget = word.chinese.replace(/（[^）]+）/g, "");
+
+    if (!exampleCn.includes(exampleTarget)) {
       throw new Error(`Example does not contain target word ${word.chinese}: ${exampleCn}`);
     }
 

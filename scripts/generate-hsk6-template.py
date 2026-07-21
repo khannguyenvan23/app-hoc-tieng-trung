@@ -80,6 +80,10 @@ def extract_rows(pdf_path: Path) -> list[tuple[int, str, str, str]]:
                         if float(word["x0"]) >= 338
                     ]
                 )
+                if chinese == "喂（动词）":
+                    chinese = "喂"
+                    pinyin = "wèi"
+
                 rows.append((int(str(anchor["text"])), chinese, pinyin, meaning))
 
     rows.sort(key=lambda row: row[0])
