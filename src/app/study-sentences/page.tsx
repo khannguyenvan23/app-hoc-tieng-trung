@@ -1521,11 +1521,7 @@ export default function StudySentencesPage() {
                           : "Phát lại audio"}
                       </button>
                       <button
-                        className={`rounded-md border px-3 py-1.5 text-sm font-medium ${
-                          showDictationMeaning
-                            ? "border-teal-700 bg-teal-50 dark:bg-teal-500/15 text-teal-800 dark:text-teal-300"
-                            : "border-zinc-300 dark:border-white/15 hover:bg-zinc-100 dark:hover:bg-white/10"
-                        }`}
+                        className={`rounded-md border px-3 py-1.5 text-sm font-medium ${ showDictationMeaning ? "border-teal-700 bg-teal-50 dark:bg-teal-500/15 text-teal-800 dark:text-teal-300" : "border-zinc-300 dark:border-white/15 hover:bg-zinc-100 dark:hover:bg-white/10" }`}
                         onClick={toggleDictationMeaning}
                         type="button"
                       >
@@ -1565,7 +1561,7 @@ export default function StudySentencesPage() {
                           ? "Gõ lại câu tiếng Trung vừa nghe"
                           : "Gõ câu tiếng Trung"}
                         <textarea
-                          className="mt-2 h-20 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-3 py-2 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-24 sm:text-2xl"
+                          className="mt-2 h-20 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-3 py-2 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-24 sm:text-2xl"
                           ref={sentenceAnswerRef}
                           onChange={(event) => {
                             setSentenceAnswer(event.target.value);
@@ -1763,7 +1759,7 @@ export default function StudySentencesPage() {
             <div className="grid min-w-0 w-full grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <select
                 aria-label="Chọn bộ thẻ luyện câu"
-                className="col-span-3 h-10 w-full rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
+                className="col-span-3 h-10 w-full rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
                 onChange={(event) => changeDeck(event.target.value)}
                 value={selectedDeckId}
               >
@@ -1776,22 +1772,14 @@ export default function StudySentencesPage() {
               </select>
               <div className="audio-speed-toggle col-span-3 sm:w-44 sm:shrink-0">
                 <button
-                  className={`audio-speed-option ${
-                    audioSpeed === "normal"
-                      ? "audio-speed-option-active"
-                      : ""
-                  }`}
+                  className={`audio-speed-option ${ audioSpeed === "normal" ? "audio-speed-option-active" : "" }`}
                   onClick={() => changeAudioSpeed("normal")}
                   type="button"
                 >
                   Bình thường
                 </button>
                 <button
-                  className={`audio-speed-option ${
-                    audioSpeed === "slow"
-                      ? "audio-speed-option-active"
-                      : ""
-                  }`}
+                  className={`audio-speed-option ${ audioSpeed === "slow" ? "audio-speed-option-active" : "" }`}
                   onClick={() => changeAudioSpeed("slow")}
                   type="button"
                 >
@@ -1800,11 +1788,7 @@ export default function StudySentencesPage() {
               </div>
               <button
                 aria-pressed={writingMode}
-                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${
-                  writingMode
-                    ? "btn-mode-active"
-                    : ""
-                }`}
+                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${ writingMode ? "btn-mode-active" : "" }`}
                 onClick={toggleWritingMode}
                 type="button"
               >
@@ -1812,11 +1796,7 @@ export default function StudySentencesPage() {
               </button>
               <button
                 aria-pressed={dictationMode}
-                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${
-                  dictationMode
-                    ? "btn-mode-active"
-                    : ""
-                }`}
+                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${ dictationMode ? "btn-mode-active" : "" }`}
                 onClick={toggleDictationMode}
                 type="button"
               >
@@ -1824,11 +1804,7 @@ export default function StudySentencesPage() {
               </button>
               <button
                 aria-pressed={showPinyinHint}
-                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${
-                  showPinyinHint
-                    ? "btn-mode-active"
-                    : ""
-                }`}
+                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${ showPinyinHint ? "btn-mode-active" : "" }`}
                 onClick={togglePinyinHint}
                 type="button"
               >

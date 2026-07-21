@@ -117,7 +117,7 @@ export function AdminAnalytics() {
     : stages;
 
   return (
-    <section className="mb-8 rounded-lg border border-teal-200 dark:border-teal-500/40 bg-white dark:bg-[#171a19] dark:bg-white/5 p-4 shadow-sm sm:p-5">
+    <section className="mb-8 rounded-lg border border-teal-200 dark:border-teal-500/40 bg-white dark:bg-[#171a19] p-4 shadow-sm sm:p-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase text-teal-800 dark:text-teal-300">Dành cho quản trị</p>
@@ -129,7 +129,7 @@ export function AdminAnalytics() {
         <label className="text-sm font-medium">
           Khoảng thời gian
           <select
-            className="ml-2 min-h-10 rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-3 outline-none focus:border-teal-700"
+            className="ml-2 min-h-10 rounded-md border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-3 outline-none focus:border-teal-700"
             onChange={(event) => {
               setError("");
               setLoading(true);

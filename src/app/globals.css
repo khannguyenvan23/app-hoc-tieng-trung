@@ -5,6 +5,11 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 :root {
+  /* Native widgets (the <select> popup, scrollbars, date pickers) are painted
+     by the browser, which follows color-scheme — not our data-theme attribute.
+     Pin it to the resolved theme or the deck dropdown opens white in dark mode. */
+  color-scheme: light;
+
   --background: #f6f8f7;
   --foreground: #18181b;
   --surface: #ffffff;
@@ -32,6 +37,8 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
+
     --background: #101312;
     --foreground: #e8e8e6;
     --surface: #171a19;
@@ -54,6 +61,13 @@
 [data-theme="dark"] ::selection {
   background: #134e4a;
   color: #ccfbf1;
+}
+
+/* Belt and braces: some browsers still paint the option list with the page
+   colours instead of following color-scheme. */
+[data-theme="dark"] option {
+  background-color: #1b1f1e;
+  color: #e8e8e6;
 }
 
 @theme inline {

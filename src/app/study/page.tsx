@@ -1249,7 +1249,7 @@ export default function StudyPage() {
                       <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                         Gõ chữ Hán bạn đoán
                         <input
-                          className="mt-2 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-3 py-3 text-center text-2xl outline-none focus:border-teal-700 sm:text-3xl"
+                          className="mt-2 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-3 py-3 text-center text-2xl outline-none focus:border-teal-700 sm:text-3xl"
                           onChange={(event) => {
                             setWritingAnswer(event.target.value);
                             setWritingResult("");
@@ -1411,7 +1411,7 @@ export default function StudyPage() {
             <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <select
                 aria-label="Chọn bộ thẻ ôn từ"
-                className="col-span-2 h-10 w-full rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
+                className="col-span-2 h-10 w-full rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-3 text-sm outline-none transition focus:border-teal-700 sm:w-48 sm:shrink-0"
                 onChange={(event) => changeDeck(event.target.value)}
                 value={selectedDeckId}
               >
@@ -1424,22 +1424,14 @@ export default function StudyPage() {
               </select>
               <div className="audio-speed-toggle col-span-2 sm:w-44 sm:shrink-0">
                 <button
-                  className={`audio-speed-option ${
-                    audioSpeed === "normal"
-                      ? "audio-speed-option-active"
-                      : ""
-                  }`}
+                  className={`audio-speed-option ${ audioSpeed === "normal" ? "audio-speed-option-active" : "" }`}
                   onClick={() => changeAudioSpeed("normal")}
                   type="button"
                 >
                   Bình thường
                 </button>
                 <button
-                  className={`audio-speed-option ${
-                    audioSpeed === "slow"
-                      ? "audio-speed-option-active"
-                      : ""
-                  }`}
+                  className={`audio-speed-option ${ audioSpeed === "slow" ? "audio-speed-option-active" : "" }`}
                   onClick={() => changeAudioSpeed("slow")}
                   type="button"
                 >
@@ -1448,11 +1440,7 @@ export default function StudyPage() {
               </div>
               <button
                 aria-pressed={writingMode}
-                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${
-                  writingMode
-                    ? "btn-mode-active"
-                    : ""
-                }`}
+                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${ writingMode ? "btn-mode-active" : "" }`}
                 onClick={toggleWritingMode}
                 type="button"
               >
@@ -1460,11 +1448,7 @@ export default function StudyPage() {
               </button>
               <button
                 aria-pressed={showPinyinHint}
-                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${
-                  showPinyinHint
-                    ? "btn-mode-active"
-                    : ""
-                }`}
+                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${ showPinyinHint ? "btn-mode-active" : "" }`}
                 onClick={togglePinyinHint}
                 type="button"
               >

@@ -550,11 +550,7 @@ export default function DashboardPage() {
                   được ôn bình thường.
                 </p>
                 <button
-                  className={`mt-4 min-h-10 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-60 ${
-                    starterPlanReady
-                      ? "border border-teal-700 bg-teal-50 dark:bg-teal-500/15 text-teal-800 dark:text-teal-300"
-                      : "bg-teal-700 text-white hover:bg-teal-800"
-                  }`}
+                  className={`mt-4 min-h-10 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-60 ${ starterPlanReady ? "border border-teal-700 bg-teal-50 dark:bg-teal-500/15 text-teal-800 dark:text-teal-300" : "bg-teal-700 text-white hover:bg-teal-800" }`}
                   disabled={savingSettings || starterPlanReady}
                   onClick={applyStarterStudyPlan}
                   type="button"
@@ -586,11 +582,7 @@ export default function DashboardPage() {
 
             {onboardingMessage ? (
               <p
-                className={`mt-4 text-sm ${
-                  onboardingMessage.startsWith("Đã")
-                    ? "text-teal-700 dark:text-teal-300"
-                    : "text-red-700 dark:text-red-300"
-                }`}
+                className={`mt-4 text-sm ${ onboardingMessage.startsWith("Đã") ? "text-teal-700 dark:text-teal-300" : "text-red-700 dark:text-red-300" }`}
               >
                 {onboardingMessage}
               </p>
@@ -621,7 +613,7 @@ export default function DashboardPage() {
                 {hasZaloGroupUrl ? "Vào nhóm Zalo" : "Nhắn Zalo nhận link"}
               </a>
               <Link
-                className="inline-flex min-h-10 items-center rounded-md border border-teal-200 dark:border-teal-500/40 bg-white dark:bg-[#171a19] dark:bg-white/5 px-4 py-2 text-sm font-semibold text-teal-800 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-500/25"
+                className="inline-flex min-h-10 items-center rounded-md border border-teal-200 dark:border-teal-500/40 bg-white dark:bg-[#171a19] px-4 py-2 text-sm font-semibold text-teal-800 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-500/25"
                 href="/community"
               >
                 Xem giới thiệu
@@ -1000,11 +992,7 @@ export default function DashboardPage() {
                     </p>
                   ) : null}
                   <button
-                    className={`mt-4 min-h-10 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-70 ${
-                      alreadyAdded
-                        ? "border border-zinc-300 dark:border-white/15 bg-zinc-100 dark:bg-white/10 text-zinc-600 dark:text-zinc-400"
-                        : "bg-teal-700 text-white hover:bg-teal-800"
-                    }`}
+                    className={`mt-4 min-h-10 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-70 ${ alreadyAdded ? "border border-zinc-300 dark:border-white/15 bg-zinc-100 dark:bg-white/10 text-zinc-600 dark:text-zinc-400" : "bg-teal-700 text-white hover:bg-teal-800" }`}
                     disabled={Boolean(copyingTemplateId) || alreadyAdded}
                     onClick={() => copyTemplate(template.id)}
                     type="button"

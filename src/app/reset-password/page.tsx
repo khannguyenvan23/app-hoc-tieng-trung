@@ -225,9 +225,7 @@ export default function ResetPasswordPage() {
 
         {message ? (
           <p
-            className={`mt-4 text-sm ${
-              isError ? "text-red-700 dark:text-red-300" : "text-teal-700 dark:text-teal-300"
-            }`}
+            className={`mt-4 text-sm ${ isError ? "text-red-700 dark:text-red-300" : "text-teal-700 dark:text-teal-300" }`}
           >
             {message}
           </p>

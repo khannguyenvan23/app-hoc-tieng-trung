@@ -147,18 +147,14 @@ export default function LoginPage() {
 
         <div className="mt-6 grid grid-cols-2 rounded-md border border-zinc-200 dark:border-white/10 p-1 text-sm">
           <button
-            className={`rounded px-3 py-2 ${
-              mode === "login" ? "bg-teal-700 text-white" : "hover:bg-zinc-100 dark:hover:bg-white/10"
-            }`}
+            className={`rounded px-3 py-2 ${ mode === "login" ? "bg-teal-700 text-white" : "hover:bg-zinc-100 dark:hover:bg-white/10" }`}
             onClick={() => changeMode("login")}
             type="button"
           >
             Đăng nhập
           </button>
           <button
-            className={`rounded px-3 py-2 ${
-              mode === "signup" ? "bg-teal-700 text-white" : "hover:bg-zinc-100 dark:hover:bg-white/10"
-            }`}
+            className={`rounded px-3 py-2 ${ mode === "signup" ? "bg-teal-700 text-white" : "hover:bg-zinc-100 dark:hover:bg-white/10" }`}
             onClick={() => changeMode("signup")}
             type="button"
           >
@@ -223,9 +219,7 @@ export default function LoginPage() {
 
         {message ? (
           <p
-            className={`mt-4 text-sm ${
-              isError ? "text-red-700 dark:text-red-300" : "text-teal-700 dark:text-teal-300"
-            }`}
+            className={`mt-4 text-sm ${ isError ? "text-red-700 dark:text-red-300" : "text-teal-700 dark:text-teal-300" }`}
           >
             {message}
           </p>

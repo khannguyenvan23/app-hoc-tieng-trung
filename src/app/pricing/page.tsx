@@ -169,11 +169,7 @@ function PricingContent({
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {creditPlans.map((plan) => (
             <article
-              className={`rounded-lg border bg-white dark:bg-[#171a19] p-5 shadow-sm ${
-                plan.highlight
-                  ? "border-teal-700 ring-2 ring-teal-100"
-                  : "border-zinc-200 dark:border-white/10"
-              }`}
+              className={`rounded-lg border bg-white dark:bg-[#171a19] p-5 shadow-sm ${ plan.highlight ? "border-teal-700 ring-2 ring-teal-100" : "border-zinc-200 dark:border-white/10" }`}
               key={plan.name}
             >
               {plan.highlight ? (
@@ -191,11 +187,7 @@ function PricingContent({
               </p>
               {phoneDigits ? (
                 <a
-                  className={`mt-5 inline-flex min-h-10 w-full items-center justify-center rounded-md px-4 py-2 text-sm font-medium ${
-                    plan.highlight
-                      ? "bg-teal-700 text-white hover:bg-teal-800"
-                      : "border border-zinc-300 dark:border-white/15 hover:bg-zinc-50 dark:hover:bg-white/5"
-                  }`}
+                  className={`mt-5 inline-flex min-h-10 w-full items-center justify-center rounded-md px-4 py-2 text-sm font-medium ${ plan.highlight ? "bg-teal-700 text-white hover:bg-teal-800" : "border border-zinc-300 dark:border-white/15 hover:bg-zinc-50 dark:hover:bg-white/5" }`}
                   href={`tel:${phoneDigits}`}
                 >
                   Liên hệ nạp credit

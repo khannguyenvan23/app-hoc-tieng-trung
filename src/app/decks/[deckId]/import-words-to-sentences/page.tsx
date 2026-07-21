@@ -116,11 +116,7 @@ export default function ImportWordsToSentencesPage() {
 
           {message ? (
             <p
-              className={`mt-4 text-sm ${
-                messageType === "success"
-                  ? "text-teal-700 dark:text-teal-300"
-                  : "text-red-700 dark:text-red-300"
-              }`}
+              className={`mt-4 text-sm ${ messageType === "success" ? "text-teal-700 dark:text-teal-300" : "text-red-700 dark:text-red-300" }`}
             >
               {message}
             </p>

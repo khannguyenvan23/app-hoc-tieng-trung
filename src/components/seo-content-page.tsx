@@ -35,7 +35,7 @@ export function SeoContentPage({ page }: { page: SeoPageContent }) {
         }}
       />
 
-      <header className="border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5">
+      <header className="border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
           <Link className="text-lg font-semibold" href="/">
             {siteConfig.name}
@@ -69,7 +69,7 @@ export function SeoContentPage({ page }: { page: SeoPageContent }) {
         </div>
       </header>
 
-      <section className="border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5">
+      <section className="border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
         <div className="mx-auto max-w-5xl px-5 py-14 sm:py-16">
           <p className="text-sm font-semibold uppercase text-teal-700 dark:text-teal-300">
             {page.eyebrow}
@@ -105,7 +105,7 @@ export function SeoContentPage({ page }: { page: SeoPageContent }) {
             ))}
           </div>
 
-          <div className="mt-10 overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5 shadow-sm">
+          <div className="mt-10 overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] shadow-sm">
             <Image
               alt={page.heroImageAlt}
               className="h-auto w-full"
@@ -123,7 +123,7 @@ export function SeoContentPage({ page }: { page: SeoPageContent }) {
           <div className="grid gap-4 md:grid-cols-3">
             {page.sections.map((section) => (
               <article
-                className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5 p-5 shadow-sm"
+                className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-5 shadow-sm"
                 key={section.title}
               >
                 <h2 className="text-lg font-semibold">{section.title}</h2>
@@ -136,7 +136,7 @@ export function SeoContentPage({ page }: { page: SeoPageContent }) {
         </div>
       </section>
 
-      <section className="border-y border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5 py-12">
+      <section className="border-y border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] py-12">
         <div className="mx-auto grid max-w-5xl gap-8 px-5 md:grid-cols-[0.8fr_1.2fr]">
           <div>
             <h2 className="text-3xl font-semibold">{page.stepsTitle}</h2>
@@ -169,7 +169,7 @@ export function SeoContentPage({ page }: { page: SeoPageContent }) {
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {page.faq.map((item) => (
               <article
-                className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5 p-5 shadow-sm"
+                className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-5 shadow-sm"
                 key={item.question}
               >
                 <h3 className="font-semibold">{item.question}</h3>
@@ -182,7 +182,7 @@ export function SeoContentPage({ page }: { page: SeoPageContent }) {
         </div>
       </section>
 
-      <section className="border-y border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5 py-12">
+      <section className="border-y border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] py-12">
         <div className="mx-auto max-w-5xl px-5">
           <h2 className="text-2xl font-semibold">Chủ đề liên quan</h2>
           <div className="mt-5 flex flex-wrap gap-3">
@@ -217,7 +217,7 @@ export function SeoContentPage({ page }: { page: SeoPageContent }) {
         </div>
       </section>
 
-      <footer className="border-t border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5">
+      <footer className="border-t border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-6 text-sm text-zinc-600 dark:text-zinc-400">
           <div>© 2026 {siteConfig.name}</div>
           <nav className="flex flex-wrap gap-4">

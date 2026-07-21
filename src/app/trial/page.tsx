@@ -172,11 +172,7 @@ export default function TrialPage() {
                 </span>
                 <button
                   aria-pressed={showPinyin}
-                  className={`rounded-md border px-3 py-1.5 font-medium ${
-                    showPinyin
-                      ? "border-teal-700 bg-teal-50 dark:bg-teal-500/15 text-teal-800 dark:text-teal-300"
-                      : "border-zinc-300 dark:border-white/15 hover:bg-zinc-100 dark:hover:bg-white/10"
-                  }`}
+                  className={`rounded-md border px-3 py-1.5 font-medium ${ showPinyin ? "border-teal-700 bg-teal-50 dark:bg-teal-500/15 text-teal-800 dark:text-teal-300" : "border-zinc-300 dark:border-white/15 hover:bg-zinc-100 dark:hover:bg-white/10" }`}
                   onClick={() => setShowPinyin(!showPinyin)}
                   type="button"
                 >

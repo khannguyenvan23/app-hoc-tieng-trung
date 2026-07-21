@@ -410,11 +410,7 @@ export default function DeckPage() {
                 </p>
                 {nameMessage ? (
                   <p
-                    className={`mt-2 text-sm ${
-                      nameMessage.startsWith("Đã")
-                        ? "text-teal-700 dark:text-teal-300"
-                        : "text-red-700 dark:text-red-300"
-                    }`}
+                    className={`mt-2 text-sm ${ nameMessage.startsWith("Đã") ? "text-teal-700 dark:text-teal-300" : "text-red-700 dark:text-red-300" }`}
                   >
                     {nameMessage}
                   </p>
@@ -667,11 +663,7 @@ export default function DeckPage() {
 
               {actionMessage ? (
                 <p
-                  className={`mt-3 text-sm ${
-                    actionMessage.startsWith("Đã")
-                      ? "text-teal-800 dark:text-teal-300"
-                      : "text-red-700 dark:text-red-300"
-                  }`}
+                  className={`mt-3 text-sm ${ actionMessage.startsWith("Đã") ? "text-teal-800 dark:text-teal-300" : "text-red-700 dark:text-red-300" }`}
                 >
                   {actionMessage}
                 </p>

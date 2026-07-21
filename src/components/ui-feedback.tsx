@@ -137,12 +137,12 @@ export function ConfirmDialog({
       className="fixed inset-0 z-[80] grid place-items-center bg-zinc-950/35 px-4 py-6 backdrop-blur-sm"
       role="dialog"
     >
-      <div className="w-full max-w-md rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5 p-5 shadow-2xl">
+      <div className="w-full max-w-md rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-5 shadow-2xl">
         <h2 className="text-lg font-semibold">{title}</h2>
         <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{body}</p>
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
-            className="min-h-10 rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] dark:bg-white/5 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
+            className="min-h-10 rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
             disabled={loading}
             onClick={onCancel}
             type="button"
@@ -150,11 +150,7 @@ export function ConfirmDialog({
             {cancelLabel}
           </button>
           <button
-            className={`min-h-10 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60 ${
-              destructive
-                ? "bg-red-700 hover:bg-red-800"
-                : "bg-teal-700 hover:bg-teal-800"
-            }`}
+            className={`min-h-10 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60 ${ destructive ? "bg-red-700 hover:bg-red-800" : "bg-teal-700 hover:bg-teal-800" }`}
             disabled={loading}
             onClick={onConfirm}
             type="button"

@@ -14,7 +14,7 @@ export function ZaloFloatingContact() {
         <span>Zalo CSKH</span>
         
       </summary>
-      <div className="absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5 p-2 text-sm shadow-xl">
+      <div className="absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-2 text-sm shadow-xl">
         <div className="px-2 pb-2 pt-1 font-semibold text-zinc-900 dark:text-zinc-100">
           Liên hệ Zalo
         </div>

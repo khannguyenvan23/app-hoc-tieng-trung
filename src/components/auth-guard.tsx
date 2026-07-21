@@ -29,7 +29,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!configured) {
     return (
       <div className="min-h-screen bg-stone-50 dark:bg-white/5 px-4 py-10 text-zinc-950 dark:text-zinc-50">
-        <div className="mx-auto max-w-2xl rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] dark:bg-white/5 p-6 shadow-sm">
+        <div className="mx-auto max-w-2xl rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-6 shadow-sm">
           <p className="text-sm font-medium text-red-700 dark:text-red-300">
             Supabase is not configured
           </p>

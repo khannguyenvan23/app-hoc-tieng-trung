@@ -60,18 +60,12 @@ export function ReviewQueueStatus({
           return (
             <div
               aria-current={isActive ? "true" : undefined}
-              className={`min-w-0 rounded-[var(--radius-md)] border px-2 py-2 text-center transition-colors ${
-                isActive ? item.activePanelClassName : item.panelClassName
-              }`}
+              className={`min-w-0 rounded-[var(--radius-md)] border px-2 py-2 text-center transition-colors ${ isActive ? item.activePanelClassName : item.panelClassName }`}
               key={item.key}
               title={`${item.label}: ${stats[item.key]}`}
             >
               <div
-                className={`flex items-center justify-center gap-1.5 text-[11px] uppercase tracking-wide ${
-                  isActive
-                    ? "font-bold text-zinc-900 dark:text-zinc-100 dark:text-zinc-50"
-                    : "font-medium text-zinc-600 dark:text-zinc-400"
-                }`}
+                className={`flex items-center justify-center gap-1.5 text-[11px] uppercase tracking-wide ${ isActive ? "font-bold text-zinc-900 dark:text-zinc-100 dark:text-zinc-50" : "font-medium text-zinc-600 dark:text-zinc-400" }`}
               >
                 <span
                   aria-hidden="true"
@@ -80,9 +74,7 @@ export function ReviewQueueStatus({
                 <span className="truncate">{item.label}</span>
               </div>
               <div
-                className={`mt-0.5 leading-none ${item.numberClassName} ${
-                  isActive ? "text-xl font-bold" : "text-lg font-semibold"
-                }`}
+                className={`mt-0.5 leading-none ${item.numberClassName} ${ isActive ? "text-xl font-bold" : "text-lg font-semibold" }`}
               >
                 {stats[item.key]}
               </div>

@@ -13,19 +13,42 @@ Thu tu de hieu nhanh nhat:
    - Ham quan trong nhat: `getNextReview`.
    - File nay tinh lan on tiep theo: `next_review_at`, `interval_days`, `ease_factor`.
 
-3. `src/lib/study-queue.ts`
+3. Chay `npm run sim:srs`
+   - `scripts/simulate-srs.ts` mo phong 1 nguoi hoc qua 365 ngay.
+   - Xem thuat toan "chay that": retention, tai on moi ngay, phan bo interval.
+   - Nhanh hon nhieu so voi doc code roi tu tuong tuong.
+
+4. `src/lib/study-queue.ts`
    - File nay xep hang hoc: lay bao nhieu the moi, the nao den han, the nao dang cho vai phut.
 
-4. `src/app/study/page.tsx`
+5. `src/lib/due-reviews.ts`
+   - Lay du lieu tu Supabase cho hang hoc. Doc de hieu vi sao phai tach 2 truy van.
+
+6. `src/app/study/page.tsx`
    - Man on tu vung.
 
-5. `src/app/study-sentences/page.tsx`
+7. `src/app/study-sentences/page.tsx`
    - Man luyen cau.
 
-6. `src/app/api/review/route.ts` va `src/app/api/review-sentence/route.ts`
+8. `src/app/api/review/route.ts` va `src/app/api/review-sentence/route.ts`
    - API luu ket qua khi bam Quen/Kho/Nho/De.
 
-Neu chi muon sua bug SRS, thuong chi can doc 4 file: `review.ts`, `study-queue.ts`, `study/page.tsx`, `study-sentences/page.tsx`.
+Neu chi muon sua bug SRS, thuong chi can doc 5 file: `review.ts`, `study-queue.ts`, `due-reviews.ts`, `study/page.tsx`, `study-sentences/page.tsx`.
+
+## Mo hinh du lieu cot loi
+
+Nam duoc doan nay thi phan con lai de hieu han.
+
+Moi hang trong `reviews` / `sentence_reviews` la trang thai hoc cua **mot the** voi **mot user**, xoay quanh 4 truong:
+
+| Truong | Y nghia |
+| --- | --- |
+| `next_review_at` | Khi nao the den han. Quyet dinh the co hien ra khong. |
+| `learning_step` | `-1` = the da tot nghiep. `>= 0` = dang o buoc hoc / hoc lai thu may. |
+| `interval_days` | Khoang cach hien tai. Khi dang relearning thi giu gia tri se khoi phuc sau khi hoc lai xong. |
+| `ease_factor` | Do de. Quyet dinh toc do gian interval. |
+
+Tat ca phan con lai cua app chi la **doc**, **hien thi**, hoac **cap nhat** 4 truong nay.
 
 ## Cau truc lon
 
@@ -116,6 +139,17 @@ Day la logic dung chung. Khi bug nam o "cach tinh", hay xem o day truoc.
 - `review.ts`
   - Bo nao SRS.
   - `getNextReview(rating, state, now, settings)` tinh lan hoc tiep theo.
+  - `fuzzInterval()` / `applyReviewFuzz()` rai ngau nhien interval cho the da tot nghiep.
+
+- `due-reviews.ts`
+  - Lay the den han tu Supabase cho 2 man hoc.
+  - `fetchDueReviewRows()` chay **2 truy van tach biet**: the da hoc (`review_count > 0`) va the moi (`review_count = 0`).
+  - Ly do: the moi mang `next_review_at` = luc tao the (rat cu), nen neu gop chung roi cat theo limit thi the moi se **chiem het cho** cua the review. Da tung gay bug "Review luon bang 0".
+
+- `pinyin-align.ts`
+  - `alignPinyinToCharacters()` map **1 am tiet pinyin cho 1 chu Han**.
+  - Pinyin trong DB luu theo tu (`餐厅` -> `cāntīng`, mot token), nen phai tach am tiet truoc.
+  - Neu khong tach duoc khop so chu, tra `null` de UI **an pinyin** thay vi hien sai cho.
 
 - `study-queue.ts`
   - Xep hang hoc.
@@ -167,9 +201,20 @@ Component UI dung lai.
 
 - `review-queue-status.tsx`
   - 3 o `Moi / Dang on / Review`.
+  - Prop `active` to dam o ung voi the dang hien tren man.
+
+- `rating-buttons.tsx`
+  - 4 nut `Quen / Kho / Nho / De`, dung chung cho ca 2 man hoc.
+  - Tu tinh nhan "Lap lai sau ..." bang `getNextReview()` (khong fuzz) + cai dat cua user.
+  - Badge `1 2 3 4` khop voi phim tat.
+
+- `theme-toggle.tsx`
+  - Nut doi giao dien `Sang / Toi / He thong`, luu vao `localStorage` key `hanzi-theme`.
+  - Ghi thuoc tinh `data-theme` len `<html>`; toan bo CSS dark bam vao thuoc tinh nay.
 
 - `study-progress.tsx`
   - Thanh tien do trong card hoc.
+  - Phan tram tinh tu `sessionAnswered` va tong 3 hang doi, **khong** tinh tu so the con lai.
 
 - `loading-skeletons.tsx`
   - Skeleton khi dang tai.
@@ -231,44 +276,90 @@ Rating co 4 gia tri:
 - `good` = Nho
 - `easy` = De
 
-Trong `src/lib/review.ts`:
+Trong `src/lib/review.ts`, ham `getNextReview()`.
 
-- Neu `interval_days <= 0`, item dang la the/cau moi hoac dang hoc buoc ngan.
-  - `again`: quay lai sau learning step dau tien.
-  - `hard`: quay lai sau learning step thu hai.
-  - `good`: tot nghiep, quay lai sau `graduating_interval_days`.
-  - `easy`: tot nghiep nhanh, quay lai sau `easy_interval_days`.
+**Truong quyet dinh la `learning_step`, khong phai `interval_days`.**
 
-- Neu `interval_days > 0`, item da la review that.
-  - `again`: vao relearning, quay lai sau `relearning_steps`.
-  - `hard`: tang interval cham.
-  - `good`: tang interval theo ease.
-  - `easy`: tang interval nhanh hon good.
+### Pha hoc (`learning_step >= 0` va `interval_days = 0`)
 
-Can nho:
+The moi di qua tung buoc trong `learning_steps` (vi du `1m 10m`):
+
+- `again`: ve buoc dau tien (step 0).
+- `hard`: **giu nguyen buoc hien tai**, thoi gian = trung binh buoc hien tai va buoc ke. Neu dang o buoc cuoi thi x1.5.
+- `good`: **tien 1 buoc**. Chi tot nghiep khi dang o buoc CUOI (ra `graduating_interval_days`).
+- `easy`: tot nghiep ngay (ra `easy_interval_days`, luon > graduating).
+
+Ease **khong doi** trong pha nay, giong Anki.
+
+### Pha review (`learning_step = -1` va `interval_days > 0`)
+
+- `again`: lapse. Giam ease 0.20, tinh interval se khoi phuc theo `new_interval_percentage`, roi day the vao `relearning_steps` (`learning_step = 0`).
+- `hard`: ease -0.15, interval x `hard_interval_multiplier`.
+- `good`: ease giu nguyen, interval x `ease_factor`.
+- `easy`: ease +0.15, interval x `ease_factor` x `easy_bonus`.
+
+Luon dam bao `hard < good < easy` (tru khi cham tran `maximum_interval_days`).
+
+### Pha hoc lai (`learning_step >= 0` va `interval_days > 0`)
+
+Day la the vua lapse. `interval_days` luc nay **giu ho** gia tri se khoi phuc. Di het `relearning_steps` roi moi quay ve pha review voi interval do.
+
+### Fuzz
+
+`applyReviewFuzz()` rai ngau nhien interval (+/- theo bien do tang dan) **chi cho the da tot nghiep va interval >= 2 ngay**. Muc dich: tranh ca tram the den han cung mot ngay.
+
+Fuzz chay **o server** (trong 2 API route), khong chay trong `getNextReview`. Nho vay nhan xem truoc tren nut ("Lap lai sau 10 phut") van on dinh.
+
+### Can nho
 
 - `next_review_at` quyet dinh luc nao item hien lai.
 - `review_count = 0` la item moi.
-- `interval_days = 0` thuong la item dang hoc trong phien ngan.
-- `interval_days > 0` la item da tot nghiep thanh review.
+- `learning_step = -1` la the review that.
+- `learning_step >= 0` la dang hoc hoac hoc lai.
+- Neu cot `learning_step` chua co (chua chay migration `035`), code tu lui ve suy doan theo `interval_days`.
 
 ## 3 o Moi / Dang on / Review
 
 File: `src/lib/review-queue-stats.ts`
 
+Ham `getReviewQueueKey(review)` phan loai 1 the; `getReviewQueueStats()` dem ca hang.
+
 - `Moi`
   - `review_count = 0`
 
 - `Dang on`
-  - `review_count > 0`
-  - va `interval_days <= 0` hoac `last_rating = again`
+  - `review_count > 0` va `learning_step >= 0`
 
 - `Review`
-  - `review_count > 0`
-  - va `interval_days > 0`
-  - va da den han trong hang dang load
+  - `review_count > 0` va `learning_step = -1`
 
-Luu y: `Review` chi la review dang co trong hang hien tai. Neu mot cau duoc hen ngay mai thi hom nay khong nam trong hang, nen so Review co the la 0.
+Neu cot `learning_step` chua ton tai (chua chay migration `035`), ham lui ve heuristic cu: `interval_days <= 0` hoac `last_rating = again`. Heuristic nay **khong chinh xac** — the tung bam Quen se mai bi dem la "Dang on" du da hoc lai xong, vi `last_rating` van la `again`.
+
+Luu y: 3 o chi dem the **dang co trong hang hien tai**. The hen ngay mai khong nam trong hang nen khong duoc dem.
+
+O ung voi the dang hien tren man se duoc **to dam** (prop `active` cua `ReviewQueueStatus`).
+
+## Tien do phien hoc va thanh phan tram
+
+File: `src/lib/study-session.ts` + `src/components/study-progress.tsx`
+
+- `sessionAnswered` tang moi lan bam Quen/Kho/Nho/De, luu vao `localStorage`.
+- Phan tram tinh nhu sau:
+
+```text
+queueRemaining = Moi + Dang on + Review
+progressTotal  = sessionAnswered + queueRemaining
+progressCurrent = sessionAnswered + 1
+```
+
+Vi sao **khong** tinh theo so the con lai trong hang: the bam Quen/Kho quay lai hang doi ngay, nen so con lai gan nhu khong giam. Neu tinh kieu do thi thanh % dung yen va nhay ve 1% moi lan F5.
+
+Luu y quan trong khi sua bug tien do: **moi man co 2 duong nap du lieu**.
+
+- `loadReviews()` — dung khi het the hoac timer buoc hoc kich hoat.
+- `useEffect` lon — dung khi **mo trang / F5** va khi doi bo the.
+
+Ca hai deu phai goi `getStoredStudyProgress()` de khoi phuc tien do. Da tung bug vi chi co `loadReviews()` khoi phuc.
 
 ## Gioi han hoc moi ngay
 
@@ -377,12 +468,13 @@ Nhung bang quan trong:
 
 - `reviews`
   - Lich on tu vung.
+  - Cot `learning_step` them o migration `035`: `-1` = the review, `>= 0` = dang hoc/hoc lai.
 
 - `sentence_cards`
   - Cau luyen tap.
 
 - `sentence_reviews`
-  - Lich on cau.
+  - Lich on cau. Cung co `learning_step` nhu tren.
 
 - `user_study_settings`
   - Cai dat gioi han moi ngay va SRS.
@@ -418,6 +510,7 @@ Nhung bang quan trong:
 
 4. Kiem tra database:
    - `review_count`
+   - `learning_step`
    - `interval_days`
    - `last_rating`
    - `next_review_at`
@@ -426,13 +519,21 @@ Nhung bang quan trong:
 5. Doi chieu:
    - Item moi ma khong hien: co vuot daily limit khong?
    - Dang on ma hien qua som: xem `next_review_at` va `getNextStudyQueueIndex`.
-   - Review khong hien: co den han chua?
+   - Review khong hien: co den han chua? Va co bi the moi chiem cho khong (xem `due-reviews.ts`)?
+   - Bam `Nho` ma the tot nghiep luon thay vi sang buoc ke: kiem tra da chay migration `035` chua.
    - Copy deck ma khong co review: dung, vi tien do la rieng moi user.
 
 6. Chay test:
 
 ```bash
 npm run test:srs
+```
+
+7. Chay mo phong de kiem bat bien (interval, ease, tai on):
+
+```bash
+npm run sim:srs
+npm run sim:srs -- --cards 2000 --days 730 --seed 1
 ```
 
 7. Neu sua code:
@@ -510,8 +611,20 @@ Nen sua o component chung neu nhieu man cung dung. Vi du:
 
 - Thanh tien do: `study-progress.tsx`
 - 3 o queue: `review-queue-status.tsx`
+- 4 nut danh gia: `rating-buttons.tsx`
 - Shell menu: `app-shell.tsx`
 - Skeleton: `loading-skeletons.tsx`
+
+### Design token va dark mode
+
+Trong `globals.css`:
+
+- Bo token dung chung: `--radius-sm/md/lg` va `--shadow-sm/md/lg`. **Dung them gia tri bo goc / do bong roi rac**, hay lay tu token.
+- Dark mode bam vao thuoc tinh `[data-theme="dark"]` tren `<html>`, khong dung `prefers-color-scheme` truc tiep.
+- Khai bao `@custom-variant dark (...)` o dau file lam cho moi class `dark:` cua Tailwind chay theo thuoc tinh do.
+- `theme-toggle.tsx` ghi thuoc tinh; mot script nho trong `layout.tsx` set truoc khi ve lan dau de khong bi nhay trang.
+
+Khi them mau moi, luon them ca cap. Vi du `bg-white dark:bg-[#171a19]`. Neu quen ban dark, o dark mode se ra **chu sang tren nen sang** (chu thua ke `--foreground` da doi mau, nen thi khong).
 
 ## Lenh hay dung
 
@@ -527,10 +640,17 @@ Tim chu trong code:
 rg "getNextReview" src test
 ```
 
-Test SRS:
+Test SRS (SRS + chinh ta + pinyin):
 
 ```bash
 npm run test:srs
+```
+
+Mo phong SRS qua nhieu ngay:
+
+```bash
+npm run sim:srs
+npm run sim:srs -- --cards 2000 --days 730 --new 30 --seed 1
 ```
 
 Lint:
@@ -568,15 +688,41 @@ Vi du bug "dang on hien lai qua som":
 3. Session: `study-session.ts`, queue luu trong localStorage.
 4. Test: `study queue skips learning items until their scheduled time`.
 
-## Nen nho 6 file quan trong nhat
+Vi du bug "thanh % nhay ve 1% moi lan F5":
 
-Neu chi duoc hoc 6 file, hoc 6 file nay:
+1. UI: `study-progress.tsx`, cach tinh `progressCurrent`.
+2. Session: `study-session.ts`, `getStoredStudyProgress`.
+3. Trang: kiem tra **ca 2 duong nap** (`loadReviews()` va `useEffect` lon) deu khoi phuc tien do.
+
+Vi du bug "o Review luon bang 0 du database co the den han":
+
+1. Truy van: `due-reviews.ts` — the moi co chiem het cho khong?
+2. Doi chieu bang SQL: dem the den han theo tung nhom trong deck dang chon.
+
+## Nen nho 7 file quan trong nhat
+
+Neu chi duoc hoc 7 file, hoc 7 file nay:
 
 1. `src/lib/review.ts`
 2. `src/lib/study-queue.ts`
-3. `src/lib/study-settings.ts`
-4. `src/lib/study-session.ts`
-5. `src/app/study/page.tsx`
-6. `src/app/study-sentences/page.tsx`
+3. `src/lib/due-reviews.ts`
+4. `src/lib/study-settings.ts`
+5. `src/lib/study-session.ts`
+6. `src/app/study/page.tsx`
+7. `src/app/study-sentences/page.tsx`
 
-Hieu 6 file nay la da nam duoc loi app hoc tap.
+Hieu 7 file nay la da nam duoc loi app hoc tap.
+
+## Test co nhung gi
+
+- `test/srs-logic.test.ts`
+  - 17 test: buoc hoc nhieu buoc, relearning, san ease, tran interval, fuzz, hang doi, phan loai 3 o.
+  - Doc file nay nhu **ban dac ta** cua SRS.
+
+- `test/sentence-diff.test.ts`
+  - Cham chinh ta cau.
+
+- `test/pinyin-align.test.ts`
+  - Tach am tiet pinyin va map 1 am tiet cho 1 chu Han.
+
+Tat ca chay bang `npm run test:srs`.
