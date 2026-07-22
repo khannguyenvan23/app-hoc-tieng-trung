@@ -198,20 +198,20 @@ export default async function Home({ searchParams }: HomeProps) {
             <p className="text-sm font-medium uppercase tracking-wide text-teal-200">
               Flashcard tiếng Trung cho người tự học
             </p>
-            <h1 className="mt-4 max-w-2xl text-5xl font-semibold leading-tight sm:text-6xl">
-              Tiếng Trung Hihi
+            <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight sm:text-6xl">
+              Học từ vựng HSK, nhớ đúng lúc cần ôn
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-stone-100 sm:text-xl">
-              Học từ vựng HSK bằng flashcard, audio, câu ví dụ, luyện chép
-              chính tả và thuật toán lặp lại ngắt quãng. Mỗi ngày chỉ cần mở
-              app và ôn đúng phần đến hạn.
+              Flashcard có audio, câu ví dụ và luyện chép chính tả, kết hợp
+              thuật toán lặp lại ngắt quãng. Mỗi ngày chỉ mở app và ôn đúng
+              phần đến hạn — không học lan man, không quên bài.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
-                className="rounded-md bg-teal-600 px-5 py-3 text-sm font-semibold text-white hover:bg-teal-500"
+                className="rounded-md bg-teal-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-teal-900/30 hover:bg-teal-500"
                 href="/trial"
               >
-                Bắt đầu học miễn phí
+                Học thử miễn phí
               </Link>
               <a
                 className="rounded-md border border-white/35 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
@@ -219,23 +219,12 @@ export default async function Home({ searchParams }: HomeProps) {
               >
                 Xem tính năng
               </a>
-              <Link
-                className="rounded-md border border-white/35 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
-                href="/pricing"
-              >
-                Xem bảng giá
-              </Link>
-              <a
-                className="rounded-md border border-white/35 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
-                href={communityJoinUrl}
-                rel="noreferrer"
-                target="_blank"
-              >
-                {hasZaloGroupUrl ? "Vào nhóm Zalo" : "Nhận link nhóm Zalo"}
-              </a>
             </div>
+            <p className="mt-4 text-sm text-stone-300">
+              Học thử ngay trên trình duyệt, không cần đăng ký.
+            </p>
             <div className="mt-8 flex flex-wrap gap-2 text-sm text-stone-100">
-              <span className="rounded-md bg-white/12 px-3 py-2">HSK1-HSK5</span>
+              <span className="rounded-md bg-white/12 px-3 py-2">HSK1-HSK6</span>
               <span className="rounded-md bg-white/12 px-3 py-2">Audio</span>
               <span className="rounded-md bg-white/12 px-3 py-2">SRS</span>
               <span className="rounded-md bg-white/12 px-3 py-2">Luyện câu</span>
@@ -352,9 +341,9 @@ export default async function Home({ searchParams }: HomeProps) {
         <div className="mx-auto max-w-6xl px-5">
           <div className="grid gap-6 md:grid-cols-3">
             <div>
-              <div className="text-4xl font-semibold text-teal-700">2.500+</div>
+              <div className="text-4xl font-semibold text-teal-700">5.000+</div>
               <p className="mt-2 text-sm text-zinc-600">
-                Từ vựng HSK1-HSK5 có sẵn để bắt đầu ngay.
+                Từ vựng HSK1-HSK6 và các bộ chủ đề có sẵn để bắt đầu ngay.
               </p>
             </div>
             <div>
@@ -387,12 +376,22 @@ export default async function Home({ searchParams }: HomeProps) {
               tiếng Trung mỗi ngày.
             </p>
           </div>
-          <Link
-            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white hover:bg-teal-800"
-            href="/community"
-          >
-            Xem nhóm học viên
-          </Link>
+          <div className="flex shrink-0 flex-wrap gap-3">
+            <a
+              className="inline-flex min-h-11 items-center justify-center rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white hover:bg-teal-800"
+              href={communityJoinUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              {hasZaloGroupUrl ? "Vào nhóm Zalo" : "Nhận link nhóm Zalo"}
+            </a>
+            <Link
+              className="inline-flex min-h-11 items-center justify-center rounded-md border border-teal-300 px-5 py-3 text-sm font-semibold text-teal-800 hover:bg-teal-100"
+              href="/community"
+            >
+              Xem nhóm học viên
+            </Link>
+          </div>
         </div>
       </section>
 

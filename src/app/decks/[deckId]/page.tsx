@@ -601,37 +601,54 @@ export default function DeckPage() {
                 <div className="space-y-6">
                   {cards.length > 0 ? (
                     <div>
-                      <h2 className="mb-3 text-lg font-semibold">Thẻ từ vựng</h2>
-                      <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
+                      <div className="mb-3 flex items-center gap-2">
+                        <h2 className="text-lg font-semibold">Thẻ từ vựng</h2>
+                        <span className="rounded-full bg-zinc-100 dark:bg-white/10 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                          {cards.length}
+                        </span>
+                      </div>
+                      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
                         {cards.map((card) => (
                           <div
-                            className="grid gap-2 border-b border-zinc-100 dark:border-white/10 p-4 last:border-b-0 lg:grid-cols-[1fr_1fr_2fr_auto]"
+                            className="group grid grid-cols-[1fr_auto] items-start gap-x-4 gap-y-2 border-b border-zinc-100 dark:border-white/10 p-4 transition-colors last:border-b-0 hover:bg-zinc-50 dark:hover:bg-white/[0.03] lg:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_auto]"
                             key={card.id}
                           >
-                            <div className="text-2xl font-semibold">
-                              {card.chinese}
+                            <div className="min-w-0">
+                              <div className="text-2xl font-semibold leading-tight">
+                                {card.chinese}
+                              </div>
+                              {card.pinyin ? (
+                                <div className="mt-0.5 text-sm text-teal-800 dark:text-teal-300">
+                                  {card.pinyin}
+                                </div>
+                              ) : null}
                             </div>
-                            <div className="text-sm text-zinc-600 dark:text-zinc-400">
-                              {card.pinyin}
-                            </div>
-                            <div className="text-sm">
+                            <div className="col-span-2 min-w-0 text-sm lg:col-span-1 lg:col-start-2">
                               <p className="font-medium">{card.meaning_vi}</p>
-                              <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-                                {card.example_cn}
-                              </p>
+                              {card.example_cn ? (
+                                <p className="mt-1.5 text-zinc-600 dark:text-zinc-400">
+                                  {card.example_cn}
+                                </p>
+                              ) : null}
                               {card.example_pinyin ? (
-                                <p className="text-teal-800 dark:text-teal-300">
+                                <p className="text-xs text-teal-700/90 dark:text-teal-300/80">
                                   {card.example_pinyin}
                                 </p>
                               ) : null}
-                              <p className="text-zinc-500 dark:text-zinc-400">{card.example_vi}</p>
+                              {card.example_vi ? (
+                                <p className="text-zinc-500 dark:text-zinc-400">
+                                  {card.example_vi}
+                                </p>
+                              ) : null}
                             </div>
                             <Link
-                              className="inline-flex min-h-9 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
+                              aria-label="Sửa thẻ"
+                              className="col-start-2 row-start-1 inline-flex size-9 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-white/10 dark:hover:text-zinc-200 lg:col-start-3 lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
                               href={`/decks/${deck.id}/cards/${card.id}/edit`}
                               prefetch={false}
+                              title="Sửa thẻ"
                             >
-                              Sửa
+                              <Icon name="edit" size={17} />
                             </Link>
                           </div>
                         ))}
@@ -642,34 +659,42 @@ export default function DeckPage() {
                   {sentenceCards.length > 0 ? (
                     <div>
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <h2 className="text-lg font-semibold">Câu luyện tập</h2>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-lg font-semibold">Câu luyện tập</h2>
+                          <span className="rounded-full bg-zinc-100 dark:bg-white/10 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                            {sentenceCards.length}
+                          </span>
+                        </div>
                         <Link
-                          className="text-sm font-medium text-teal-700 dark:text-teal-300 hover:text-teal-900"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-teal-700 dark:text-teal-300 hover:text-teal-900"
                           href={`/study-sentences?deck=${params.deckId}`}
                           onClick={() => rememberStudyDeck("sentence")}
                           prefetch={false}
                         >
                           Vào luyện câu
+                          <Icon name="play" size={14} />
                         </Link>
                       </div>
-                      <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
+                      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19]">
                         {sentenceCards.map((sentenceCard) => (
                           <div
-                            className="grid gap-2 border-b border-zinc-100 dark:border-white/10 p-4 last:border-b-0 lg:grid-cols-[2fr_2fr_3fr_auto]"
+                            className="group grid grid-cols-[1fr_auto] items-start gap-x-4 gap-y-2 border-b border-zinc-100 dark:border-white/10 p-4 transition-colors last:border-b-0 hover:bg-zinc-50 dark:hover:bg-white/[0.03] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto]"
                             key={sentenceCard.id}
                           >
-                            <div className="font-medium">
-                              {sentenceCard.sentence_vi}
-                            </div>
-                            <div>
-                              <p className="text-lg font-semibold">
+                            <div className="min-w-0">
+                              <p className="text-lg font-semibold leading-snug">
                                 {sentenceCard.sentence_cn}
                               </p>
-                              <p className="text-sm text-teal-800 dark:text-teal-300">
-                                {sentenceCard.sentence_pinyin}
+                              {sentenceCard.sentence_pinyin ? (
+                                <p className="mt-0.5 text-sm text-teal-800 dark:text-teal-300">
+                                  {sentenceCard.sentence_pinyin}
+                                </p>
+                              ) : null}
+                              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                                {sentenceCard.sentence_vi}
                               </p>
                             </div>
-                            <div className="text-sm text-zinc-600 dark:text-zinc-400">
+                            <div className="col-span-2 min-w-0 text-sm text-zinc-500 dark:text-zinc-400 lg:col-span-1 lg:col-start-2">
                               {Array.isArray(sentenceCard.vocab_json)
                                 ? sentenceCard.vocab_json
                                     .map((item) => `${item.chinese}: ${item.meaning_vi}`)
@@ -677,11 +702,13 @@ export default function DeckPage() {
                                 : null}
                             </div>
                             <Link
-                              className="inline-flex min-h-9 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
+                              aria-label="Sửa câu"
+                              className="col-start-2 row-start-1 inline-flex size-9 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-white/10 dark:hover:text-zinc-200 lg:col-start-3 lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
                               href={`/decks/${deck.id}/sentences/${sentenceCard.id}/edit`}
                               prefetch={false}
+                              title="Sửa câu"
                             >
-                              Sửa
+                              <Icon name="edit" size={17} />
                             </Link>
                           </div>
                         ))}
