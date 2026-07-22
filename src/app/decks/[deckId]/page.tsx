@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AppShell, EmptyState, PrimaryLink } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { DeckGridSkeleton } from "@/components/loading-skeletons";
+import { Icon } from "@/components/icons";
 import { ConfirmDialog, ToastList, useToast } from "@/components/ui-feedback";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
@@ -428,11 +429,12 @@ export default function DeckPage() {
               <div className="flex flex-wrap gap-2">
                 {cards.length > 0 ? (
                   <Link
-                    className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
+                    className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                     href={`/study?deck=${params.deckId}`}
                     onClick={() => rememberStudyDeck("word")}
                     prefetch={false}
                   >
+                    <Icon name="play" size={16} />
                     Ôn tập
                   </Link>
                 ) : (
@@ -446,11 +448,12 @@ export default function DeckPage() {
                 )}
                 {sentenceCards.length > 0 ? (
                   <Link
-                    className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
+                    className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                     href={`/study-sentences?deck=${params.deckId}`}
                     onClick={() => rememberStudyDeck("sentence")}
                     prefetch={false}
                   >
+                    <Icon name="sentences" size={16} />
                     Luyện câu
                   </Link>
                 ) : (
@@ -463,18 +466,20 @@ export default function DeckPage() {
                   </span>
                 )}
                 <button
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
+                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
                   disabled={shareLoading}
                   onClick={createShareLink}
                   type="button"
                 >
+                  <Icon name="share" size={16} />
                   {shareLoading ? "Đang tạo..." : "Chia sẻ"}
                 </button>
                 <Link
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
+                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                   href={`/decks/${deck.id}/cards/new`}
                   prefetch={false}
                 >
+                  <Icon name="plus" size={16} />
                   Thêm thẻ
                 </Link>
                 <Link

@@ -3,42 +3,50 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ActiveDayTracker } from "@/components/active-day-tracker";
+import { Icon } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const navItems = [
   {
     href: "/study",
+    icon: "study",
     label: "Ôn tập",
     paths: ["/study"],
   },
   {
     href: "/study-sentences",
+    icon: "sentences",
     label: "Luyện câu",
     paths: ["/study-sentences"],
   },
   {
     href: "/statistics",
+    icon: "stats",
     label: "Thống kê",
     paths: ["/statistics"],
   },
   {
     href: "/community",
+    icon: "community",
     label: "Cộng đồng",
     paths: ["/community"],
   },
   {
     href: "/dashboard",
+    icon: "decks",
     label: "Bộ thẻ",
     paths: ["/dashboard", "/decks"],
   },
   {
     href: "/pricing",
+    icon: "credit",
     label: "Nạp credit",
     paths: ["/pricing"],
   },
   {
     href: "/options",
+    icon: "settings",
     label: "Cài đặt",
     paths: ["/options"],
   },
@@ -55,7 +63,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   function navLinkClass(active: boolean, mobile = false) {
-    const base = mobile ? "rounded-lg px-3 py-2" : "rounded-lg px-3 py-2";
+    const base = mobile
+      ? "flex items-center gap-2 rounded-lg px-3 py-2"
+      : "inline-flex items-center gap-1.5 rounded-lg px-3 py-2";
     return active
       ? `${base} bg-teal-50 dark:bg-teal-500/15 font-semibold text-teal-800 dark:text-teal-300 shadow-sm`
       : `${base} text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 hover:text-zinc-950 dark:hover:bg-white/10 dark:hover:text-white`;
@@ -82,21 +92,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               return (
                 <Link
                   aria-current={active ? "page" : undefined}
+                  aria-label={item.label}
                   className={navLinkClass(active)}
                   href={item.href}
                   key={item.href}
+                  title={item.label}
                 >
-                  {item.label}
+                  <Icon name={item.icon} size={17} />
+                  <span className="hidden lg:inline">{item.label}</span>
                 </Link>
               );
             })}
             <ThemeToggle />
             <button
-              className="rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-3 py-2 font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
+              aria-label="Đăng xuất"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-3 py-2 font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
               onClick={signOut}
+              title="Đăng xuất"
               type="button"
             >
-              Đăng xuất
+              <Icon name="logout" size={17} />
+              <span className="hidden lg:inline">Đăng xuất</span>
             </button>
           </nav>
           <details className="relative sm:hidden">
@@ -114,16 +130,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     href={item.href}
                     key={item.href}
                   >
+                    <Icon name={item.icon} size={18} />
                     {item.label}
                   </Link>
                 );
               })}
               <ThemeToggle className="justify-start" />
               <button
-                className="rounded-lg px-3 py-2 text-left font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-left font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                 onClick={signOut}
                 type="button"
               >
+                <Icon name="logout" size={18} />
                 Đăng xuất
               </button>
             </nav>
