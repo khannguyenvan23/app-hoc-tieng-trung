@@ -24,6 +24,11 @@ const paths: Record<string, string> = {
   share: "M8 12a3 3 0 1 0 0-.1M16 6a3 3 0 1 0 0 .1M16 18a3 3 0 1 0 0-.1M10.5 10.5l3-2M10.5 13.5l3 2",
   edit: "M4 20h4L18 10l-4-4L4 16v4zM13 5l4 4",
   logout: "M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 12h10M17 9l3 3-3 3",
+  // stats
+  flame:
+    "M12 3c.6 2.6-1.8 3.8-1.8 6.2A1.8 1.8 0 0 0 13 10.6c.4 2.4 2.8 1.8 2.8 5.4a3.8 3.8 0 0 1-7.6 0c0-3.4 3.4-3.8 3.8-13z",
+  calendar: "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M8 14h.01M12 14h.01M16 14h.01",
+  trophy: "M7 4h10v3a5 5 0 0 1-10 0V4zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M9 20h6M10 15v5M14 15v5",
 };
 
 export function Icon({ name, size = 18, className }: IconProps & { name: string }) {

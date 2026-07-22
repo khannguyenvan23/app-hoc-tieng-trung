@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AdminAnalytics } from "@/components/admin-analytics";
 import { AuthGuard } from "@/components/auth-guard";
+import { Icon } from "@/components/icons";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
 
@@ -48,6 +49,43 @@ function toMonthKey(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   return `${year}-${month}`;
+}
+
+function dayMs() {
+  return 86_400_000;
+}
+
+// Consecutive days (ending today, or yesterday if today has nothing yet) with
+// at least one new word, plus the longest such run on record.
+function computeStreaks(activeDayKeys: Set<string>) {
+  let current = 0;
+  const cursor = new Date();
+  cursor.setHours(0, 0, 0, 0);
+
+  if (!activeDayKeys.has(toDateKey(cursor))) {
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  while (activeDayKeys.has(toDateKey(cursor))) {
+    current += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  const sortedTimes = Array.from(activeDayKeys)
+    .map((key) => new Date(`${key}T00:00:00`).getTime())
+    .sort((left, right) => left - right);
+
+  let longest = 0;
+  let run = 0;
+  let previous: number | null = null;
+
+  for (const time of sortedTimes) {
+    run = previous !== null && time - previous === dayMs() ? run + 1 : 1;
+    longest = Math.max(longest, run);
+    previous = time;
+  }
+
+  return { current, longest };
 }
 
 function getMonthOptions() {
@@ -119,20 +157,27 @@ function BarChart({
             item.count === 0
               ? 4
               : Math.max(10, Math.round((item.count / maxCount) * 164));
+          const isPeak = item.count > 0 && item.count === maxCount;
 
           return (
             <div
               aria-label={`${item.label}: ${item.count} từ`}
-              className="flex h-full min-w-0 flex-col justify-end text-center"
+              className="group flex h-full min-w-0 flex-col justify-end text-center"
               key={item.key}
               title={`${item.label}: ${item.count} từ`}
             >
-              <span className="mb-1 h-5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              <span className="mb-1 h-5 text-xs font-medium text-zinc-600 opacity-0 transition-opacity group-hover:opacity-100 dark:text-zinc-400">
                 {item.count}
               </span>
               <div className="flex h-44 items-end justify-center">
                 <div
-                  className={`w-3/4 min-w-2 max-w-10 rounded-t ${ item.count > 0 ? "bg-teal-700" : "bg-zinc-200 dark:bg-white/15" }`}
+                  className={`w-3/4 min-w-2 max-w-10 rounded-t-md transition-colors ${
+                    item.count > 0
+                      ? isPeak
+                        ? "bg-gradient-to-t from-teal-600 to-teal-400 dark:from-teal-500 dark:to-teal-300"
+                        : "bg-teal-600 group-hover:bg-teal-500 dark:bg-teal-500/80 dark:group-hover:bg-teal-400"
+                      : "bg-zinc-200 dark:bg-white/10"
+                  }`}
                   style={{ height: barHeight }}
                 />
               </div>
@@ -142,6 +187,42 @@ function BarChart({
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function heatmapTone(count: number) {
+  if (count <= 0) {
+    return "bg-zinc-100 dark:bg-white/[0.06]";
+  }
+  if (count < 3) {
+    return "bg-teal-200 dark:bg-teal-500/30";
+  }
+  if (count < 6) {
+    return "bg-teal-400 dark:bg-teal-500/60";
+  }
+  if (count < 12) {
+    return "bg-teal-600 dark:bg-teal-400/80";
+  }
+  return "bg-teal-800 dark:bg-teal-300";
+}
+
+function ActivityHeatmap({ days }: { days: ChartPoint[] }) {
+  return (
+    <div className="overflow-x-auto pb-1">
+      <div
+        className="grid grid-flow-col grid-rows-7 gap-1"
+        style={{ minWidth: Math.ceil(days.length / 7) * 15 }}
+      >
+        {days.map((day) => (
+          <div
+            aria-label={`${day.label}: ${day.count} từ`}
+            className={`size-3 rounded-[3px] ${heatmapTone(day.count)}`}
+            key={day.key}
+            title={`${day.label}: ${day.count} từ mới`}
+          />
+        ))}
       </div>
     </div>
   );
@@ -269,10 +350,44 @@ export default function StatisticsPage() {
       (left, right) => right[1] - left[1],
     )[0];
 
+    const activeDayKeys = new Set(
+      Array.from(dailyCounts.entries())
+        .filter(([, count]) => count > 0)
+        .map(([key]) => key),
+    );
+    const { current: currentStreak, longest: longestStreak } =
+      computeStreaks(activeDayKeys);
+
+    // Last 18 weeks of daily counts, oldest first, for the activity heatmap.
+    const heatmapWeeks = 18;
+    const heatmapDays: ChartPoint[] = [];
+    const heatmapStart = new Date();
+    heatmapStart.setHours(0, 0, 0, 0);
+    heatmapStart.setDate(heatmapStart.getDate() - (heatmapWeeks * 7 - 1));
+
+    for (let index = 0; index < heatmapWeeks * 7; index += 1) {
+      const date = new Date(heatmapStart);
+      date.setDate(date.getDate() + index);
+      const key = toDateKey(date);
+
+      heatmapDays.push({
+        key,
+        label: date.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+        }),
+        count: dailyCounts.get(key) || 0,
+      });
+    }
+
     return {
+      activeDayCount: activeDayKeys.size,
       bestDayCount: bestDay?.[1] || 0,
       currentMonthCount,
+      currentStreak,
       dailyData,
+      heatmapDays,
+      longestStreak,
       monthlyData,
       selectedMonthCount: monthlyCounts.get(selectedMonth) || 0,
       todayCount,
@@ -393,34 +508,78 @@ export default function StatisticsPage() {
 
         <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
-            { label: "Hôm nay", value: statistics.todayCount, note: "từ mới" },
             {
-              label: "Tháng này",
-              value: statistics.currentMonthCount,
-              note: "từ đã học",
+              icon: "flame",
+              label: "Chuỗi ngày học",
+              value: statistics.currentStreak,
+              note: `Dài nhất ${statistics.longestStreak} ngày`,
             },
             {
-              label: "12 tháng qua",
-              value: statistics.totalCount,
-              note: "từ đã học",
+              icon: "calendar",
+              label: "Ngày có học",
+              value: statistics.activeDayCount,
+              note: "trong 12 tháng",
             },
             {
+              icon: "plus",
+              label: "Hôm nay",
+              value: statistics.todayCount,
+              note: "từ mới",
+            },
+            {
+              icon: "trophy",
               label: "Kỷ lục một ngày",
               value: statistics.bestDayCount,
               note: "từ mới",
             },
           ].map((item) => (
             <div
-              className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-4 shadow-sm"
+              className="rounded-[var(--radius-lg)] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-4 shadow-[var(--shadow-sm)]"
               key={item.label}
             >
-              <div className="text-sm text-zinc-500 dark:text-zinc-400">{item.label}</div>
-              <div className="mt-2 text-3xl font-semibold text-teal-800 dark:text-teal-300">
+              <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+                <span className="inline-flex size-7 items-center justify-center rounded-full bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300">
+                  <Icon name={item.icon} size={16} />
+                </span>
+                {item.label}
+              </div>
+              <div className="mt-2 text-3xl font-semibold tabular-nums text-teal-800 dark:text-teal-200">
                 {loading ? "..." : item.value}
               </div>
-              <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{item.note}</div>
+              <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                {item.note}
+              </div>
             </div>
           ))}
+        </section>
+
+        <section className="mt-6 rounded-[var(--radius-lg)] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-5 shadow-[var(--shadow-sm)]">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-semibold">Lịch học từ mới</h2>
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                18 tuần gần nhất — ô càng đậm là ngày học càng nhiều từ.
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              Ít
+              <span className="size-3 rounded-[3px] bg-zinc-100 dark:bg-white/[0.06]" />
+              <span className="size-3 rounded-[3px] bg-teal-200 dark:bg-teal-500/30" />
+              <span className="size-3 rounded-[3px] bg-teal-400 dark:bg-teal-500/60" />
+              <span className="size-3 rounded-[3px] bg-teal-600 dark:bg-teal-400/80" />
+              <span className="size-3 rounded-[3px] bg-teal-800 dark:bg-teal-300" />
+              Nhiều
+            </div>
+          </div>
+          <div className="mt-4">
+            {loading ? (
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Đang tải...
+              </p>
+            ) : (
+              <ActivityHeatmap days={statistics.heatmapDays} />
+            )}
+          </div>
         </section>
 
         <section className="mt-8 border-t border-zinc-200 dark:border-white/10 pt-6">
