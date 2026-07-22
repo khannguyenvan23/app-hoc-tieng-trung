@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Spinner } from "@/components/icons";
 import { SharedDeckPreviewSkeleton } from "@/components/loading-skeletons";
 import { fetchWithAuth } from "@/lib/fetch-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -168,7 +169,12 @@ export default function SharedDeckPage() {
                 type="button"
               >
                 {copying
-                  ? "Đang thêm..."
+                  ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size={15} />
+                Đang thêm...
+              </span>
+            )
                   : signedIn === false
                     ? "Đăng nhập để thêm"
                     : "Thêm vào tài khoản"}

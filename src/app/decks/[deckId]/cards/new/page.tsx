@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { ButtonLabel } from "@/components/icons";
 
 type ManualCardForm = {
   chinese: string;
@@ -185,7 +186,7 @@ export default function NewCardPage() {
             disabled={loading}
             type="submit"
           >
-            {loading ? "Đang lưu..." : "Lưu thẻ"}
+            <ButtonLabel busy="Đang lưu..." idle="Lưu thẻ" loading={loading} />
           </button>
         </form>
       </AppShell>

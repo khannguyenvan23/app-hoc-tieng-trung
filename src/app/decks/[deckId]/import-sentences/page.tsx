@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ButtonLabel } from "@/components/icons";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { ToastList, useToast } from "@/components/ui-feedback";
@@ -104,7 +105,7 @@ export default function ImportSentencesPage() {
               disabled={loading || items.length === 0}
               type="submit"
             >
-              {loading ? "Đang tạo câu bằng AI..." : "Tạo bài luyện câu"}
+              <ButtonLabel busy="Đang tạo câu bằng AI..." idle="Tạo bài luyện câu" loading={loading} />
             </button>
           </div>
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { Spinner } from "@/components/icons";
 import { trackPublicAnalyticsEvent } from "@/lib/analytics-client";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -242,7 +243,12 @@ export default function LoginPage() {
           type="submit"
         >
           {loading
-            ? "Đang xử lý..."
+            ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size={15} />
+                Đang xử lý...
+              </span>
+            )
             : mode === "login"
               ? "Đăng nhập"
               : mode === "signup"

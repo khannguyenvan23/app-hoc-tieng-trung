@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { ButtonLabel } from "@/components/icons";
 
 export default function NewDeckPage() {
   const router = useRouter();
@@ -65,7 +66,7 @@ export default function NewDeckPage() {
             disabled={loading}
             type="submit"
           >
-            {loading ? "Đang tạo..." : "Tạo bộ thẻ"}
+            <ButtonLabel busy="Đang tạo..." idle="Tạo bộ thẻ" loading={loading} />
           </button>
         </form>
       </AppShell>

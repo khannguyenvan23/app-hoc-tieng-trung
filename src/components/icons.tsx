@@ -31,6 +31,59 @@ const paths: Record<string, string> = {
   trophy: "M7 4h10v3a5 5 0 0 1-10 0V4zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M9 20h6M10 15v5M14 15v5",
 };
 
+// Spinning loader that inherits the button's text color. Pause under
+// prefers-reduced-motion so it does not distract.
+export function Spinner({ size = 16, className = "" }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={`animate-spin motion-reduce:animate-none ${className}`}
+      fill="none"
+      height={size}
+      viewBox="0 0 24 24"
+      width={size}
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+        stroke="currentColor"
+        strokeOpacity="0.25"
+        strokeWidth="2.5"
+      />
+      <path
+        d="M21 12a9 9 0 0 0-9-9"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2.5"
+      />
+    </svg>
+  );
+}
+
+// A button label that swaps to a spinner + busy text while an action runs, so
+// every async button gives the same "working…" feedback.
+export function ButtonLabel({
+  busy,
+  idle,
+  loading,
+}: {
+  busy: string;
+  idle: string;
+  loading: boolean;
+}) {
+  if (loading) {
+    return (
+      <span className="inline-flex items-center gap-2">
+        <Spinner size={15} />
+        {busy}
+      </span>
+    );
+  }
+
+  return <>{idle}</>;
+}
+
 export function Icon({ name, size = 18, className }: IconProps & { name: string }) {
   const d = paths[name];
 

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import { Spinner } from "@/components/icons";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 function cleanResetUrl() {
@@ -237,9 +238,19 @@ export default function ResetPasswordPage() {
           type="submit"
         >
           {checkingSession
-            ? "Đang kiểm tra link..."
+            ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size={15} />
+                Đang kiểm tra link...
+              </span>
+            )
             : loading
-              ? "Đang lưu..."
+              ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size={15} />
+                Đang lưu...
+              </span>
+            )
               : "Đổi mật khẩu"}
         </button>
 

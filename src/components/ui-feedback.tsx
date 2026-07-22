@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ButtonLabel } from "@/components/icons";
 
 export type ToastTone = "success" | "error" | "info";
 
@@ -155,7 +156,7 @@ export function ConfirmDialog({
             onClick={onConfirm}
             type="button"
           >
-            {loading ? "Đang xử lý..." : confirmLabel}
+            <ButtonLabel busy="Đang xử lý..." idle={confirmLabel} loading={loading} />
           </button>
         </div>
       </div>

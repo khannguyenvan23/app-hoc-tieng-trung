@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Spinner } from "@/components/icons";
 import { AppShell, EmptyState, PrimaryLink } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import {
@@ -531,7 +532,12 @@ export default function DashboardPage() {
                   type="button"
                 >
                   {copyingTemplateId === hsk1Template?.id
-                    ? "Đang thêm HSK1..."
+                    ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size={15} />
+                Đang thêm HSK1...
+              </span>
+            )
                     : hsk1Template?.already_added
                       ? "Mở bộ HSK1"
                       : "Thêm HSK1"}
@@ -1000,7 +1006,12 @@ export default function DashboardPage() {
                     {alreadyAdded
                       ? "Đã thêm"
                       : copyingTemplateId === template.id
-                      ? "Đang thêm..."
+                      ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size={15} />
+                Đang thêm...
+              </span>
+            )
                       : "Thêm bộ này"}
                   </button>
                   {alreadyAdded && template.user_deck_id ? (

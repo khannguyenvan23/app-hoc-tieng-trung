@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import { ButtonLabel } from "@/components/icons";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { ConfirmDialog } from "@/components/ui-feedback";
@@ -290,7 +291,7 @@ export default function EditSentencePage() {
               disabled={saving || loading}
               type="submit"
             >
-              {saving ? "Đang lưu..." : "Lưu thay đổi"}
+              <ButtonLabel busy="Đang lưu..." idle="Lưu thay đổi" loading={saving} />
             </button>
             <button
               className="min-h-11 rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"

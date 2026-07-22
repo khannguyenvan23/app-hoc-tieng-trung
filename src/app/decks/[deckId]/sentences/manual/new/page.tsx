@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import type { SentenceVocabItem } from "@/lib/types";
+import { ButtonLabel } from "@/components/icons";
 
 type ManualSentenceForm = {
   sentence_cn: string;
@@ -174,7 +175,7 @@ export default function NewManualSentencePage() {
             disabled={loading}
             type="submit"
           >
-            {loading ? "Đang lưu và tạo audio..." : "Lưu câu"}
+            <ButtonLabel busy="Đang lưu và tạo audio..." idle="Lưu câu" loading={loading} />
           </button>
         </form>
       </AppShell>

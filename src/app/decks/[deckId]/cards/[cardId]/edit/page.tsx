@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/ui-feedback";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Card } from "@/lib/types";
+import { ButtonLabel } from "@/components/icons";
 
 type CardForm = {
   chinese: string;
@@ -232,7 +233,7 @@ export default function EditCardPage() {
               disabled={saving || loading}
               type="submit"
             >
-              {saving ? "Đang lưu..." : "Lưu thay đổi"}
+              <ButtonLabel busy="Đang lưu..." idle="Lưu thay đổi" loading={saving} />
             </button>
             <button
               className="min-h-11 rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"

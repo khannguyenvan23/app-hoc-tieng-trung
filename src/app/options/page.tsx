@@ -5,6 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
+import { ButtonLabel } from "@/components/icons";
 import {
   defaultStudySettings,
   isValidLearningSteps,
@@ -277,17 +278,39 @@ export default function OptionsPage() {
                 onClick={saveSettings}
                 type="button"
               >
-                {saving ? "Đang lưu..." : "Lưu cài đặt"}
+                <ButtonLabel busy="Đang lưu..." idle="Lưu cài đặt" loading={saving} />
               </button>
             </div>
           </div>
 
           {message ? (
-            <p
-              className={`mt-4 text-sm ${ message.startsWith("Đã") ? "text-teal-700 dark:text-teal-300" : "text-red-700 dark:text-red-300" }`}
+            <div
+              className={`mt-4 inline-flex animate-[fade-in_200ms_ease-out] items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+                message.startsWith("Đã")
+                  ? "border-teal-200 bg-teal-50 text-teal-800 dark:border-teal-500/40 dark:bg-teal-500/15 dark:text-teal-200"
+                  : "border-red-200 bg-red-50 text-red-800 dark:border-red-500/40 dark:bg-red-500/15 dark:text-red-200"
+              }`}
+              role="status"
             >
+              {message.startsWith("Đã") ? (
+                <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white dark:bg-teal-400 dark:text-teal-950">
+                  <svg
+                    aria-hidden="true"
+                    fill="none"
+                    height="12"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                    viewBox="0 0 24 24"
+                    width="12"
+                  >
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+              ) : null}
               {message}
-            </p>
+            </div>
           ) : null}
 
           <section className="mt-6 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-5 shadow-sm">

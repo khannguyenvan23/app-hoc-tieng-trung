@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Spinner } from "@/components/icons";
 import { AppShell, EmptyState } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { StudyCardSkeleton } from "@/components/loading-skeletons";
@@ -1535,7 +1536,12 @@ export default function StudySentencesPage() {
                       type="button"
                     >
                       {updatingDailyLimit
-                        ? "Đang cập nhật..."
+                        ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size={15} />
+                Đang cập nhật...
+              </span>
+            )
                         : `Tăng lên ${suggestedDailyLimit} câu/ngày`}
                     </button>
                     <Link
@@ -1587,7 +1593,12 @@ export default function StudySentencesPage() {
                         type="button"
                       >
                         {creatingAudioId === card.id
-                          ? "Đang tạo audio..."
+                          ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size={15} />
+                Đang tạo audio...
+              </span>
+            )
                           : "Phát lại audio"}
                       </button>
                       <button

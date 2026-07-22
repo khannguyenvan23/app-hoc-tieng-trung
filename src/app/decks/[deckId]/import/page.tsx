@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ButtonLabel } from "@/components/icons";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { ToastList, useToast } from "@/components/ui-feedback";
@@ -187,7 +188,7 @@ export default function ImportPage() {
                 disabled={generating || saving || items.length === 0}
                 type="submit"
               >
-                {generating ? "Đang tạo preview..." : "Tạo preview"}
+                <ButtonLabel busy="Đang tạo preview..." idle="Tạo preview" loading={generating} />
               </button>
             </div>
           </form>
@@ -208,7 +209,7 @@ export default function ImportPage() {
                   onClick={saveCards}
                   type="button"
                 >
-                  {saving ? "Đang lưu..." : `Lưu ${previewCards.length} thẻ`}
+                  <ButtonLabel busy="Đang lưu..." idle={`Lưu ${previewCards.length} thẻ`} loading={saving} />
                 </button>
               </div>
 

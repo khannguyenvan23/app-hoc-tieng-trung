@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
+import { ButtonLabel } from "@/components/icons";
 
 export default function NewSentenceFromWordPage() {
   const params = useParams<{ deckId: string }>();
@@ -76,7 +77,7 @@ export default function NewSentenceFromWordPage() {
             disabled={loading || !word.trim()}
             type="submit"
           >
-            {loading ? "Đang tạo bằng AI..." : "Tạo câu luyện tập"}
+            <ButtonLabel busy="Đang tạo bằng AI..." idle="Tạo câu luyện tập" loading={loading} />
           </button>
         </form>
       </AppShell>

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { AppShell, EmptyState, PrimaryLink } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import { DeckGridSkeleton } from "@/components/loading-skeletons";
-import { Icon } from "@/components/icons";
+import { ButtonLabel, Icon, Spinner } from "@/components/icons";
 import { ConfirmDialog, ToastList, useToast } from "@/components/ui-feedback";
 import { hasPublicEnv } from "@/lib/env";
 import { fetchWithAuth } from "@/lib/fetch-auth";
@@ -387,7 +387,7 @@ export default function DeckPage() {
                         onClick={() => void saveDeckName()}
                         type="button"
                       >
-                        {savingName ? "Đang lưu..." : "Lưu"}
+                        <ButtonLabel busy="Đang lưu..." idle="Lưu" loading={savingName} />
                       </button>
                       <button
                         className="min-h-10 rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
@@ -472,7 +472,7 @@ export default function DeckPage() {
                   type="button"
                 >
                   <Icon name="share" size={16} />
-                  {shareLoading ? "Đang tạo..." : "Chia sẻ"}
+                  <ButtonLabel busy="Đang tạo..." idle="Chia sẻ" loading={shareLoading} />
                 </button>
                 <Link
                   className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
@@ -744,7 +744,12 @@ export default function DeckPage() {
                   type="button"
                 >
                   {actionLoading === "reset-progress"
-                    ? "Đang reset..."
+                    ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size={15} />
+                Đang reset...
+              </span>
+            )
                     : "Reset tiến độ"}
                 </button>
                 <button
@@ -754,7 +759,12 @@ export default function DeckPage() {
                   type="button"
                 >
                   {actionLoading === "delete-vocabulary"
-                    ? "Đang xóa..."
+                    ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size={15} />
+                Đang xóa...
+              </span>
+            )
                     : "Xóa thẻ từ"}
                 </button>
                 <button
@@ -764,7 +774,12 @@ export default function DeckPage() {
                   type="button"
                 >
                   {actionLoading === "delete-sentences"
-                    ? "Đang xóa..."
+                    ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size={15} />
+                Đang xóa...
+              </span>
+            )
                     : "Xóa câu"}
                 </button>
                 <button
@@ -774,7 +789,12 @@ export default function DeckPage() {
                   type="button"
                 >
                   {actionLoading === "delete-deck"
-                    ? "Đang xóa..."
+                    ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size={15} />
+                Đang xóa...
+              </span>
+            )
                     : "Xóa toàn bộ deck"}
                 </button>
               </div>
