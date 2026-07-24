@@ -665,7 +665,12 @@ export default function StudySentencesPage() {
         setSelectedDeckId((currentDeckId) => {
           if (
             currentDeckId === allDecksValue ||
-            sentenceDecks.some((deck) => deck.id === currentDeckId)
+            sentenceDecks.some((deck) => deck.id === currentDeckId) ||
+            // A just-added deck reached here via ?deck= but the deck list can
+            // lag one query behind its content. Keep it selected so the
+            // repair/retry path heals it in seconds instead of resetting to
+            // "all" and waiting for an incidental reload.
+            currentDeckId === requestedDeckIdRef.current
           ) {
             return currentDeckId;
           }

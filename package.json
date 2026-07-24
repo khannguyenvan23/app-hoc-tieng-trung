@@ -10,7 +10,14 @@
     "test:srs": "tsx --test test/srs-logic.test.ts test/sentence-diff.test.ts test/pinyin-align.test.ts",
     "sim:srs": "tsx scripts/simulate-srs.ts",
     "audio:templates": "tsx scripts/prepare-template-audio.ts",
-    "examples:hsk6": "tsx scripts/generate-hsk6-examples.ts"
+    "examples:hsk6": "tsx scripts/generate-hsk6-examples.ts",
+    "template:travel": "tsx scripts/generate-travel-template.ts",
+    "template:factory": "tsx scripts/generate-factory-template.ts",
+    "template:shopping": "tsx scripts/generate-shopping-template.ts",
+    "template:food": "tsx scripts/generate-food-template.ts",
+    "template:housing": "tsx scripts/generate-housing-template.ts",
+    "template:office-sentences": "tsx scripts/generate-office-sentences-template.ts",
+    "template:factory-sentences": "tsx scripts/generate-factory-sentences-template.ts"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.63.0",
