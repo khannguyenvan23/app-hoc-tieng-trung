@@ -36,6 +36,7 @@ const updateSchema = z.object({
   starting_ease_factor: z.number().min(1.3).max(5),
   minimum_ease_factor: z.number().min(1.1).max(5),
   maximum_interval_days: z.number().int().min(1).max(3650),
+  email_reminders_enabled: z.boolean().optional(),
 });
 
 export async function GET(request: Request) {
@@ -83,15 +84,31 @@ export async function PUT(request: Request) {
 
   const supabase = createSupabaseAdminClient();
   const nextSettings = normalizeStudySettings(body.data);
-  const { data, error } = await supabase
+  const payload: Record<string, unknown> = {
+    user_id: user.id,
+    ...nextSettings,
+    updated_at: new Date().toISOString(),
+  };
+
+  let { data, error } = await supabase
     .from("user_study_settings")
-    .upsert({
-      user_id: user.id,
-      ...nextSettings,
-      updated_at: new Date().toISOString(),
-    })
+    .upsert(payload)
     .select("*")
     .single();
+
+  // Degrade gracefully when migration 038 has not been applied yet: retry the
+  // save without the reminders column so the rest of the settings still save.
+  if (error && String(error.message).includes("email_reminders_enabled")) {
+    const fallbackPayload = { ...payload };
+    delete fallbackPayload.email_reminders_enabled;
+    const retry = await supabase
+      .from("user_study_settings")
+      .upsert(fallbackPayload)
+      .select("*")
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
 
   if (error) {
     console.error(error);
