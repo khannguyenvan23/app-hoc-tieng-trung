@@ -233,6 +233,68 @@ export default function DashboardPage() {
 
     let active = true;
     const supabase = createSupabaseBrowserClient();
+    const nowIso = new Date().toISOString();
+
+    type WordDueRow = { cards: { deck_id: string }[] | null };
+    type SentenceDueRow = { sentence_cards: { deck_id: string }[] | null };
+
+    Promise.all([
+      supabase
+        .from("reviews")
+        .select("cards!inner(deck_id)")
+        .gt("review_count", 0)
+        .lte("next_review_at", nowIso),
+      supabase
+        .from("sentence_reviews")
+        .select("sentence_cards!inner(deck_id)")
+        .gt("review_count", 0)
+        .lte("next_review_at", nowIso),
+    ]).then(([wordResult, sentenceResult]) => {
+      if (!active) {
+        return;
+      }
+
+      const byDeck: Record<string, { words: number; sentences: number }> = {};
+      const bump = (deckId: string, kind: "words" | "sentences") => {
+        if (!byDeck[deckId]) {
+          byDeck[deckId] = { words: 0, sentences: 0 };
+        }
+        byDeck[deckId][kind] += 1;
+      };
+
+      let words = 0;
+      for (const row of (wordResult.data || []) as WordDueRow[]) {
+        const deckId = row.cards?.[0]?.deck_id;
+        if (deckId) {
+          bump(deckId, "words");
+          words += 1;
+        }
+      }
+
+      let sentences = 0;
+      for (const row of (sentenceResult.data || []) as SentenceDueRow[]) {
+        const deckId = row.sentence_cards?.[0]?.deck_id;
+        if (deckId) {
+          bump(deckId, "sentences");
+          sentences += 1;
+        }
+      }
+
+      setDueCounts({ words, sentences, byDeck });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [configured]);
+
+  useEffect(() => {
+    if (!configured) {
+      return;
+    }
+
+    let active = true;
+    const supabase = createSupabaseBrowserClient();
 
     supabase.auth.getUser().then(({ data }) => {
       if (!active || !data.user) {
@@ -613,10 +675,14 @@ export default function DashboardPage() {
                   Hôm nay
                 </p>
                 <h2 className="mt-1 text-xl font-semibold">
-                  Sẵn sàng ôn tập?
+                  {dueCounts.words + dueCounts.sentences > 0
+                    ? "Có phần đến hạn cần ôn"
+                    : "Sẵn sàng ôn tập?"}
                 </h2>
                 <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                  Mở phần đến hạn và giữ chuỗi ngày học của bạn.
+                  {dueCounts.words + dueCounts.sentences > 0
+                    ? `${dueCounts.words} thẻ từ vựng và ${dueCounts.sentences} câu đang chờ bạn ôn.`
+                    : "Không có thẻ đến hạn. Học thẻ mới hoặc quay lại sau nhé."}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Link
@@ -976,19 +1042,33 @@ export default function DashboardPage() {
               />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {decks.map((deck) => (
-                  <Link
-                    className="app-surface rounded-xl p-5 hover:border-teal-700"
-                    href={`/decks/${deck.id}`}
-                    key={deck.id}
-                  >
-                    <h3 className="font-semibold">{deck.name}</h3>
-                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                      Tạo ngày{" "}
-                      {new Date(deck.created_at).toLocaleDateString("vi-VN")}
-                    </p>
-                  </Link>
-                ))}
+                {decks.map((deck) => {
+                  const deckDue = dueCounts.byDeck[deck.id];
+                  const dueTotal = deckDue
+                    ? deckDue.words + deckDue.sentences
+                    : 0;
+
+                  return (
+                    <Link
+                      className="app-surface rounded-xl p-5 hover:border-teal-700"
+                      href={`/decks/${deck.id}`}
+                      key={deck.id}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="min-w-0 font-semibold">{deck.name}</h3>
+                        {dueTotal > 0 ? (
+                          <span className="shrink-0 rounded-full bg-teal-600 px-2 py-0.5 text-xs font-semibold text-white dark:bg-teal-500">
+                            {dueTotal} đến hạn
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                        Tạo ngày{" "}
+                        {new Date(deck.created_at).toLocaleDateString("vi-VN")}
+                      </p>
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </div>
