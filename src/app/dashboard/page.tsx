@@ -9,7 +9,6 @@ import { AuthGuard } from "@/components/auth-guard";
 import {
   CommunityDeckSkeleton,
   DeckGridSkeleton,
-  HskProgressSkeleton,
   WeakItemsSkeleton,
 } from "@/components/loading-skeletons";
 import { communityJoinUrl, hasZaloGroupUrl } from "@/lib/community";
@@ -25,23 +24,6 @@ import type { Deck, TemplateDeck } from "@/lib/types";
 type DashboardStats = {
   totalCards: number;
   streakDays: number;
-};
-
-type HskProgressLevel = {
-  slug: string;
-  name: string;
-  level: string;
-  totalCards: number;
-  copiedCards: number;
-  learnedCards: number;
-  percent: number;
-};
-
-type HskProgress = {
-  levels: HskProgressLevel[];
-  totalLearned: number;
-  totalCards: number;
-  completedLevels: number;
 };
 
 type WeakReviewItem = {
@@ -77,13 +59,6 @@ type DueCounts = {
 };
 
 const emptyDueCounts: DueCounts = { words: 0, sentences: 0, byDeck: {} };
-
-const emptyProgress: HskProgress = {
-  levels: [],
-  totalLearned: 0,
-  totalCards: 0,
-  completedLevels: 0,
-};
 
 function startOfLocalDay(date: Date) {
   const nextDate = new Date(date);
@@ -209,8 +184,6 @@ export default function DashboardPage() {
   const [templates, setTemplates] = useState<TemplateDeck[]>([]);
   const [sharedDecks, setSharedDecks] = useState<SharedDeckSummary[]>([]);
   const [stats, setStats] = useState<DashboardStats>(emptyStats);
-  const [progress, setProgress] = useState<HskProgress>(emptyProgress);
-  const [progressLoading, setProgressLoading] = useState(configured);
   const [loading, setLoading] = useState(configured);
   const [statsLoading, setStatsLoading] = useState(configured);
   const [templatesLoading, setTemplatesLoading] = useState(configured);
@@ -515,34 +488,6 @@ export default function DashboardPage() {
       .finally(() => {
         if (active) {
           setWeakItemsLoading(false);
-        }
-      });
-
-    fetchWithAuth("/api/progress")
-      .then(async (response) => {
-        if (!active) {
-          return;
-        }
-
-        if (response.ok) {
-          const progressData = await response.json();
-          setProgress((progressData || emptyProgress) as HskProgress);
-          return;
-        }
-
-        setProgress(emptyProgress);
-      })
-      .catch((error) => {
-        if (!active) {
-          return;
-        }
-
-        console.error(error);
-        setProgress(emptyProgress);
-      })
-      .finally(() => {
-        if (active) {
-          setProgressLoading(false);
         }
       });
 
@@ -856,169 +801,6 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {false && (
-        <section className="app-surface mt-6 rounded-xl p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
-                Chứng chỉ & cấp độ
-              </p>
-              <h2 className="mt-1 text-xl font-semibold">
-                {progressLoading
-                  ? "Đang tính tiến độ HSK"
-                  : `Đã học ${progress.totalLearned} từ HSK`}
-              </h2>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                Theo dõi tiến độ từng cấp để thấy mình đang đi tới đâu.
-              </p>
-            </div>
-            <div className="rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm text-teal-900 dark:text-teal-200">
-              Hoàn thành{" "}
-              <span className="text-lg font-semibold">
-                {progressLoading
-                  ? "..."
-                  : `${progress.completedLevels}/${progress.levels.length}`}
-              </span>{" "}
-              cấp
-            </div>
-          </div>
-
-          {progressLoading ? (
-            <HskProgressSkeleton />
-          ) : progress.levels.length === 0 ? (
-            <p className="mt-5 text-sm text-zinc-600 dark:text-zinc-400">
-              Chưa có dữ liệu HSK. Hãy thêm bộ HSK mẫu và ôn ít nhất một thẻ.
-            </p>
-          ) : (
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {progress.levels.map((level) => {
-                const remainingCards = Math.max(
-                  0,
-                  level.totalCards - level.learnedCards,
-                );
-                const copiedButNotStudied = Math.max(
-                  0,
-                  level.copiedCards - level.learnedCards,
-                );
-
-                return (
-                  <div
-                    className="rounded-md border border-zinc-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 p-4"
-                    key={level.slug}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold">{level.level}</h3>
-                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                          {level.name}
-                        </p>
-                      </div>
-                      <span className="text-2xl font-semibold text-teal-800 dark:text-teal-300">
-                        {level.percent}%
-                      </span>
-                    </div>
-                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/15">
-                      <div
-                        className="h-full rounded-full bg-teal-700"
-                        style={{ width: `${level.percent}%` }}
-                      />
-                    </div>
-                    <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">
-                      {level.learnedCards}/{level.totalCards} từ đã học
-                    </p>
-                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                      {remainingCards === 0
-                        ? "Đã hoàn thành cấp này."
-                        : `Còn ${remainingCards} từ để đạt 100%.`}
-                    </p>
-                    {copiedButNotStudied > 0 ? (
-                      <p className="mt-1 text-xs text-teal-800 dark:text-teal-300">
-                        {copiedButNotStudied} từ đã có trong bộ, chưa ôn.
-                      </p>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-        )}
-
-        {false && (
-          <section className="app-surface mt-6 rounded-xl p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
-                  Chứng chỉ & cấp độ
-                </p>
-                <h2 className="mt-1 text-xl font-semibold">
-                  Đã học {progress.totalLearned} từ HSK
-                </h2>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                  Theo dõi tiến độ từng cấp để thấy mình đang đi tới đâu.
-                </p>
-              </div>
-              <div className="rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm text-teal-900 dark:text-teal-200">
-                Hoàn thành{" "}
-                <span className="text-lg font-semibold">
-                  {progress.completedLevels}/{progress.levels.length}
-                </span>{" "}
-                cấp
-              </div>
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {progress.levels.map((level) => {
-                const remainingCards = Math.max(
-                  0,
-                  level.totalCards - level.learnedCards,
-                );
-                const copiedButNotStudied = Math.max(
-                  0,
-                  level.copiedCards - level.learnedCards,
-                );
-
-                return (
-                  <div
-                    className="rounded-md border border-zinc-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 p-4"
-                    key={level.slug}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold">{level.level}</h3>
-                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                          {level.name}
-                        </p>
-                      </div>
-                      <span className="text-2xl font-semibold text-teal-800 dark:text-teal-300">
-                        {level.percent}%
-                      </span>
-                    </div>
-                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/15">
-                      <div
-                        className="h-full rounded-full bg-teal-700"
-                        style={{ width: `${level.percent}%` }}
-                      />
-                    </div>
-                    <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">
-                      {level.learnedCards}/{level.totalCards} từ đã học
-                    </p>
-                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                      {remainingCards === 0
-                        ? "Đã hoàn thành cấp này."
-                        : `Còn ${remainingCards} từ để đạt 100%.`}
-                    </p>
-                    {copiedButNotStudied > 0 ? (
-                      <p className="mt-1 text-xs text-teal-800 dark:text-teal-300">
-                        {copiedButNotStudied} từ đã có trong bộ, chưa ôn.
-                      </p>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
 
         <section className="mt-8">
           <div className="border-y border-zinc-200 dark:border-white/10 py-5">
@@ -1049,13 +831,14 @@ export default function DashboardPage() {
                     : 0;
 
                   return (
-                    <Link
-                      className="app-surface rounded-xl p-5 hover:border-teal-700"
-                      href={`/decks/${deck.id}`}
-                      key={deck.id}
-                    >
+                    <div className="app-surface rounded-xl p-5" key={deck.id}>
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="min-w-0 font-semibold">{deck.name}</h3>
+                        <Link
+                          className="min-w-0 font-semibold hover:text-teal-700 dark:hover:text-teal-300"
+                          href={`/decks/${deck.id}`}
+                        >
+                          {deck.name}
+                        </Link>
                         {dueTotal > 0 ? (
                           <span className="shrink-0 rounded-full bg-teal-600 px-2 py-0.5 text-xs font-semibold text-white dark:bg-teal-500">
                             {dueTotal} đến hạn
@@ -1066,7 +849,32 @@ export default function DashboardPage() {
                         Tạo ngày{" "}
                         {new Date(deck.created_at).toLocaleDateString("vi-VN")}
                       </p>
-                    </Link>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        {deckDue && deckDue.words > 0 ? (
+                          <Link
+                            className="inline-flex items-center gap-1 rounded-md bg-teal-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-800"
+                            href={`/study?deck=${deck.id}`}
+                          >
+                            <Icon name="play" size={13} />
+                            Ôn {deckDue.words} thẻ
+                          </Link>
+                        ) : null}
+                        {deckDue && deckDue.sentences > 0 ? (
+                          <Link
+                            className="inline-flex items-center gap-1 rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-semibold hover:bg-zinc-100 dark:border-white/15 dark:hover:bg-white/10"
+                            href={`/study-sentences?deck=${deck.id}`}
+                          >
+                            Luyện {deckDue.sentences} câu
+                          </Link>
+                        ) : null}
+                        <Link
+                          className="inline-flex items-center rounded-md px-2 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100"
+                          href={`/decks/${deck.id}`}
+                        >
+                          Quản lý
+                        </Link>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
