@@ -49,6 +49,7 @@ export async function GET(request: Request) {
   let sent = 0;
   let skippedNoDue = 0;
   let failed = 0;
+  const errors: string[] = [];
 
   for (const target of targets) {
     const dueCount = await countDueForUser(supabase, target.userId, nowIso);
@@ -65,6 +66,7 @@ export async function GET(request: Request) {
 
     if (!email) {
       failed += 1;
+      errors.push("Không lấy được email của người dùng.");
       continue;
     }
 
@@ -78,7 +80,9 @@ export async function GET(request: Request) {
       sent += 1;
     } else if (!result.skipped) {
       failed += 1;
-      console.error("reminders: send failed", target.userId, result.error);
+      const detail = result.error || "unknown error";
+      errors.push(detail);
+      console.error("reminders: send failed", target.userId, detail);
     }
   }
 
@@ -88,5 +92,8 @@ export async function GET(request: Request) {
     sent,
     skippedNoDue,
     failed,
+    // Only surfaced to the secret-protected caller, to help diagnose Resend
+    // rejections (e.g. an unverified sending domain). Capped to avoid noise.
+    errors: errors.slice(0, 3),
   });
 }
