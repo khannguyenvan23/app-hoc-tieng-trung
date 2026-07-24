@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Spinner } from "@/components/icons";
+import { Icon, Spinner } from "@/components/icons";
 import { AppShell, EmptyState, PrimaryLink } from "@/components/app-shell";
 import { AuthGuard } from "@/components/auth-guard";
 import {
@@ -67,6 +67,16 @@ const emptyStats: DashboardStats = {
   totalCards: 0,
   streakDays: 0,
 };
+
+// Learned cards (words + sentences) due for review right now, both in total and
+// per deck, so the dashboard can show "what to study today".
+type DueCounts = {
+  words: number;
+  sentences: number;
+  byDeck: Record<string, { words: number; sentences: number }>;
+};
+
+const emptyDueCounts: DueCounts = { words: 0, sentences: 0, byDeck: {} };
 
 const emptyProgress: HskProgress = {
   levels: [],
@@ -211,6 +221,7 @@ export default function DashboardPage() {
   const [studySettings, setStudySettings] =
     useState<StudySettings>(defaultStudySettings);
   const [weakItems, setWeakItems] = useState<WeakReviewItem[]>([]);
+  const [dueCounts, setDueCounts] = useState<DueCounts>(emptyDueCounts);
   const [savingSettings, setSavingSettings] = useState(false);
   const [onboardingMessage, setOnboardingMessage] = useState("");
   const [accountName, setAccountName] = useState("");
@@ -594,6 +605,61 @@ export default function DashboardPage() {
           <PrimaryLink href="/decks/new">Tạo bộ thẻ</PrimaryLink>
         </div>
 
+        {!showOnboarding ? (
+          <section className="app-surface mt-6 rounded-2xl p-5">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-teal-800 dark:text-teal-300">
+                  Hôm nay
+                </p>
+                <h2 className="mt-1 text-xl font-semibold">
+                  Sẵn sàng ôn tập?
+                </h2>
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                  Mở phần đến hạn và giữ chuỗi ngày học của bạn.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Link
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-brand)] hover:bg-teal-800"
+                    href="/study"
+                  >
+                    <Icon name="play" size={16} />
+                    Ôn từ vựng
+                  </Link>
+                  <Link
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-zinc-300 dark:border-white/15 px-5 py-2.5 text-sm font-semibold hover:bg-zinc-100 dark:hover:bg-white/10"
+                    href="/study-sentences"
+                  >
+                    <Icon name="sentences" size={16} />
+                    Luyện câu
+                  </Link>
+                  {weakItems.length > 0 ? (
+                    <Link
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-red-200 bg-red-50 px-5 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 dark:border-red-500/40 dark:bg-red-500/15 dark:text-red-300 dark:hover:bg-red-500/25"
+                      href="/study?weak=1"
+                    >
+                      Ôn {weakItems.length} thẻ yếu
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+              <div className="flex items-center gap-3 self-start rounded-xl border border-teal-200 bg-teal-50 px-5 py-4 dark:border-teal-500/40 dark:bg-teal-500/15 sm:self-auto">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white dark:bg-teal-500">
+                  <Icon name="flame" size={20} />
+                </span>
+                <div>
+                  <div className="text-3xl font-semibold leading-none tabular-nums text-teal-800 dark:text-teal-200">
+                    {statsLoading ? "…" : stats.streakDays}
+                  </div>
+                  <div className="mt-1 text-xs text-teal-800 dark:text-teal-300">
+                    ngày liên tiếp
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         {showOnboarding ? (
           <section className="app-surface mt-6 rounded-xl p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -889,27 +955,14 @@ export default function DashboardPage() {
         )}
 
         <section className="mt-8">
-          <div className="flex flex-col gap-4 border-y border-zinc-200 dark:border-white/10 py-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
-                Tủ học cá nhân
-              </p>
-              <h2 className="mt-1 text-2xl font-semibold">Bộ thẻ của bạn</h2>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                Chọn một bộ thẻ để thêm nội dung, chỉnh sửa hoặc bắt đầu học.
-              </p>
-            </div>
-            <div className="flex min-w-40 items-center justify-between gap-4 rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 sm:block sm:text-center">
-              <div className="text-sm font-medium text-teal-900 dark:text-teal-200">Streak học</div>
-              <div>
-                <span className="text-3xl font-semibold text-teal-800 dark:text-teal-300">
-                  {statsLoading ? "..." : stats.streakDays}
-                </span>
-                <span className="ml-2 text-xs text-teal-800 dark:text-teal-300 sm:ml-0 sm:block">
-                  ngày liên tiếp
-                </span>
-              </div>
-            </div>
+          <div className="border-y border-zinc-200 dark:border-white/10 py-5">
+            <p className="text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
+              Tủ học cá nhân
+            </p>
+            <h2 className="mt-1 text-2xl font-semibold">Bộ thẻ của bạn</h2>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+              Chọn một bộ thẻ để thêm nội dung, chỉnh sửa hoặc bắt đầu học.
+            </p>
           </div>
 
           <div className="mt-4">
