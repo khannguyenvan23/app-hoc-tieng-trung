@@ -19,7 +19,6 @@ export type StudySettings = {
   starting_ease_factor: number;
   minimum_ease_factor: number;
   maximum_interval_days: number;
-  email_reminders_enabled: boolean;
 };
 
 export const defaultStudySettings: StudySettings = {
@@ -39,7 +38,6 @@ export const defaultStudySettings: StudySettings = {
   starting_ease_factor: 2.5,
   minimum_ease_factor: 1.3,
   maximum_interval_days: 365,
-  email_reminders_enabled: false,
 };
 
 function clampNumber(value: unknown, min: number, max: number, fallback: number) {
@@ -214,7 +212,6 @@ export function normalizeStudySettings(value: unknown): StudySettings {
       3650,
       defaultStudySettings.maximum_interval_days,
     ),
-    email_reminders_enabled: source.email_reminders_enabled === true,
   };
 }
 

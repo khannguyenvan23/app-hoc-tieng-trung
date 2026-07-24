@@ -211,14 +211,6 @@ export default function OptionsPage() {
     setMessage("");
   }
 
-  function updateEmailReminders(enabled: boolean) {
-    setSettings((current) => ({
-      ...current,
-      email_reminders_enabled: enabled,
-    }));
-    setMessage("");
-  }
-
   function updateRelearningSteps(value: string) {
     setSettings((current) => ({ ...current, relearning_steps: value }));
     setMessage("");
@@ -488,42 +480,6 @@ export default function OptionsPage() {
                 ))}
               </div>
             </div>
-          </section>
-
-          <section className="mt-6 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-5 shadow-sm">
-            <h2 className="text-xl font-semibold">Nhắc học</h2>
-            <label className="mt-4 flex cursor-pointer items-start justify-between gap-4">
-              <span className="text-sm">
-                <span className="font-medium">Nhắc học qua email</span>
-                <span className="mt-1 block text-zinc-500 dark:text-zinc-400">
-                  Mỗi ngày, nếu có thẻ đến hạn, gửi một email nhắc bạn vào ôn.
-                  Không có thẻ đến hạn thì không gửi.
-                </span>
-              </span>
-              <button
-                aria-checked={settings.email_reminders_enabled}
-                aria-label="Nhắc học qua email"
-                className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-60 ${
-                  settings.email_reminders_enabled
-                    ? "bg-teal-600"
-                    : "bg-zinc-300 dark:bg-white/20"
-                }`}
-                disabled={loading}
-                onClick={() =>
-                  updateEmailReminders(!settings.email_reminders_enabled)
-                }
-                role="switch"
-                type="button"
-              >
-                <span
-                  className={`inline-block size-5 transform rounded-full bg-white shadow transition-transform ${
-                    settings.email_reminders_enabled
-                      ? "translate-x-5"
-                      : "translate-x-0.5"
-                  }`}
-                />
-              </button>
-            </label>
           </section>
         </div>
       </AppShell>
