@@ -202,6 +202,10 @@ export default function DashboardPage() {
   const [progress, setProgress] = useState<HskProgress>(emptyProgress);
   const [progressLoading, setProgressLoading] = useState(configured);
   const [loading, setLoading] = useState(configured);
+  const [statsLoading, setStatsLoading] = useState(configured);
+  const [templatesLoading, setTemplatesLoading] = useState(configured);
+  const [sharedDecksLoading, setSharedDecksLoading] = useState(configured);
+  const [weakItemsLoading, setWeakItemsLoading] = useState(configured);
   const [copyingTemplateId, setCopyingTemplateId] = useState("");
   const [templateMessage, setTemplateMessage] = useState("");
   const [studySettings, setStudySettings] =
@@ -232,10 +236,37 @@ export default function DashboardPage() {
       setAccountName(profileName || emailName);
     });
 
+    void (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("decks")
+          .select("*")
+          .order("created_at", {
+            ascending: false,
+          });
+
+        if (!active) {
+          return;
+        }
+
+        if (error) {
+          throw error;
+        }
+
+        setDecks((data || []) as Deck[]);
+      } catch (error) {
+        if (active) {
+          console.error(error);
+          setDecks([]);
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    })();
+
     Promise.all([
-      supabase.from("decks").select("*").order("created_at", {
-        ascending: false,
-      }),
       supabase.from("cards").select("id", { count: "exact", head: true }),
       supabase
         .from("sentence_cards")
@@ -252,9 +283,123 @@ export default function DashboardPage() {
         .gt("review_count", 0)
         .order("updated_at", { ascending: false })
         .limit(250),
-      fetchWithAuth("/api/template-decks"),
-      fetchWithAuth("/api/deck-shares"),
-      fetchWithAuth("/api/study-settings"),
+    ])
+      .then(
+        ([
+          cardsCountResult,
+          sentenceCardsCountResult,
+          reviewedCardsResult,
+          reviewedSentenceCardsResult,
+        ]) => {
+          if (!active) {
+            return;
+          }
+
+          const reviewDates = [
+            ...((reviewedCardsResult.data || []) as { updated_at: string }[]),
+            ...((reviewedSentenceCardsResult.data || []) as {
+              updated_at: string;
+            }[]),
+          ].map((review) => review.updated_at);
+
+          setStats({
+            totalCards:
+              (cardsCountResult.count || 0) +
+              (sentenceCardsCountResult.count || 0),
+            streakDays: calculateStreak(reviewDates),
+          });
+        },
+      )
+      .catch((error) => {
+        if (active) {
+          console.error(error);
+          setStats(emptyStats);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setStatsLoading(false);
+        }
+      });
+
+    fetchWithAuth("/api/template-decks")
+      .then(async (response) => {
+        if (!active) {
+          return;
+        }
+
+        if (!response.ok) {
+          setTemplates([]);
+          return;
+        }
+
+        const templateData = await response.json();
+        if (active) {
+          setTemplates((templateData.templates || []) as TemplateDeck[]);
+        }
+      })
+      .catch((error) => {
+        if (active) {
+          console.error(error);
+          setTemplates([]);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setTemplatesLoading(false);
+        }
+      });
+
+    fetchWithAuth("/api/deck-shares")
+      .then(async (response) => {
+        if (!active) {
+          return;
+        }
+
+        if (!response.ok) {
+          setSharedDecks([]);
+          return;
+        }
+
+        const sharedDecksData = await response.json();
+        if (active) {
+          setSharedDecks(
+            (sharedDecksData.shares || []) as SharedDeckSummary[],
+          );
+        }
+      })
+      .catch((error) => {
+        if (active) {
+          console.error(error);
+          setSharedDecks([]);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setSharedDecksLoading(false);
+        }
+      });
+
+    fetchWithAuth("/api/study-settings")
+      .then(async (response) => {
+        if (!active || !response.ok) {
+          return;
+        }
+
+        const settingsData = await response.json();
+        if (active) {
+          setStudySettings(
+            (settingsData.settings || defaultStudySettings) as StudySettings,
+          );
+        }
+      })
+      .catch((error) => {
+        if (active) {
+          console.error(error);
+        }
+      });
+
+    Promise.all([
       supabase
         .from("reviews")
         .select(
@@ -273,60 +418,12 @@ export default function DashboardPage() {
         .order("weak_score", { ascending: false })
         .order("updated_at", { ascending: false })
         .limit(8),
-    ]).then(
-      async ([
-        decksResult,
-        cardsCountResult,
-        sentenceCardsCountResult,
-        reviewedCardsResult,
-        reviewedSentenceCardsResult,
-        templatesResponse,
-        sharedDecksResponse,
-        settingsResponse,
-        weakReviewsResult,
-        weakSentenceReviewsResult,
-      ]) => {
+    ])
+      .then(([weakReviewsResult, weakSentenceReviewsResult]) => {
         if (!active) {
           return;
         }
 
-        const reviewDates = [
-          ...((reviewedCardsResult.data || []) as { updated_at: string }[]),
-          ...((reviewedSentenceCardsResult.data || []) as {
-            updated_at: string;
-          }[]),
-        ].map((review) => review.updated_at);
-
-        if (templatesResponse.ok) {
-          const templateData = await templatesResponse.json();
-          setTemplates((templateData.templates || []) as TemplateDeck[]);
-        } else {
-          setTemplates([]);
-        }
-
-        if (sharedDecksResponse.ok) {
-          const sharedDecksData = await sharedDecksResponse.json();
-          setSharedDecks(
-            (sharedDecksData.shares || []) as SharedDeckSummary[],
-          );
-        } else {
-          setSharedDecks([]);
-        }
-
-        if (settingsResponse.ok) {
-          const settingsData = await settingsResponse.json();
-          setStudySettings(
-            (settingsData.settings || defaultStudySettings) as StudySettings,
-          );
-        }
-
-        setDecks((decksResult.data || []) as Deck[]);
-        setStats({
-          totalCards:
-            (cardsCountResult.count || 0) +
-            (sentenceCardsCountResult.count || 0),
-          streakDays: calculateStreak(reviewDates),
-        });
         setWeakItems(
           buildWeakReviewItems(
             weakReviewsResult.error ? [] : weakReviewsResult.data || [],
@@ -335,19 +432,18 @@ export default function DashboardPage() {
               : weakSentenceReviewsResult.data || [],
           ),
         );
-        setLoading(false);
-      },
-    ).catch((error) => {
-      if (!active) {
-        return;
-      }
-
-      console.error(error);
-      setTemplates([]);
-      setSharedDecks([]);
-      setWeakItems([]);
-      setLoading(false);
-    });
+      })
+      .catch((error) => {
+        if (active) {
+          console.error(error);
+          setWeakItems([]);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setWeakItemsLoading(false);
+        }
+      });
 
     fetchWithAuth("/api/progress")
       .then(async (response) => {
@@ -807,7 +903,7 @@ export default function DashboardPage() {
               <div className="text-sm font-medium text-teal-900 dark:text-teal-200">Streak học</div>
               <div>
                 <span className="text-3xl font-semibold text-teal-800 dark:text-teal-300">
-                  {loading ? "..." : stats.streakDays}
+                  {statsLoading ? "..." : stats.streakDays}
                 </span>
                 <span className="ml-2 text-xs text-teal-800 dark:text-teal-300 sm:ml-0 sm:block">
                   ngày liên tiếp
@@ -858,7 +954,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {loading ? (
+          {sharedDecksLoading ? (
             <CommunityDeckSkeleton />
           ) : sharedDecks.length === 0 ? (
             <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
@@ -918,7 +1014,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {loading ? (
+          {weakItemsLoading ? (
             <WeakItemsSkeleton />
           ) : weakItems.length === 0 ? (
             <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
@@ -1026,7 +1122,7 @@ export default function DashboardPage() {
                 );
               })}
             </div>
-          ) : loading ? (
+          ) : templatesLoading ? (
             <DeckGridSkeleton />
           ) : (
             <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">

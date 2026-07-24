@@ -30,8 +30,11 @@ type TemplateDeckRow = {
   description: string | null;
   level: string | null;
   created_at: string;
-  template_cards?: { id: string }[] | null;
-  template_sentence_cards?: { id: string }[] | null;
+};
+
+type TemplateDeckWithCountsRow = TemplateDeckRow & {
+  template_cards?: { count: number | null }[] | null;
+  template_sentence_cards?: { count: number | null }[] | null;
 };
 
 type UserDeckRow = {
@@ -87,6 +90,10 @@ function isUniqueTemplateError(error: unknown) {
 
 function normalizeName(value: string | null | undefined) {
   return (value || "").trim().toLowerCase();
+}
+
+function getRelationCount(rows: { count: number | null }[] | null | undefined) {
+  return Number(rows?.[0]?.count || 0);
 }
 
 function findExistingTemplateDeck(
@@ -206,7 +213,9 @@ export async function GET(request: Request) {
   const supabase = createSupabaseAdminClient();
   const { data: templates, error } = await supabase
     .from("template_decks")
-    .select("*")
+    .select(
+      "id, slug, name, description, level, created_at, template_cards(count), template_sentence_cards(count)",
+    )
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -219,7 +228,7 @@ export async function GET(request: Request) {
 
   const { data: userDecks, error: userDecksError } = await supabase
     .from("decks")
-    .select("*")
+    .select("id, name, source_template_slug")
     .eq("user_id", user.id);
 
   if (userDecksError) {
@@ -230,43 +239,28 @@ export async function GET(request: Request) {
     );
   }
 
-  const templatesWithCounts = await Promise.all(
-    ((templates || []) as TemplateDeckRow[]).map(async (template) => {
-      const existingDeck = findExistingTemplateDeck(
-        template,
-        (userDecks || []) as UserDeckRow[],
-      );
-      const [
-        { count: templateCardCount, error: templateCardCountError },
-        { count: templateSentenceCardCount, error: templateSentenceCardCountError },
-      ] = await Promise.all([
-        supabase
-          .from("template_cards")
-          .select("id", { count: "exact", head: true })
-          .eq("template_deck_id", template.id),
-        supabase
-          .from("template_sentence_cards")
-          .select("id", { count: "exact", head: true })
-          .eq("template_deck_id", template.id),
-      ]);
+  const templatesWithCounts = (
+    (templates || []) as TemplateDeckWithCountsRow[]
+  ).map((template) => {
+    const existingDeck = findExistingTemplateDeck(
+      template,
+      (userDecks || []) as UserDeckRow[],
+    );
 
-      if (templateCardCountError || templateSentenceCardCountError) {
-        console.error(templateCardCountError || templateSentenceCardCountError);
-      }
-
-      return {
-        id: template.id,
-        slug: template.slug,
-        name: template.name,
-        description: template.description,
-        level: template.level,
-        created_at: template.created_at,
-        already_added: Boolean(existingDeck),
-        user_deck_id: existingDeck?.id || null,
-        card_count: (templateCardCount || 0) + (templateSentenceCardCount || 0),
-      };
-    }),
-  );
+    return {
+      id: template.id,
+      slug: template.slug,
+      name: template.name,
+      description: template.description,
+      level: template.level,
+      created_at: template.created_at,
+      already_added: Boolean(existingDeck),
+      user_deck_id: existingDeck?.id || null,
+      card_count:
+        getRelationCount(template.template_cards) +
+        getRelationCount(template.template_sentence_cards),
+    };
+  });
 
   return NextResponse.json({
     templates: templatesWithCounts,
