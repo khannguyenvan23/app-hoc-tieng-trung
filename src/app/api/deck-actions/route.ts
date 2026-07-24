@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth";
+import { getImmediateDueAt } from "@/lib/immediate-due";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const schema = z.object({
@@ -133,7 +134,7 @@ export async function POST(request: Request) {
   }
 
   const now = new Date().toISOString();
-  const dueNow = new Date(Date.now() - 60_000).toISOString();
+  const dueNow = getImmediateDueAt();
   const cardIds = (cards || []).map((card) => card.id);
   const sentenceCardIds = (sentenceCards || []).map((card) => card.id);
 

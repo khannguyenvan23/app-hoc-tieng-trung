@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth";
+import { getImmediateDueAt } from "@/lib/immediate-due";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const schema = z.object({
@@ -54,7 +55,14 @@ export async function POST(request: Request) {
       !Array.isArray(card.sentence_reviews) ||
       card.sentence_reviews.length === 0,
   );
-  const dueNow = new Date(Date.now() - 60_000).toISOString();
+  const unreviewedReviewIds = (sentenceCards || []).flatMap((card) =>
+    Array.isArray(card.sentence_reviews)
+      ? card.sentence_reviews
+          .filter((review) => Number(review.review_count) === 0)
+          .map((review) => review.id)
+      : [],
+  );
+  const dueNow = getImmediateDueAt();
 
   if (cardsWithoutReviews.length > 0) {
     const { error: reviewsError } = await supabase.from("sentence_reviews").insert(
@@ -74,9 +82,27 @@ export async function POST(request: Request) {
     }
   }
 
+  if (unreviewedReviewIds.length > 0) {
+    for (let index = 0; index < unreviewedReviewIds.length; index += 100) {
+      const { error: updateError } = await supabase
+        .from("sentence_reviews")
+        .update({ next_review_at: dueNow })
+        .eq("user_id", user.id)
+        .in("id", unreviewedReviewIds.slice(index, index + 100));
+
+      if (updateError) {
+        console.error(updateError);
+        return NextResponse.json(
+          { error: `Khong the cap nhat lich on cau: ${updateError.message}` },
+          { status: 500 },
+        );
+      }
+    }
+  }
+
   return NextResponse.json({
     success: true,
     created: cardsWithoutReviews.length,
-    updated: 0,
+    updated: unreviewedReviewIds.length,
   });
 }

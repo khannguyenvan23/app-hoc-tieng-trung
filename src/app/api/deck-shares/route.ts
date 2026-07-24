@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRequestUser } from "@/lib/auth";
+import { getImmediateDueAt } from "@/lib/immediate-due";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const tokenSchema = z.string().uuid();
@@ -322,7 +323,7 @@ export async function POST(request: Request) {
       copiedSentences = (result.data || []) as CreatedCard[];
     }
 
-    const dueNow = new Date(Date.now() - 60_000).toISOString();
+    const dueNow = getImmediateDueAt();
 
     if (copiedCards.length > 0) {
       const { error } = await supabase.from("reviews").insert(

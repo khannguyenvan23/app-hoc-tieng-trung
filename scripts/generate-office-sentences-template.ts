@@ -413,8 +413,166 @@ const officeDataCorrections: Record<
       "Tổng kết cuộc họp hôm nay, chúng ta đã đạt được một số đồng thuận quan trọng.",
   },
 };
+const factoryDataCorrections: Record<
+  string,
+  Partial<GeneratedSentence>
+> = {
+  "今天的生产计划已交代清楚，请按要求执行。": {
+    sentence_vi:
+      "Kế hoạch sản xuất hôm nay đã được bàn giao rõ ràng, vui lòng thực hiện đúng yêu cầu.",
+  },
+  "请核对产品数量，确保无误后再交接。": {
+    sentence_vi:
+      "Vui lòng đối chiếu số lượng sản phẩm, xác nhận chính xác rồi mới bàn giao.",
+  },
+  "接班人员如有问题，请及时沟通反馈。": {
+    sentence_vi:
+      "Nếu có vấn đề, nhân viên nhận ca vui lòng trao đổi và phản hồi kịp thời.",
+  },
+  "每天作业结束后，必须对设备进行彻底清洁维护。": {
+    sentence_vi:
+      "Sau khi kết thúc công việc mỗi ngày, phải vệ sinh kỹ và bảo dưỡng thiết bị.",
+  },
+  "操作期间请密切观察仪表，及时发现异常数据。": {
+    sentence_vi:
+      "Trong quá trình vận hành, hãy theo dõi sát đồng hồ đo để kịp thời phát hiện số liệu bất thường.",
+  },
+  "每日工作前请仔细检查所有传动部件的润滑情况。": {
+    sentence_vi:
+      "Trước mỗi ngày làm việc, hãy kiểm tra kỹ tình trạng bôi trơn của tất cả bộ phận truyền động.",
+  },
+  "加注润滑油时应避免过量，防止污染产品。": {
+    sentence_vi:
+      "Khi châm dầu bôi trơn, tránh châm quá mức để không làm bẩn sản phẩm.",
+  },
+  "请将检测不合格的产品放入隔离区，避免混入良品。": {
+    sentence_vi:
+      "Vui lòng đưa sản phẩm không đạt vào khu cách ly để tránh lẫn với hàng đạt chuẩn.",
+  },
+  "请技术员复检有争议的样品，确保数据准确。": {
+    sentence_vi:
+      "Hãy nhờ kỹ thuật viên kiểm tra lại mẫu có kết quả chưa thống nhất để bảo đảm số liệu chính xác.",
+  },
+  "需要二次检验的产品，请标记并通知质检部门。": {
+    sentence_vi:
+      "Hãy đánh dấu sản phẩm cần kiểm tra lần hai và thông báo cho bộ phận kiểm tra chất lượng.",
+  },
+  "为保证检测准确，请严格按照操作规程执行。": {
+    sentence_vi:
+      "Để bảo đảm kết quả kiểm tra chính xác, vui lòng tuân thủ nghiêm quy trình vận hành.",
+  },
+  "质量异常报告必须及时上报，避免影响生产进度。": {
+    sentence_vi:
+      "Báo cáo bất thường về chất lượng phải được gửi kịp thời để tránh ảnh hưởng tiến độ sản xuất.",
+  },
+  "机器出现E12故障代码，可能是传感器信号异常导致。": {
+    sentence_cn:
+      "机器显示十二号故障代码，可能是传感器信号异常导致。",
+    sentence_pinyin:
+      "Jīqì xiǎnshì shí'èr hào gùzhàng dàimǎ, kěnéng shì chuángǎnqì xìnhào yìcháng dǎozhì.",
+    sentence_vi:
+      "Máy hiển thị mã lỗi số 12, có thể do tín hiệu cảm biến bất thường.",
+    vocabulary: [
+      {
+        chinese: "故障代码",
+        pinyin: "gùzhàng dàimǎ",
+        meaning_vi: "mã lỗi",
+      },
+      {
+        chinese: "传感器",
+        pinyin: "chuángǎnqì",
+        meaning_vi: "cảm biến",
+      },
+      {
+        chinese: "信号异常",
+        pinyin: "xìnhào yìcháng",
+        meaning_vi: "tín hiệu bất thường",
+      },
+    ],
+  },
+  "检测发现排气系统堵塞，需要及时清理并更换滤芯。": {
+    sentence_vi:
+      "Kiểm tra phát hiện hệ thống thoát khí bị tắc, cần vệ sinh kịp thời và thay lõi lọc.",
+  },
+  "维修过程中应记录所有更换零件编号和使用时间。": {
+    sentence_vi:
+      "Trong quá trình sửa chữa, cần ghi lại mã số và thời gian sử dụng của tất cả linh kiện được thay.",
+  },
+  "对设备进行例行维护，清理灰尘和检查紧固件状态。": {
+    sentence_vi:
+      "Thực hiện bảo trì định kỳ, vệ sinh bụi và kiểm tra tình trạng các chi tiết liên kết của thiết bị.",
+  },
+  "进入车间请戴好安全帽和防护眼镜，避免飞溅伤害。": {
+    sentence_vi:
+      "Khi vào xưởng, hãy đội mũ và đeo kính bảo hộ để tránh vật bắn văng gây thương tích.",
+  },
+  "未经许可不得拆卸机械保护罩，防止意外伤害发生。": {
+    sentence_vi:
+      "Khi chưa được phép, tuyệt đối không tháo tấm chắn bảo vệ của máy để tránh tai nạn.",
+  },
+  "车间入口处设有明显的安全警示标志，请勿随意进入。": {
+    sentence_vi:
+      "Lối vào xưởng có biển cảnh báo an toàn rõ ràng, vui lòng không tự ý đi vào.",
+  },
+  "操作车间设备前必须确认所有安全防护装置已开启。": {
+    sentence_vi:
+      "Trước khi vận hành thiết bị trong xưởng, phải xác nhận tất cả cơ cấu bảo vệ an toàn đã được bật.",
+  },
+  "禁止在生产区域内吸烟，防止火灾和爆炸危险。": {
+    sentence_vi:
+      "Cấm hút thuốc trong khu vực sản xuất để phòng ngừa nguy cơ cháy nổ.",
+  },
+  "操作高温设备时，必须穿戴隔热手套和防护面罩。": {
+    sentence_vi:
+      "Khi vận hành thiết bị nhiệt độ cao, phải đeo găng tay cách nhiệt và tấm che mặt bảo hộ.",
+  },
+  "生产现场请保持地面干净整洁，防止滑倒和跌落事故。": {
+    sentence_vi:
+      "Hãy giữ sàn khu vực sản xuất sạch sẽ, gọn gàng để phòng tránh tai nạn trượt và té ngã.",
+  },
+  "请配合质检部门，做好成品的最终包装和标识。": {
+    sentence_vi:
+      "Vui lòng phối hợp với bộ phận kiểm tra chất lượng để hoàn tất đóng gói và ghi nhãn thành phẩm.",
+  },
+  "请提前准备好运输车辆，确保按时发货。": {
+    sentence_vi:
+      "Vui lòng chuẩn bị trước phương tiện vận chuyển để bảo đảm giao hàng đúng hạn.",
+  },
+  "接收订单后，请立刻安排物流部门发货。": {
+    sentence_cn: "成品入库后，请及时安排物流部门发货。",
+    sentence_pinyin:
+      "Chéngpǐn rùkù hòu, qǐng jíshí ānpái wùliú bùmén fāhuò.",
+    sentence_vi:
+      "Sau khi thành phẩm nhập kho, vui lòng sắp xếp bộ phận logistics giao hàng kịp thời.",
+    vocabulary: [
+      {
+        chinese: "成品入库",
+        pinyin: "chéngpǐn rùkù",
+        meaning_vi: "thành phẩm nhập kho",
+      },
+      {
+        chinese: "物流部门",
+        pinyin: "wùliú bùmén",
+        meaning_vi: "bộ phận logistics",
+      },
+      {
+        chinese: "发货",
+        pinyin: "fāhuò",
+        meaning_vi: "giao hàng, xuất hàng",
+      },
+    ],
+  },
+  "发现包装材料不足，请提前通知采购部门补充。": {
+    sentence_vi:
+      "Nếu phát hiện thiếu vật liệu đóng gói, hãy kịp thời thông báo bộ phận mua hàng bổ sung.",
+  },
+  "请确认所有生产设备已准备就绪，确保开工顺利。": {
+    sentence_vi:
+      "Vui lòng xác nhận tất cả thiết bị đã sẵn sàng để quá trình sản xuất diễn ra thuận lợi.",
+  },
+};
 const dataCorrections = isFactoryTemplate
-  ? {}
+  ? factoryDataCorrections
   : officeDataCorrections;
 
 function sqlLiteral(value: string) {

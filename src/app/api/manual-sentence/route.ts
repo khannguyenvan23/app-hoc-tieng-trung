@@ -7,6 +7,7 @@ import {
   refundCredits,
   spendCredits,
 } from "@/lib/credits";
+import { getImmediateDueAt } from "@/lib/immediate-due";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createAndUploadSpeech } from "@/lib/tts";
 
@@ -114,7 +115,7 @@ export async function POST(request: Request) {
       .insert({
         user_id: user.id,
         sentence_card_id: sentenceCard.id,
-        next_review_at: new Date(Date.now() - 60_000).toISOString(),
+        next_review_at: getImmediateDueAt(),
       });
 
     if (reviewError) {

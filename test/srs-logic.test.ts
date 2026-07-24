@@ -6,6 +6,7 @@ import {
   getNextReview,
 } from "../src/lib/review.ts";
 import { getReviewQueueStats } from "../src/lib/review-queue-stats.ts";
+import { getImmediateDueAt } from "../src/lib/immediate-due.ts";
 import { defaultStudySettings } from "../src/lib/study-settings.ts";
 import {
   buildStudyQueue,
@@ -44,6 +45,19 @@ function daysUntil(nextReviewAt: string) {
     (new Date(nextReviewAt).getTime() - baseNow.getTime()) / 86_400_000,
   );
 }
+
+test("new reviews are immediately due despite client/server clock skew", () => {
+  const dueAt = getImmediateDueAt(baseNow);
+  const clientEightMinutesBehind = new Date(
+    baseNow.getTime() - 8 * 60_000,
+  );
+
+  assert.equal(minutesUntil(dueAt), -10);
+  assert.equal(
+    new Date(dueAt).getTime() <= clientEightMinutesBehind.getTime(),
+    true,
+  );
+});
 
 function addMinutesIso(date: Date, minutes: number) {
   return new Date(date.getTime() + minutes * 60_000).toISOString();

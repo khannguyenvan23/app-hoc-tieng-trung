@@ -9,6 +9,7 @@ import {
   refundCredits,
   spendCredits,
 } from "@/lib/credits";
+import { getImmediateDueAt } from "@/lib/immediate-due";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const schema = z.object({
@@ -100,6 +101,7 @@ export async function POST(request: Request) {
         sentenceCards.map((sentenceCard) => ({
           user_id: user.id,
           sentence_card_id: sentenceCard.id,
+          next_review_at: getImmediateDueAt(),
         })),
       );
 
