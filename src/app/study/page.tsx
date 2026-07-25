@@ -11,7 +11,11 @@ import { SentenceDiffBreakdown } from "@/components/sentence-diff-view";
 import { StudyProgress } from "@/components/study-progress";
 import { fetchDueReviewRows } from "@/lib/due-reviews";
 import { hasPublicEnv } from "@/lib/env";
-import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
+import {
+  fetchWithAuth,
+  getApiErrorMessage,
+  isInsufficientCreditsPayload,
+} from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
 import { getNextReview } from "@/lib/review";
 import {
@@ -246,7 +250,10 @@ export default function StudyPage() {
   const [scheduledReloadAt, setScheduledReloadAt] = useState<string | null>(
     null,
   );
-  const [creditNotice, setCreditNotice] = useState("");
+  const [audioNotice, setAudioNotice] = useState<{
+    message: string;
+    showPricing: boolean;
+  } | null>(null);
   const reloadReviewsRef = useRef<() => void>(() => {});
 
   // Re-apply the requested deck once the deck list has loaded. The state
@@ -351,14 +358,18 @@ export default function StudyPage() {
         .then(async (response) => {
           if (!response.ok) {
             const data = await response.json().catch(() => null);
-            setCreditNotice(
-              getApiErrorMessage(data, "Không thể tự tạo audio cho thẻ này."),
-            );
+            const isCreditError = isInsufficientCreditsPayload(data);
+            setAudioNotice({
+              message: isCreditError
+                ? getApiErrorMessage(data, "Không đủ credit để tạo audio.")
+                : "Không tạo được audio cho thẻ này — bạn vẫn học bình thường được.",
+              showPricing: isCreditError,
+            });
             return getCardAudioData(reviewCard);
           }
 
           const data = (await response.json()) as CardAudioData;
-          setCreditNotice("");
+          setAudioNotice(null);
           const audioData = {
             wordAudioUrl: data.wordAudioUrl || reviewCard.word_audio_url,
             sentenceAudioUrl:
@@ -1288,16 +1299,22 @@ export default function StudyPage() {
     <AuthGuard>
       <AppShell>
         <div className="study-page-shell mx-auto min-w-0 w-full max-w-2xl">
-          {creditNotice ? (
-            <div className="mb-5 rounded-md border border-red-200 dark:border-red-500/40 bg-red-50 dark:bg-red-500/15 px-4 py-3 text-sm leading-6 text-red-800 dark:text-red-300">
-              <div>{creditNotice}</div>
-              <Link
-                className="mt-2 inline-flex font-medium text-red-900 dark:text-red-200 underline"
-                href="/pricing"
-              >
-                Xem bảng giá và nạp credit
-              </Link>
-            </div>
+          {audioNotice ? (
+            audioNotice.showPricing ? (
+              <div className="mb-5 rounded-md border border-red-200 dark:border-red-500/40 bg-red-50 dark:bg-red-500/15 px-4 py-3 text-sm leading-6 text-red-800 dark:text-red-300">
+                <div>{audioNotice.message}</div>
+                <Link
+                  className="mt-2 inline-flex font-medium text-red-900 dark:text-red-200 underline"
+                  href="/pricing"
+                >
+                  Xem bảng giá và nạp credit
+                </Link>
+              </div>
+            ) : (
+              <div className="mb-5 rounded-md border border-zinc-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 px-4 py-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+                {audioNotice.message}
+              </div>
+            )
           ) : null}
 
           {loading || repairingReviews ? (

@@ -3,6 +3,7 @@
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type ApiErrorPayload = {
+  code?: string;
   error?: string;
   credits?: {
     balance?: number;
@@ -12,6 +13,24 @@ type ApiErrorPayload = {
 
 function isApiErrorPayload(value: unknown): value is ApiErrorPayload {
   return Boolean(value && typeof value === "object");
+}
+
+// True only for a real "out of credits" response (HTTP 402 from
+// createCreditErrorResponse). Other server failures — a TTS outage, a missing
+// storage bucket — must not be dressed up as a billing problem.
+export function isInsufficientCreditsPayload(data: unknown): boolean {
+  if (!isApiErrorPayload(data)) {
+    return false;
+  }
+
+  if (data.code === "insufficient_credits") {
+    return true;
+  }
+
+  return (
+    typeof data.credits?.balance === "number" &&
+    typeof data.credits?.required === "number"
+  );
 }
 
 export function getApiErrorMessage(data: unknown, fallback: string) {

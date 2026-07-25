@@ -12,7 +12,11 @@ import { SentenceDiffBreakdown } from "@/components/sentence-diff-view";
 import { StudyProgress } from "@/components/study-progress";
 import { fetchDueReviewRows } from "@/lib/due-reviews";
 import { hasPublicEnv } from "@/lib/env";
-import { fetchWithAuth, getApiErrorMessage } from "@/lib/fetch-auth";
+import {
+  fetchWithAuth,
+  getApiErrorMessage,
+  isInsufficientCreditsPayload,
+} from "@/lib/fetch-auth";
 import { isEditableKeyboardTarget } from "@/lib/keyboard";
 import { sortDecksByRecentContent } from "@/lib/deck-activity";
 import { getNextReview } from "@/lib/review";
@@ -270,7 +274,10 @@ export default function StudySentencesPage() {
   );
   const [updatingDailyLimit, setUpdatingDailyLimit] = useState(false);
   const [dailyLimitError, setDailyLimitError] = useState("");
-  const [audioNotice, setAudioNotice] = useState("");
+  const [audioNotice, setAudioNotice] = useState<{
+    message: string;
+    showPricing: boolean;
+  } | null>(null);
   const [creatingAudioId, setCreatingAudioId] = useState<string | null>(null);
   const reloadReviewsRef = useRef<() => void>(() => {});
 
@@ -344,9 +351,13 @@ export default function StudySentencesPage() {
         .then(async (response) => {
           if (!response.ok) {
             const data = await response.json().catch(() => null);
-            setAudioNotice(
-              getApiErrorMessage(data, "Không thể tự tạo audio cho câu này."),
-            );
+            const isCreditError = isInsufficientCreditsPayload(data);
+            setAudioNotice({
+              message: isCreditError
+                ? getApiErrorMessage(data, "Không đủ credit để tạo audio.")
+                : "Không tạo được audio cho câu này — bạn vẫn học bình thường được.",
+              showPricing: isCreditError,
+            });
             return sentenceCard.sentence_audio_url;
           }
 
@@ -354,7 +365,7 @@ export default function StudySentencesPage() {
           const sentenceAudioUrl =
             data.sentenceAudioUrl || sentenceCard.sentence_audio_url;
 
-          setAudioNotice("");
+          setAudioNotice(null);
 
           if (sentenceAudioUrl) {
             setReviews((currentReviews) =>
@@ -377,7 +388,11 @@ export default function StudySentencesPage() {
         })
         .catch((error) => {
           console.warn("Could not ensure sentence audio", error);
-          setAudioNotice("Không thể tự tạo audio cho câu này.");
+          setAudioNotice({
+            message:
+              "Không tạo được audio cho câu này — bạn vẫn học bình thường được.",
+            showPricing: false,
+          });
           return sentenceCard.sentence_audio_url;
         })
         .finally(() => {
@@ -1774,12 +1789,18 @@ export default function StudySentencesPage() {
                 Pinyin
               </button>
               {audioNotice ? (
-                <p className="col-span-3 text-left text-xs text-red-700 dark:text-red-300 sm:basis-full sm:text-right">
-                  {audioNotice}{" "}
-                  <Link className="font-medium underline" href="/pricing">
-                    Nạp credit
-                  </Link>
-                </p>
+                audioNotice.showPricing ? (
+                  <p className="col-span-3 text-left text-xs text-red-700 dark:text-red-300 sm:basis-full sm:text-right">
+                    {audioNotice.message}{" "}
+                    <Link className="font-medium underline" href="/pricing">
+                      Nạp credit
+                    </Link>
+                  </p>
+                ) : (
+                  <p className="col-span-3 text-left text-xs text-zinc-500 dark:text-zinc-400 sm:basis-full sm:text-right">
+                    {audioNotice.message}
+                  </p>
+                )
               ) : null}
             </div>
             <span className="sr-only">
