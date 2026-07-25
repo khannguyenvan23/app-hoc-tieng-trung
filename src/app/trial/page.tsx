@@ -2,6 +2,20 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { Icon } from "@/components/icons";
+import { RatingButtons } from "@/components/rating-buttons";
+import { defaultStudySettings } from "@/lib/study-settings";
+import type { ReviewRating } from "@/lib/types";
+
+// A fresh-card state so RatingButtons shows the same real SRS interval previews
+// the app does ("Lặp lại sau 10 phút", "1 ngày"…) — the trial demos the actual
+// scheduler, not a stand-in.
+const trialReviewState = {
+  review_count: 0,
+  interval_days: 0,
+  ease_factor: null,
+  learning_step: 0,
+};
 
 type TrialCard = {
   chinese: string;
@@ -55,27 +69,18 @@ const trialCards: TrialCard[] = [
   },
 ];
 
-const ratingCopy = {
-  again: "Học lại",
-  hard: "Hơi khó",
-  good: "Nhớ được",
-  easy: "Quá dễ",
-} as const;
-
-type Rating = keyof typeof ratingCopy;
-
 export default function TrialPage() {
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [showPinyin, setShowPinyin] = useState(true);
-  const [completed, setCompleted] = useState<Rating[]>([]);
+  const [completed, setCompleted] = useState<ReviewRating[]>([]);
   const card = trialCards[index];
   const progressPercent = useMemo(
     () => Math.round((completed.length / trialCards.length) * 100),
     [completed.length],
   );
 
-  function rate(rating: Rating) {
+  function rate(rating: ReviewRating) {
     const nextCompleted = [...completed, rating];
     setCompleted(nextCompleted);
     setShowAnswer(false);
@@ -137,26 +142,27 @@ export default function TrialPage() {
           </div>
 
           {finished ? (
-            <section className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-5 shadow-sm sm:p-7">
-              <p className="text-sm font-medium text-teal-800 dark:text-teal-300">
-                Bạn đã hoàn thành bài học thử
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold">
-                Tạo tài khoản để lưu tiến độ và học tiếp mỗi ngày
+            <section className="study-card overflow-hidden p-6 text-center sm:p-8">
+              <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300">
+                <Icon name="trophy" size={28} />
+              </span>
+              <h2 className="mt-4 text-2xl font-semibold">
+                Bạn vừa học {trialCards.length} từ tiếng Trung đầu tiên
               </h2>
-              <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                Khi đăng ký, bạn có thể mở bộ HSK, lưu lịch ôn SRS, theo dõi
-                streak và tiếp tục từ đúng chỗ vừa học.
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+                Đăng ký miễn phí để lưu tiến độ, mở khoá hàng nghìn từ HSK, và để
+                thuật toán SRS tự nhắc bạn ôn đúng lúc — tiếp tục ngay từ chỗ vừa
+                dừng.
               </p>
-              <div className="mt-6 flex flex-wrap gap-3">
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
                 <Link
-                  className="rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white hover:bg-teal-800"
+                  className="btn-primary px-6 py-2.5 text-sm"
                   href="/login?next=/dashboard"
                 >
-                  Tạo tài khoản miễn phí
+                  Đăng ký miễn phí
                 </Link>
                 <button
-                  className="rounded-md border border-zinc-300 dark:border-white/15 px-5 py-3 text-sm font-semibold hover:bg-zinc-100 dark:hover:bg-white/10"
+                  className="btn-secondary px-6 py-2.5 text-sm"
                   onClick={restart}
                   type="button"
                 >
@@ -165,7 +171,10 @@ export default function TrialPage() {
               </div>
             </section>
           ) : (
-            <section className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-4 shadow-sm sm:p-6">
+            <section
+              className="study-card min-w-0 overflow-hidden p-4 sm:p-5"
+              key={index}
+            >
               <div className="flex items-center justify-between gap-3 text-sm text-zinc-500 dark:text-zinc-400">
                 <span>
                   Thẻ {index + 1} / {trialCards.length}
@@ -180,41 +189,43 @@ export default function TrialPage() {
                 </button>
               </div>
 
-              <div className="mt-8 text-center">
-                <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              <div className="mt-6 text-center">
+                <div className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                   Nghĩa tiếng Việt
                 </div>
-                <div className="mt-3 text-3xl font-semibold">
+                <div className="mt-2 text-2xl font-semibold sm:text-3xl">
                   {card.meaningVi}
                 </div>
               </div>
 
               {!showAnswer ? (
                 <button
-                  className="mt-10 min-h-12 w-full rounded-md bg-teal-700 px-4 py-3 text-sm font-semibold text-white hover:bg-teal-800"
+                  className="btn-primary mt-6 w-full px-4 py-2.5 text-sm"
                   onClick={() => setShowAnswer(true)}
                   type="button"
                 >
                   Hiện đáp án
                 </button>
               ) : (
-                <div className="mt-8">
-                  <div className="rounded-lg bg-stone-50 dark:bg-white/5 p-4 text-center">
-                    <div className="text-5xl font-semibold">{card.chinese}</div>
+                <>
+                  <div className="study-answer-panel mt-4 p-4 text-center sm:p-5">
+                    <div className="text-4xl font-semibold leading-relaxed sm:text-5xl">
+                      {card.chinese}
+                    </div>
                     {showPinyin ? (
-                      <div className="mt-3 text-lg text-teal-800 dark:text-teal-300">
+                      <div className="mt-2 text-lg text-teal-800 dark:text-teal-300">
                         {card.pinyin}
                       </div>
                     ) : null}
-                    <div className="mt-5 border-t border-zinc-200 dark:border-white/10 pt-4">
-                      <div className="text-sm font-medium uppercase text-zinc-500 dark:text-zinc-400">
+                    <div className="mt-4 border-t border-zinc-200/70 pt-4 dark:border-white/10">
+                      <div className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                         Câu ví dụ
                       </div>
                       <div className="mt-2 text-xl font-medium">
                         {card.exampleCn}
                       </div>
                       {showPinyin ? (
-                        <div className="mt-1 text-sm text-teal-800 dark:text-teal-300">
+                        <div className="mt-0.5 text-sm text-teal-800 dark:text-teal-300">
                           {card.examplePinyin}
                         </div>
                       ) : null}
@@ -224,33 +235,35 @@ export default function TrialPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {(Object.keys(ratingCopy) as Rating[]).map((rating) => (
-                      <button
-                        className="min-h-12 rounded-md border border-zinc-300 dark:border-white/15 px-3 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
-                        key={rating}
-                        onClick={() => rate(rating)}
-                        type="button"
-                      >
-                        {ratingCopy[rating]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                  <RatingButtons
+                    onRate={rate}
+                    review={trialReviewState}
+                    settings={defaultStudySettings}
+                  />
+                </>
               )}
             </section>
           )}
         </div>
 
-        <aside className="rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#171a19] p-5 shadow-sm lg:sticky lg:top-6 lg:self-start">
+        <aside className="rounded-[var(--radius-lg)] border border-zinc-200 bg-white p-5 shadow-[var(--shadow-md)] dark:border-white/10 dark:bg-[#171a19] lg:sticky lg:top-6 lg:self-start">
           <h2 className="text-base font-semibold">Sau khi đăng ký</h2>
           <ul className="mt-4 space-y-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-            <li>Lưu tiến độ từng thẻ và lịch ôn tiếp theo.</li>
-            <li>Học bộ HSK1/HSK2 có sẵn hoặc tạo bộ riêng.</li>
-            <li>Luyện câu, nghe chép chính tả và bật/tắt pinyin.</li>
+            {[
+              "Lưu tiến độ từng thẻ và lịch ôn tiếp theo.",
+              "Học bộ HSK1/HSK2 có sẵn hoặc tạo bộ riêng.",
+              "Luyện câu, nghe chép chính tả và bật/tắt pinyin.",
+            ].map((item) => (
+              <li className="flex gap-2.5" key={item}>
+                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300">
+                  <Icon name="check" size={13} />
+                </span>
+                <span>{item}</span>
+              </li>
+            ))}
           </ul>
           <Link
-            className="mt-5 inline-flex w-full justify-center rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
+            className="btn-primary mt-5 flex w-full justify-center px-4 py-2.5 text-sm"
             href="/login?next=/dashboard"
           >
             Đăng ký để lưu
