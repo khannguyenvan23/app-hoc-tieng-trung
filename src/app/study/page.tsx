@@ -7,6 +7,7 @@ import { AuthGuard } from "@/components/auth-guard";
 import { StudyCardSkeleton } from "@/components/loading-skeletons";
 import { RatingButtons } from "@/components/rating-buttons";
 import { ReviewQueueStatus } from "@/components/review-queue-status";
+import { SentenceDiffBreakdown } from "@/components/sentence-diff-view";
 import { StudyProgress } from "@/components/study-progress";
 import { fetchDueReviewRows } from "@/lib/due-reviews";
 import { hasPublicEnv } from "@/lib/env";
@@ -17,6 +18,10 @@ import {
   getReviewQueueKey,
   getReviewQueueStats,
 } from "@/lib/review-queue-stats";
+import {
+  compareChineseSentences,
+  type SentenceDiffResult,
+} from "@/lib/sentence-diff";
 import { sortDecksByRecentContent } from "@/lib/deck-activity";
 import {
   defaultStudySettings,
@@ -103,10 +108,6 @@ function startOfLocalDay(date: Date) {
 
 function dueReviewCutoff() {
   return new Date(Date.now() + 60_000).toISOString();
-}
-
-function normalizeHanzi(value: string) {
-  return value.replace(/\s+/g, "").trim();
 }
 
 function buildStudyQueue(
@@ -234,6 +235,7 @@ export default function StudyPage() {
   const [writingResult, setWritingResult] = useState<"correct" | "wrong" | "">(
     "",
   );
+  const [cardDiff, setCardDiff] = useState<SentenceDiffResult | null>(null);
   const [repairingReviews, setRepairingReviews] = useState(false);
   const [studySettings, setStudySettings] =
     useState<StudySettings>(defaultStudySettings);
@@ -486,6 +488,7 @@ export default function StudyPage() {
     setShowAnswer(false);
     setWritingAnswer("");
     setWritingResult("");
+    setCardDiff(null);
     setLoading(false);
   }
 
@@ -700,6 +703,7 @@ export default function StudyPage() {
             setShowAnswer(false);
             setWritingAnswer("");
             setWritingResult("");
+            setCardDiff(null);
             setLoading(false);
             return;
           }
@@ -743,6 +747,7 @@ export default function StudyPage() {
       setShowAnswer(false);
       setWritingAnswer("");
       setWritingResult("");
+      setCardDiff(null);
       setLoading(false);
       }),
     );
@@ -845,6 +850,7 @@ export default function StudyPage() {
     setWritingMode(nextValue);
     setWritingAnswer("");
     setWritingResult("");
+    setCardDiff(null);
     window.localStorage.setItem("hanzi-writing-mode", String(nextValue));
   }
 
@@ -982,10 +988,19 @@ export default function StudyPage() {
       return;
     }
 
-    const expected = normalizeHanzi(card.chinese);
-    const actual = normalizeHanzi(writingAnswer);
+    // Compare character by character (same engine as the sentence page) so a
+    // wrong guess shows exactly which Han characters were right, wrong, missing
+    // or extra — not just a pass/fail.
+    const comparison = compareChineseSentences(card.chinese, writingAnswer);
+    const hasAnswer = comparison.items.some((item) => item.actual);
+    const hasMistake =
+      comparison.counts.wrong > 0 ||
+      comparison.counts.missing > 0 ||
+      comparison.counts.extra > 0;
 
-    if (actual && actual === expected) {
+    setCardDiff(comparison);
+
+    if (hasAnswer && !hasMistake) {
       setWritingResult("correct");
       showAnswerAndPlayAudio();
       return;
@@ -1098,6 +1113,7 @@ export default function StudyPage() {
     setShowAnswer(false);
     setWritingAnswer("");
     setWritingResult("");
+    setCardDiff(null);
 
     if (
       shouldRequeueInCurrentSession(optimisticNextReview.next_review_at)
@@ -1325,6 +1341,7 @@ export default function StudyPage() {
                           onChange={(event) => {
                             setWritingAnswer(event.target.value);
                             setWritingResult("");
+                            setCardDiff(null);
                           }}
                           onKeyDown={(event) => {
                             if (
@@ -1349,6 +1366,14 @@ export default function StudyPage() {
                         <p className="mt-3 text-sm font-medium text-red-700 dark:text-red-300">
                           Chưa đúng, thử lại hoặc hiện đáp án.
                         </p>
+                      ) : null}
+
+                      {writingResult === "wrong" && cardDiff ? (
+                        <SentenceDiffBreakdown
+                          chinese={card.chinese}
+                          diff={cardDiff}
+                          pinyin={card.pinyin}
+                        />
                       ) : null}
 
                       <div className="mt-4 grid grid-cols-2 gap-2">

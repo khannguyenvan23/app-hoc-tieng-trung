@@ -1,11 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/icons";
 import { RatingButtons } from "@/components/rating-buttons";
+import { isEditableKeyboardTarget } from "@/lib/keyboard";
 import { defaultStudySettings } from "@/lib/study-settings";
 import type { ReviewRating } from "@/lib/types";
+
+const keyToRating: Record<string, ReviewRating> = {
+  "1": "again",
+  "2": "hard",
+  "3": "good",
+  "4": "easy",
+};
 
 // A fresh-card state so RatingButtons shows the same real SRS interval previews
 // the app does ("Lặp lại sau 10 phút", "1 ngày"…) — the trial demos the actual
@@ -80,15 +88,13 @@ export default function TrialPage() {
     [completed.length],
   );
 
-  function rate(rating: ReviewRating) {
-    const nextCompleted = [...completed, rating];
-    setCompleted(nextCompleted);
+  const rate = useCallback((rating: ReviewRating) => {
+    setCompleted((current) => [...current, rating]);
     setShowAnswer(false);
-
-    if (index < trialCards.length - 1) {
-      setIndex(index + 1);
-    }
-  }
+    setIndex((current) =>
+      current < trialCards.length - 1 ? current + 1 : current,
+    );
+  }, []);
 
   function restart() {
     setIndex(0);
@@ -97,6 +103,47 @@ export default function TrialPage() {
   }
 
   const finished = completed.length >= trialCards.length;
+
+  // Same shortcuts as the real study screen: Space reveals the answer, 1–4
+  // rate, P toggles pinyin — so the keyboard badges on the buttons actually work.
+  useEffect(() => {
+    if (finished) {
+      return;
+    }
+
+    function handleKey(event: KeyboardEvent) {
+      if (
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        isEditableKeyboardTarget(event.target)
+      ) {
+        return;
+      }
+
+      if (event.key === " ") {
+        if (!showAnswer) {
+          event.preventDefault();
+          setShowAnswer(true);
+        }
+        return;
+      }
+
+      if (event.key.toLowerCase() === "p") {
+        event.preventDefault();
+        setShowPinyin((current) => !current);
+        return;
+      }
+
+      if (showAnswer && keyToRating[event.key]) {
+        event.preventDefault();
+        rate(keyToRating[event.key]);
+      }
+    }
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [finished, showAnswer, rate]);
 
   return (
     <main className="min-h-screen bg-stone-50 dark:bg-white/5 text-zinc-950 dark:text-zinc-50">
@@ -244,6 +291,12 @@ export default function TrialPage() {
               )}
             </section>
           )}
+
+          {!finished ? (
+            <p className="mt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
+              Phím tắt: Space hiện đáp án · 1–4 đánh giá · P bật/tắt pinyin
+            </p>
+          ) : null}
         </div>
 
         <aside className="rounded-[var(--radius-lg)] border border-zinc-200 bg-white p-5 shadow-[var(--shadow-md)] dark:border-white/10 dark:bg-[#171a19] lg:sticky lg:top-6 lg:self-start">
