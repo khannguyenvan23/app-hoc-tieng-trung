@@ -166,6 +166,7 @@ export default function StudyPage() {
   const transientAudioRef = useRef<HTMLAudioElement | null>(null);
   const audioCacheRef = useRef<Map<string, HTMLAudioElement>>(new Map());
   const replayCardAudioRef = useRef<() => void>(() => {});
+  const writingAnswerRef = useRef<HTMLInputElement | null>(null);
   const keyboardActionsRef = useRef<{
     replayAudio: () => void;
     showAnswer: () => void;
@@ -1243,6 +1244,24 @@ export default function StudyPage() {
       ? queuedCurrent
       : undefined;
   const card = current?.cards;
+  const currentCardId = card?.id;
+
+  // Auto-focus the input when a new card appears in Viết mode, so the learner
+  // can start typing straight away without reaching for the mouse.
+  useEffect(() => {
+    if (!writingMode || showAnswer || !currentCardId) {
+      return;
+    }
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      writingAnswerRef.current?.focus({ preventScroll: true });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+    };
+  }, [currentCardId, showAnswer, writingMode]);
+
   const scheduledLearningStepLabel = scheduledReloadAt
     ? formatReviewIntervalLabel(scheduledReloadAt, 0)
     : "";
@@ -1338,6 +1357,7 @@ export default function StudyPage() {
                         Gõ chữ Hán bạn đoán
                         <input
                           className="mt-2 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-3 py-3 text-center text-2xl outline-none focus:border-teal-700 sm:text-3xl"
+                          ref={writingAnswerRef}
                           onChange={(event) => {
                             setWritingAnswer(event.target.value);
                             setWritingResult("");
