@@ -1365,6 +1365,15 @@ export default function StudyPage() {
                           }}
                           onKeyDown={(event) => {
                             if (
+                              event.key === " " &&
+                              !event.nativeEvent.isComposing
+                            ) {
+                              event.preventDefault();
+                              showAnswerAndPlayAudio();
+                              return;
+                            }
+
+                            if (
                               event.key === "Enter" &&
                               !event.nativeEvent.isComposing
                             ) {
