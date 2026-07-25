@@ -1405,6 +1405,11 @@ export default function StudyPage() {
                 </div>
               ) : (
                 <div className="mt-4 sm:mt-5">
+                  {writingResult === "correct" ? (
+                    <div className="mb-3 rounded-md border border-teal-200 dark:border-teal-500/40 bg-teal-50 dark:bg-teal-500/15 px-4 py-3 text-sm font-medium text-teal-800 dark:text-teal-300">
+                      Đúng rồi. Đây là chữ chính xác:
+                    </div>
+                  ) : null}
                   <div className="study-answer-panel p-3 text-center sm:p-4">
                     <div className="text-4xl font-semibold sm:text-5xl">{card.chinese}</div>
                     {showPinyinHint && card?.pinyin ? (
