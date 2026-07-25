@@ -9,7 +9,6 @@ import { AuthGuard } from "@/components/auth-guard";
 import {
   CommunityDeckSkeleton,
   DeckGridSkeleton,
-  WeakItemsSkeleton,
 } from "@/components/loading-skeletons";
 import { communityJoinUrl, hasZaloGroupUrl } from "@/lib/community";
 import { hasPublicEnv } from "@/lib/env";
@@ -188,7 +187,6 @@ export default function DashboardPage() {
   const [statsLoading, setStatsLoading] = useState(configured);
   const [templatesLoading, setTemplatesLoading] = useState(configured);
   const [sharedDecksLoading, setSharedDecksLoading] = useState(configured);
-  const [weakItemsLoading, setWeakItemsLoading] = useState(configured);
   const [copyingTemplateId, setCopyingTemplateId] = useState("");
   const [templateMessage, setTemplateMessage] = useState("");
   const [studySettings, setStudySettings] =
@@ -484,11 +482,6 @@ export default function DashboardPage() {
           console.error(error);
           setWeakItems([]);
         }
-      })
-      .finally(() => {
-        if (active) {
-          setWeakItemsLoading(false);
-        }
       });
 
     return () => {
@@ -598,6 +591,75 @@ export default function DashboardPage() {
   const starterPlanReady =
     studySettings.daily_new_card_limit === 10 &&
     studySettings.daily_new_sentence_limit === 5;
+
+  // Split templates so learners can scan HSK levels (sorted 1→6) apart from
+  // topic/sentence sets. Level values look like "HSK1"…"HSK6", "CHỦ ĐỀ", …
+  const hskLevelOf = (template: TemplateDeck) => {
+    const match = (template.level || "").match(/HSK\s*(\d)/i);
+    return match ? Number(match[1]) : 0;
+  };
+  const hskTemplates = templates
+    .filter((template) => hskLevelOf(template) > 0)
+    .sort((left, right) => hskLevelOf(left) - hskLevelOf(right));
+  const otherTemplates = templates.filter(
+    (template) => hskLevelOf(template) === 0,
+  );
+
+  function renderTemplateCard(template: TemplateDeck) {
+    const alreadyAdded = Boolean(template.already_added);
+
+    return (
+      <div className="app-surface rounded-xl p-5" key={template.id}>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-semibold">{template.name}</h3>
+            {template.level ? (
+              <p className="mt-1 text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
+                {template.level}
+              </p>
+            ) : null}
+          </div>
+          <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-600 dark:bg-white/10 dark:text-zinc-400">
+            {template.card_count} thẻ
+          </span>
+        </div>
+        {template.description ? (
+          <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+            {template.description}
+          </p>
+        ) : null}
+        <button
+          className={`mt-4 min-h-10 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-70 ${
+            alreadyAdded
+              ? "border border-zinc-300 bg-zinc-100 text-zinc-600 dark:border-white/15 dark:bg-white/10 dark:text-zinc-400"
+              : "bg-teal-700 text-white hover:bg-teal-800"
+          }`}
+          disabled={Boolean(copyingTemplateId) || alreadyAdded}
+          onClick={() => copyTemplate(template.id)}
+          type="button"
+        >
+          {alreadyAdded ? (
+            "Đã thêm"
+          ) : copyingTemplateId === template.id ? (
+            <span className="inline-flex items-center gap-2">
+              <Spinner size={15} />
+              Đang thêm...
+            </span>
+          ) : (
+            "Thêm bộ này"
+          )}
+        </button>
+        {alreadyAdded && template.user_deck_id ? (
+          <Link
+            className="mt-2 inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-white/15 dark:hover:bg-white/10"
+            href={`/decks/${template.user_deck_id}`}
+          >
+            Mở bộ
+          </Link>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <AuthGuard>
@@ -931,66 +993,6 @@ export default function DashboardPage() {
           )}
         </section>
 
-        <section className="app-surface mt-6 rounded-xl p-5">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">Cần học lại</h2>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                Thẻ bấm Quên nhiều lần sẽ tự vào nhóm yếu để ôn gấp.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Link
-                className="inline-flex min-h-10 items-center rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
-                href="/study?weak=1"
-              >
-                Ôn từ yếu
-              </Link>
-              <Link
-                className="inline-flex min-h-10 items-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
-                href="/study-sentences?weak=1"
-              >
-                Ôn câu yếu
-              </Link>
-            </div>
-          </div>
-
-          {weakItemsLoading ? (
-            <WeakItemsSkeleton />
-          ) : weakItems.length === 0 ? (
-            <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-              Chưa có thẻ nào bị quên nhiều lần.
-            </p>
-          ) : (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {weakItems.map((item) => (
-                <div
-                  className="app-surface-muted rounded-xl p-4"
-                  key={`${item.type}-${item.id}`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="rounded-full bg-red-50 dark:bg-red-500/15 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-300">
-                      {item.type === "word" ? "Từ vựng" : "Câu"}
-                    </span>
-                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                      Quên {item.lapseCount} lần
-                    </span>
-                  </div>
-                  <div className="mt-3 text-lg font-semibold">
-                    {item.title}
-                  </div>
-                  {item.detail ? (
-                    <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{item.detail}</p>
-                  ) : null}
-                  <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
-                    {item.deckName} · điểm yếu {item.weakScore}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
         <section className="mt-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -1007,61 +1009,27 @@ export default function DashboardPage() {
           ) : null}
 
           {templates.length > 0 ? (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {templates.map((template) => {
-                const alreadyAdded = Boolean(template.already_added);
-
-                return (
-                <div
-                  className="app-surface rounded-xl p-5"
-                  key={template.id}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold">{template.name}</h3>
-                      {template.level ? (
-                        <p className="mt-1 text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
-                          {template.level}
-                        </p>
-                      ) : null}
-                    </div>
-                    <span className="rounded-full bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs text-zinc-600 dark:text-zinc-400">
-                      {template.card_count} thẻ
-                    </span>
+            <div className="mt-4 space-y-6">
+              {hskTemplates.length > 0 ? (
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                    Theo cấp độ HSK
+                  </h3>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {hskTemplates.map(renderTemplateCard)}
                   </div>
-                  {template.description ? (
-                    <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-                      {template.description}
-                    </p>
-                  ) : null}
-                  <button
-                    className={`mt-4 min-h-10 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-70 ${ alreadyAdded ? "border border-zinc-300 dark:border-white/15 bg-zinc-100 dark:bg-white/10 text-zinc-600 dark:text-zinc-400" : "bg-teal-700 text-white hover:bg-teal-800" }`}
-                    disabled={Boolean(copyingTemplateId) || alreadyAdded}
-                    onClick={() => copyTemplate(template.id)}
-                    type="button"
-                  >
-                    {alreadyAdded
-                      ? "Đã thêm"
-                      : copyingTemplateId === template.id
-                      ? (
-              <span className="inline-flex items-center gap-2">
-                <Spinner size={15} />
-                Đang thêm...
-              </span>
-            )
-                      : "Thêm bộ này"}
-                  </button>
-                  {alreadyAdded && template.user_deck_id ? (
-                    <Link
-                      className="mt-2 inline-flex min-h-10 items-center rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
-                      href={`/decks/${template.user_deck_id}`}
-                    >
-                      Mở bộ
-                    </Link>
-                  ) : null}
                 </div>
-                );
-              })}
+              ) : null}
+              {otherTemplates.length > 0 ? (
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                    Chủ đề &amp; luyện câu
+                  </h3>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {otherTemplates.map(renderTemplateCard)}
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : templatesLoading ? (
             <DeckGridSkeleton />
