@@ -29,6 +29,12 @@ const paths: Record<string, string> = {
     "M12 3c.6 2.6-1.8 3.8-1.8 6.2A1.8 1.8 0 0 0 13 10.6c.4 2.4 2.8 1.8 2.8 5.4a3.8 3.8 0 0 1-7.6 0c0-3.4 3.4-3.8 3.8-13z",
   calendar: "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M8 14h.01M12 14h.01M16 14h.01",
   trophy: "M7 4h10v3a5 5 0 0 1-10 0V4zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M9 20h6M10 15v5M14 15v5",
+  audio: "M4 9v6h4l5 4V5L8 9H4zM16 8.5a4 4 0 0 1 0 7M18.5 6a7 7 0 0 1 0 12",
+  repeat:
+    "M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5",
+  check: "M5 13l4 4L19 7",
+  sparkle:
+    "M12 3l1.7 5.1a2 2 0 0 0 1.2 1.2L20 11l-5.1 1.7a2 2 0 0 0-1.2 1.2L12 19l-1.7-5.1a2 2 0 0 0-1.2-1.2L4 11l5.1-1.7a2 2 0 0 0 1.2-1.2L12 3z",
 };
 
 // Spinning loader that inherits the button's text color. Pause under

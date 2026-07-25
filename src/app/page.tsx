@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Icon } from "@/components/icons";
 import { communityJoinUrl, hasZaloGroupUrl } from "@/lib/community";
 import { hasPublicEnv } from "@/lib/env";
 import { seoPageList } from "@/lib/seo-pages";
@@ -70,22 +71,27 @@ const landingJsonLd = {
 
 const features = [
   {
+    icon: "decks",
     title: "Bộ HSK sẵn sàng",
     body: "Bắt đầu nhanh với HSK1 đến HSK5 và các bộ chủ đề. Mỗi tài khoản có tiến độ riêng.",
   },
   {
+    icon: "audio",
     title: "Audio tiếng Trung",
     body: "Nghe phát âm từ vựng và câu ví dụ, có chế độ chậm để nghe rõ từng âm.",
   },
   {
+    icon: "repeat",
     title: "SRS chống quên",
     body: "Quên, Khó, Nhớ, Dễ tự tính lịch ôn tiếp theo để học ít hơn mà nhớ lâu hơn.",
   },
   {
+    icon: "sentences",
     title: "Luyện câu thực tế",
     body: "Học từ trong câu, xem nghĩa tiếng Việt, pinyin khi cần và luyện viết chữ Hán.",
   },
   {
+    icon: "edit",
     title: "Nghe chép chính tả",
     body: "Ẩn câu, nghe audio rồi chép lại tiếng Trung. Bật nghĩa Việt khi cần và kiểm tra ngay.",
   },
@@ -152,16 +158,15 @@ export default async function Home({ searchParams }: HomeProps) {
           __html: JSON.stringify(landingJsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <section className="relative isolate min-h-[78svh] overflow-hidden bg-zinc-950 text-white">
-        <Image
-          alt="Màn hình luyện câu Tiếng Trung Hihi"
-          className="absolute inset-0 -z-20 h-full w-full object-cover object-left-top opacity-55"
-          height={815}
-          priority
-          src="/landing-study-sentences.png"
-          width={1308}
+      <section className="relative isolate overflow-hidden bg-zinc-950 text-white">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-40 -top-40 -z-10 size-[36rem] rounded-full bg-teal-500/15 blur-[110px]"
         />
-        <div className="absolute inset-0 -z-10 bg-zinc-950/65" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-48 -left-40 -z-10 size-[32rem] rounded-full bg-sky-500/10 blur-[110px]"
+        />
 
         <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
           <div className="text-lg font-semibold">Tiếng Trung Hihi</div>
@@ -193,42 +198,64 @@ export default async function Home({ searchParams }: HomeProps) {
           </nav>
         </header>
 
-        <div className="mx-auto flex max-w-6xl px-5 pb-16 pt-16 sm:pb-20 sm:pt-24">
-          <div className="max-w-3xl">
-            <p className="text-sm font-medium uppercase tracking-wide text-teal-200">
+        <div className="mx-auto grid max-w-6xl gap-10 px-5 pb-16 pt-8 lg:grid-cols-2 lg:items-center lg:gap-12 lg:pb-24 lg:pt-12">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-wide text-teal-300">
               Flashcard tiếng Trung cho người tự học
             </p>
-            <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight sm:text-6xl">
+            <h1 className="mt-4 text-4xl font-semibold leading-tight sm:text-5xl">
               Học từ vựng HSK, nhớ đúng lúc cần ôn
             </h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-stone-100 sm:text-xl">
+            <p className="mt-5 max-w-xl text-lg leading-8 text-stone-200">
               Flashcard có audio, câu ví dụ và luyện chép chính tả, kết hợp
               thuật toán lặp lại ngắt quãng. Mỗi ngày chỉ mở app và ôn đúng
               phần đến hạn — không học lan man, không quên bài.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
-                className="rounded-md bg-teal-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-teal-900/30 hover:bg-teal-500"
+                className="rounded-md bg-teal-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-teal-900/40 hover:bg-teal-500"
                 href="/trial"
               >
                 Học thử miễn phí
               </Link>
               <a
-                className="rounded-md border border-white/35 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
+                className="rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
                 href="#features"
               >
                 Xem tính năng
               </a>
             </div>
-            <p className="mt-4 text-sm text-stone-300">
+            <p className="mt-4 text-sm text-stone-400">
               Học thử ngay trên trình duyệt, không cần đăng ký.
             </p>
-            <div className="mt-8 flex flex-wrap gap-2 text-sm text-stone-100">
-              <span className="rounded-md bg-white/12 px-3 py-2">HSK1-HSK6</span>
-              <span className="rounded-md bg-white/12 px-3 py-2">Audio</span>
-              <span className="rounded-md bg-white/12 px-3 py-2">SRS</span>
-              <span className="rounded-md bg-white/12 px-3 py-2">Luyện câu</span>
-              <span className="rounded-md bg-white/12 px-3 py-2">Chính tả</span>
+            <div className="mt-8 flex flex-wrap gap-2 text-sm text-stone-200">
+              <span className="rounded-md bg-white/10 px-3 py-2">HSK1-HSK6</span>
+              <span className="rounded-md bg-white/10 px-3 py-2">Audio</span>
+              <span className="rounded-md bg-white/10 px-3 py-2">SRS</span>
+              <span className="rounded-md bg-white/10 px-3 py-2">Luyện câu</span>
+              <span className="rounded-md bg-white/10 px-3 py-2">Chính tả</span>
+            </div>
+          </div>
+
+          <div className="relative">
+            <div
+              aria-hidden="true"
+              className="absolute -inset-3 -z-10 rounded-3xl bg-teal-400/15 blur-2xl"
+            />
+            <div className="overflow-hidden rounded-xl border border-white/15 bg-zinc-900 shadow-2xl">
+              <div className="flex items-center gap-1.5 border-b border-white/10 px-3.5 py-2.5">
+                <span className="size-2.5 rounded-full bg-red-400/60" />
+                <span className="size-2.5 rounded-full bg-amber-400/60" />
+                <span className="size-2.5 rounded-full bg-emerald-400/60" />
+              </div>
+              <Image
+                alt="Màn hình học flashcard Tiếng Trung Hihi"
+                className="h-auto w-full"
+                height={535}
+                priority
+                src="/landing-flashcard.png"
+                width={979}
+              />
             </div>
           </div>
         </div>
@@ -247,11 +274,14 @@ export default async function Home({ searchParams }: HomeProps) {
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {features.map((feature) => (
               <article
-                className="rounded-lg border border-zinc-200 bg-stone-50 p-5"
+                className="rounded-[var(--radius-lg)] border border-zinc-200 bg-white p-5 shadow-[var(--shadow-sm)] transition-shadow hover:shadow-[var(--shadow-md)]"
                 key={feature.title}
               >
-                <h3 className="text-lg font-semibold">{feature.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-zinc-600">
+                <span className="inline-flex size-10 items-center justify-center rounded-full bg-teal-50 text-teal-700">
+                  <Icon name={feature.icon} size={20} />
+                </span>
+                <h3 className="mt-4 text-lg font-semibold">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-600">
                   {feature.body}
                 </p>
               </article>
@@ -271,14 +301,16 @@ export default async function Home({ searchParams }: HomeProps) {
             <ul className="mt-6 space-y-3 text-sm text-zinc-700">
               {steps.map((step) => (
                 <li className="flex gap-3" key={step}>
-                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-teal-700" />
+                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-700">
+                    <Icon name="check" size={13} />
+                  </span>
                   <span>{step}</span>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-[var(--radius-lg)] border border-zinc-200 bg-white shadow-[var(--shadow-lg)]">
             <Image
               alt="Màn hình ôn tập flashcard Tiếng Trung Hihi"
               className="h-auto w-full"
@@ -291,7 +323,7 @@ export default async function Home({ searchParams }: HomeProps) {
       </section>
 
       <section className="border-y border-zinc-200 bg-white py-14">
-        <div className="mx-auto grid max-w-6xl gap-8 px-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+        <div className="mx-auto grid max-w-6xl gap-8 px-5 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
             <p className="text-sm font-medium uppercase tracking-wide text-teal-700">
               Luyện nghe chủ động
@@ -304,18 +336,18 @@ export default async function Home({ searchParams }: HomeProps) {
               lại. Khi bí, có thể bật nghĩa tiếng Việt mà chưa cần xem đáp án.
             </p>
             <ul className="mt-6 space-y-3 text-sm text-zinc-700">
-              <li className="flex gap-3">
-                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-teal-700" />
-                <span>Tự phát audio khi chuyển sang câu mới.</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-teal-700" />
-                <span>Bật hoặc tắt nghĩa tiếng Việt theo mức độ cần gợi ý.</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-teal-700" />
-                <span>Kiểm tra đúng sai ngay, dùng Ctrl để nghe lại và Space để xem đáp án.</span>
-              </li>
+              {[
+                "Tự phát audio khi chuyển sang câu mới.",
+                "Bật hoặc tắt nghĩa tiếng Việt theo mức độ cần gợi ý.",
+                "Kiểm tra đúng sai ngay, dùng Ctrl để nghe lại và Space để xem đáp án.",
+              ].map((item) => (
+                <li className="flex gap-3" key={item}>
+                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-700">
+                    <Icon name="check" size={13} />
+                  </span>
+                  <span>{item}</span>
+                </li>
+              ))}
             </ul>
             <Link
               className="mt-7 inline-flex rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white hover:bg-teal-800"
@@ -325,7 +357,7 @@ export default async function Home({ searchParams }: HomeProps) {
             </Link>
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-zinc-200 bg-stone-50 shadow-sm">
+          <div className="overflow-hidden rounded-[var(--radius-lg)] border border-zinc-200 bg-stone-50 shadow-[var(--shadow-lg)] lg:order-first">
             <Image
               alt="Chế độ luyện nghe chép chính tả tiếng Trung"
               className="h-auto w-full"
@@ -337,27 +369,39 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </section>
 
-      <section className="border-y border-zinc-200 bg-white py-14">
+      <section className="border-y border-zinc-200 bg-stone-50 py-14">
         <div className="mx-auto max-w-6xl px-5">
-          <div className="grid gap-6 md:grid-cols-3">
-            <div>
-              <div className="text-4xl font-semibold text-teal-700">5.000+</div>
-              <p className="mt-2 text-sm text-zinc-600">
-                Từ vựng HSK1-HSK6 và các bộ chủ đề có sẵn để bắt đầu ngay.
-              </p>
-            </div>
-            <div>
-              <div className="text-4xl font-semibold text-teal-700">SRS</div>
-              <p className="mt-2 text-sm text-zinc-600">
-                Tự lên lịch ôn theo mức Quên, Khó, Nhớ, Dễ.
-              </p>
-            </div>
-            <div>
-              <div className="text-4xl font-semibold text-teal-700">AI</div>
-              <p className="mt-2 text-sm text-zinc-600">
-                Tự tạo nghĩa, pinyin, câu ví dụ và audio khi import từ.
-              </p>
-            </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                icon: "decks",
+                value: "5.000+",
+                body: "Từ vựng HSK1-HSK6 và các bộ chủ đề có sẵn để bắt đầu ngay.",
+              },
+              {
+                icon: "repeat",
+                value: "SRS",
+                body: "Tự lên lịch ôn theo mức Quên, Khó, Nhớ, Dễ.",
+              },
+              {
+                icon: "sparkle",
+                value: "AI",
+                body: "Tự tạo nghĩa, pinyin, câu ví dụ và audio khi import từ.",
+              },
+            ].map((stat) => (
+              <div
+                className="rounded-[var(--radius-lg)] border border-zinc-200 bg-white p-6 shadow-[var(--shadow-sm)]"
+                key={stat.value}
+              >
+                <span className="inline-flex size-10 items-center justify-center rounded-full bg-teal-50 text-teal-700">
+                  <Icon name={stat.icon} size={20} />
+                </span>
+                <div className="mt-4 text-4xl font-semibold text-teal-700">
+                  {stat.value}
+                </div>
+                <p className="mt-2 text-sm text-zinc-600">{stat.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
