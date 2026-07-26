@@ -1167,6 +1167,12 @@ export default function StudySentencesPage() {
       return;
     }
 
+    // A learning card due within the learn-ahead window is surfaced right away,
+    // so there is no "waiting for the next step" to arm for it.
+    if (isDueForStudy(nextReviewAt, new Date(), LEARN_AHEAD_GRACE_MS)) {
+      return;
+    }
+
     setScheduledReloadAt((currentReloadAt) => {
       if (!currentReloadAt) {
         return nextReviewAt;
