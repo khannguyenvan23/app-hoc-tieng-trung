@@ -67,14 +67,26 @@ export function shouldRequeueInCurrentSession(
   return minutesUntilDue < 23 * 60;
 }
 
-export function isDueForStudy(nextReviewAt: string, now = new Date()) {
-  return new Date(nextReviewAt).getTime() <= now.getTime() + 60_000;
+// Small default grace only absorbs client/server clock skew. The study pages
+// pass LEARN_AHEAD_GRACE_MS instead, so a learning card whose step is only a
+// few minutes away is surfaced right away rather than blocking on the "waiting
+// for the next step" screen — same idea as Anki's learn-ahead limit.
+const DEFAULT_DUE_GRACE_MS = 60_000;
+export const LEARN_AHEAD_GRACE_MS = 20 * 60_000;
+
+export function isDueForStudy(
+  nextReviewAt: string,
+  now = new Date(),
+  graceMs = DEFAULT_DUE_GRACE_MS,
+) {
+  return new Date(nextReviewAt).getTime() <= now.getTime() + graceMs;
 }
 
 export function getNextStudyQueueIndex<TReview extends StudyQueueReview>(
   reviews: TReview[],
   preferredIndex = 0,
   now = new Date(),
+  graceMs = DEFAULT_DUE_GRACE_MS,
 ) {
   if (reviews.length === 0) {
     return -1;
@@ -85,7 +97,7 @@ export function getNextStudyQueueIndex<TReview extends StudyQueueReview>(
   for (let offset = 0; offset < reviews.length; offset += 1) {
     const index = (startIndex + offset) % reviews.length;
 
-    if (isDueForStudy(reviews[index].next_review_at, now)) {
+    if (isDueForStudy(reviews[index].next_review_at, now, graceMs)) {
       return index;
     }
   }
@@ -96,8 +108,9 @@ export function getNextStudyQueueIndex<TReview extends StudyQueueReview>(
 export function getNextPendingStudyAt<TReview extends StudyQueueReview>(
   reviews: TReview[],
   now = new Date(),
+  graceMs = DEFAULT_DUE_GRACE_MS,
 ) {
-  const nowWithGrace = now.getTime() + 60_000;
+  const nowWithGrace = now.getTime() + graceMs;
   const nextTime = reviews.reduce<number | null>((earliest, review) => {
     const reviewTime = new Date(review.next_review_at).getTime();
 

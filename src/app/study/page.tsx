@@ -38,6 +38,7 @@ import {
   getNextPendingStudyAt,
   getNextStudyQueueIndex,
   isDueForStudy,
+  LEARN_AHEAD_GRACE_MS,
   shouldRequeueInCurrentSession,
 } from "@/lib/study-queue";
 import {
@@ -137,15 +138,20 @@ function getRestoredCardStudyIndex(reviews: DueReview[], storageKey: string) {
     storageKey,
     (review) => review.cards?.id,
   );
-  const nextStudyIndex = getNextStudyQueueIndex(reviews, storedIndex);
+  const nextStudyIndex = getNextStudyQueueIndex(
+    reviews,
+    storedIndex,
+    undefined,
+    LEARN_AHEAD_GRACE_MS,
+  );
 
   return nextStudyIndex >= 0 ? nextStudyIndex : storedIndex;
 }
 
 function getPendingCardStudyAt(reviews: DueReview[]) {
-  return getNextStudyQueueIndex(reviews) >= 0
+  return getNextStudyQueueIndex(reviews, 0, undefined, LEARN_AHEAD_GRACE_MS) >= 0
     ? null
-    : getNextPendingStudyAt(reviews);
+    : getNextPendingStudyAt(reviews, undefined, LEARN_AHEAD_GRACE_MS);
 }
 
 function getCardAudioData(card: Card | null | undefined): CardAudioData | null {
@@ -1134,7 +1140,12 @@ export default function StudyPage() {
       // one left, so the "waiting for the next step" screen shows and the card
       // comes back after its learning step instead of ending the session.
       const requeuedReviews = [...remainingReviews, reviewedCurrent];
-      const nextStudyIndex = getNextStudyQueueIndex(requeuedReviews, index);
+      const nextStudyIndex = getNextStudyQueueIndex(
+        requeuedReviews,
+        index,
+        undefined,
+        LEARN_AHEAD_GRACE_MS,
+      );
       const nextIndex =
         nextStudyIndex >= 0
           ? nextStudyIndex
@@ -1178,7 +1189,12 @@ export default function StudyPage() {
         void loadReviews();
       });
     } else {
-      const nextStudyIndex = getNextStudyQueueIndex(remainingReviews, index);
+      const nextStudyIndex = getNextStudyQueueIndex(
+        remainingReviews,
+        index,
+        undefined,
+        LEARN_AHEAD_GRACE_MS,
+      );
       const nextIndex =
         nextStudyIndex >= 0
           ? nextStudyIndex
@@ -1207,7 +1223,12 @@ export default function StudyPage() {
     );
     const timer = window.setTimeout(() => {
       if (reviews.length > 0) {
-        const nextStudyIndex = getNextStudyQueueIndex(reviews, index);
+        const nextStudyIndex = getNextStudyQueueIndex(
+          reviews,
+          index,
+          undefined,
+          LEARN_AHEAD_GRACE_MS,
+        );
 
         if (nextStudyIndex >= 0) {
           setScheduledReloadAt(null);
@@ -1251,7 +1272,8 @@ export default function StudyPage() {
 
   const queuedCurrent = reviews[index];
   const current =
-    queuedCurrent && isDueForStudy(queuedCurrent.next_review_at)
+    queuedCurrent &&
+    isDueForStudy(queuedCurrent.next_review_at, undefined, LEARN_AHEAD_GRACE_MS)
       ? queuedCurrent
       : undefined;
   const card = current?.cards;
