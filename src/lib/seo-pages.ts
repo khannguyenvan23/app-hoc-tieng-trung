@@ -227,10 +227,10 @@ export const seoPages = {
   dailyChinese: {
     path: "/hoc-tieng-trung-moi-ngay",
     navLabel: "Học mỗi ngày",
-    metaTitle: "Học tiếng Trung mỗi ngày với flashcard, audio và SRS",
-    title: "Học tiếng Trung mỗi ngày mà không bị quá tải",
+    metaTitle: "Học tiếng Trung mỗi ngày trong 15 phút với SRS và audio",
+    title: "Học tiếng Trung mỗi ngày",
     description:
-      "Xây thói quen học tiếng Trung mỗi ngày bằng thẻ đến hạn, từ mới vừa sức, audio, luyện câu và SRS.",
+      "Lộ trình 15 phút học tiếng Trung mỗi ngày bằng flashcard, audio, luyện câu, chép chính tả và SRS. Học thử miễn phí, không cần đăng ký.",
     eyebrow: "Lộ trình tự học",
     heroImage: "/landing-study-sentences.png",
     heroImageAlt: "Màn hình luyện câu tiếng Trung mỗi ngày",

@@ -829,6 +829,140 @@ const dataCorrections = isLogisticsTemplate
     : factoryDataCorrections;
 
 const fallbackCards: Record<string, GeneratedCard[]> = {
+  "safety-progress-acceptance": [
+    {
+      category: "safety-progress-acceptance",
+      chinese: "高处作业许可证",
+      pinyin: "gāochù zuòyè xǔkězhèng",
+      meaning_vi: "giấy phép làm việc trên cao",
+      example_cn: "施工人员进入作业区前必须确认高处作业许可证有效。",
+      example_pinyin:
+        "Shīgōng rényuán jìnrù zuòyèqū qián bìxū quèrèn gāochù zuòyè xǔkězhèng yǒuxiào.",
+      example_vi:
+        "Trước khi vào khu vực làm việc, nhân viên thi công phải xác nhận giấy phép làm việc trên cao còn hiệu lực.",
+    },
+    {
+      category: "safety-progress-acceptance",
+      chinese: "临边防护",
+      pinyin: "línbiān fánghù",
+      meaning_vi: "biện pháp bảo vệ mép sàn",
+      example_cn: "楼层施工前要检查所有临边防护是否牢固。",
+      example_pinyin:
+        "Lóucéng shīgōng qián yào jiǎnchá suǒyǒu línbiān fánghù shìfǒu láogù.",
+      example_vi:
+        "Trước khi thi công tầng, cần kiểm tra mọi biện pháp bảo vệ mép sàn có chắc chắn hay không.",
+    },
+    {
+      category: "safety-progress-acceptance",
+      chinese: "安全技术交底",
+      pinyin: "ānquán jìshù jiāodǐ",
+      meaning_vi: "phổ biến kỹ thuật an toàn",
+      example_cn: "新工序开始前，班组必须完成安全技术交底。",
+      example_pinyin:
+        "Xīn gōngxù kāishǐ qián, bānzǔ bìxū wánchéng ānquán jìshù jiāodǐ.",
+      example_vi:
+        "Trước khi bắt đầu công đoạn mới, tổ đội phải hoàn thành việc phổ biến kỹ thuật an toàn.",
+    },
+    {
+      category: "safety-progress-acceptance",
+      chinese: "班前安全会",
+      pinyin: "bānqián ānquán huì",
+      meaning_vi: "họp an toàn đầu ca",
+      example_cn: "班前安全会重点说明今天的施工风险和防护要求。",
+      example_pinyin:
+        "Bānqián ānquán huì zhòngdiǎn shuōmíng jīntiān de shīgōng fēngxiǎn hé fánghù yāoqiú.",
+      example_vi:
+        "Cuộc họp an toàn đầu ca tập trung giải thích rủi ro thi công và yêu cầu bảo hộ trong ngày.",
+    },
+    {
+      category: "safety-progress-acceptance",
+      chinese: "危险源辨识",
+      pinyin: "wēixiǎnyuán biànshí",
+      meaning_vi: "nhận diện nguồn nguy hiểm",
+      example_cn: "项目部每周组织危险源辨识并更新控制措施。",
+      example_pinyin:
+        "Xiàngmùbù měi zhōu zǔzhī wēixiǎnyuán biànshí bìng gēngxīn kòngzhì cuòshī.",
+      example_vi:
+        "Ban dự án tổ chức nhận diện nguồn nguy hiểm hằng tuần và cập nhật biện pháp kiểm soát.",
+    },
+    {
+      category: "safety-progress-acceptance",
+      chinese: "进度偏差",
+      pinyin: "jìndù piānchā",
+      meaning_vi: "sai lệch tiến độ",
+      example_cn: "现场负责人正在分析进度偏差并调整施工安排。",
+      example_pinyin:
+        "Xiànchǎng fùzérén zhèngzài fēnxī jìndù piānchā bìng tiáozhěng shīgōng ānpái.",
+      example_vi:
+        "Người phụ trách hiện trường đang phân tích sai lệch tiến độ và điều chỉnh kế hoạch thi công.",
+    },
+    {
+      category: "safety-progress-acceptance",
+      chinese: "赶工措施",
+      pinyin: "gǎngōng cuòshī",
+      meaning_vi: "biện pháp đẩy nhanh tiến độ",
+      example_cn: "采用赶工措施时仍要保证施工质量和人员安全。",
+      example_pinyin:
+        "Cǎiyòng gǎngōng cuòshī shí réng yào bǎozhèng shīgōng zhìliàng hé rényuán ānquán.",
+      example_vi:
+        "Khi áp dụng biện pháp đẩy nhanh tiến độ vẫn phải bảo đảm chất lượng thi công và an toàn nhân sự.",
+    },
+    {
+      category: "safety-progress-acceptance",
+      chinese: "隐蔽工程验收",
+      pinyin: "yǐnbì gōngchéng yànshōu",
+      meaning_vi: "nghiệm thu công việc bị che khuất",
+      example_cn: "封闭吊顶之前必须完成隐蔽工程验收。",
+      example_pinyin:
+        "Fēngbì diàodǐng zhīqián bìxū wánchéng yǐnbì gōngchéng yànshōu.",
+      example_vi:
+        "Trước khi đóng trần phải hoàn thành nghiệm thu công việc bị che khuất.",
+    },
+    {
+      category: "safety-progress-acceptance",
+      chinese: "整改通知单",
+      pinyin: "zhěnggǎi tōngzhīdān",
+      meaning_vi: "biên bản yêu cầu khắc phục",
+      example_cn: "监理发现质量问题后向施工单位发出整改通知单。",
+      example_pinyin:
+        "Jiānlǐ fāxiàn zhìliàng wèntí hòu xiàng shīgōng dānwèi fāchū zhěnggǎi tōngzhīdān.",
+      example_vi:
+        "Sau khi phát hiện vấn đề chất lượng, tư vấn giám sát gửi biên bản yêu cầu khắc phục cho đơn vị thi công.",
+    },
+    {
+      category: "safety-progress-acceptance",
+      chinese: "竣工验收",
+      pinyin: "jùngōng yànshōu",
+      meaning_vi: "nghiệm thu hoàn thành công trình",
+      example_cn: "竣工验收前要整理完整的施工记录和检测报告。",
+      example_pinyin:
+        "Jùngōng yànshōu qián yào zhěnglǐ wánzhěng de shīgōng jìlù hé jiǎncè bàogào.",
+      example_vi:
+        "Trước khi nghiệm thu hoàn thành công trình cần sắp xếp đầy đủ hồ sơ thi công và báo cáo kiểm tra.",
+    },
+    {
+      category: "safety-progress-acceptance",
+      chinese: "安全巡查",
+      pinyin: "ānquán xúnchá",
+      meaning_vi: "kiểm tra an toàn định kỳ",
+      example_cn: "安全员每天进行安全巡查并记录现场隐患。",
+      example_pinyin:
+        "Ānquányuán měitiān jìnxíng ānquán xúnchá bìng jìlù xiànchǎng yǐnhuàn.",
+      example_vi:
+        "Nhân viên an toàn thực hiện kiểm tra an toàn hằng ngày và ghi nhận nguy cơ tại hiện trường.",
+    },
+    {
+      category: "safety-progress-acceptance",
+      chinese: "应急疏散",
+      pinyin: "yìngjí shūsàn",
+      meaning_vi: "sơ tán khẩn cấp",
+      example_cn: "项目部定期组织应急疏散演练，确保通道畅通。",
+      example_pinyin:
+        "Xiàngmùbù dìngqī zǔzhī yìngjí shūsàn yǎnliàn, quèbǎo tōngdào chàngtōng.",
+      example_vi:
+        "Ban dự án định kỳ tổ chức diễn tập sơ tán khẩn cấp để bảo đảm lối đi thông thoáng.",
+    },
+  ],
   "packaging-labeling": [
     {
       category: "packaging-labeling",
