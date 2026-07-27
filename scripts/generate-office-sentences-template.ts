@@ -42,20 +42,39 @@ type OfficeSentenceCard = GeneratedSentence & {
 const isFactoryTemplate = process.argv.includes("--factory");
 const isFriendshipTemplate = process.argv.includes("--friendship");
 const isChinaDailyLifeTemplate = process.argv.includes("--china-daily-life");
+const isTravelAirportTemplate = process.argv.includes("--travel-airport");
+const isSalesCustomerServiceTemplate = process.argv.includes(
+  "--sales-customer-service",
+);
+const isLogisticsImportExportTemplate = process.argv.includes(
+  "--logistics-import-export",
+);
 const templateSlug = isFactoryTemplate
   ? "nha-may-xuong-150-cau"
   : isFriendshipTemplate
     ? "lam-quen-ket-ban-150-cau"
     : isChinaDailyLifeTemplate
       ? "sinh-hoat-tai-trung-quoc-200-cau"
-      : "giao-tiep-cong-so-150-cau";
+      : isTravelAirportTemplate
+        ? "du-lich-san-bay-150-cau"
+        : isSalesCustomerServiceTemplate
+          ? "ban-hang-cham-soc-khach-hang-150-cau"
+          : isLogisticsImportExportTemplate
+            ? "xuat-nhap-khau-logistics-150-cau"
+            : "giao-tiep-cong-so-150-cau";
 const outputPath = isFactoryTemplate
   ? "supabase/migrations/044_factory_150_sentences.sql"
   : isFriendshipTemplate
     ? "supabase/migrations/045_friendship_150_sentences.sql"
     : isChinaDailyLifeTemplate
       ? "supabase/migrations/046_china_daily_life_200_sentences.sql"
-      : "supabase/migrations/043_office_communication_150_sentences.sql";
+      : isTravelAirportTemplate
+        ? "supabase/migrations/047_travel_airport_150_sentences.sql"
+        : isSalesCustomerServiceTemplate
+          ? "supabase/migrations/048_sales_customer_service_150_sentences.sql"
+          : isLogisticsImportExportTemplate
+            ? "supabase/migrations/050_logistics_import_export_150_sentences.sql"
+            : "supabase/migrations/043_office_communication_150_sentences.sql";
 const cachePath = path.join(
   os.tmpdir(),
   isFactoryTemplate
@@ -64,10 +83,22 @@ const cachePath = path.join(
       ? "tiengtrunghihi-friendship-150-sentences.json"
       : isChinaDailyLifeTemplate
         ? "tiengtrunghihi-china-daily-life-200-sentences.json"
-        : "tiengtrunghihi-office-communication-150-sentences.json",
+        : isTravelAirportTemplate
+          ? "tiengtrunghihi-travel-airport-150-sentences.json"
+          : isSalesCustomerServiceTemplate
+            ? "tiengtrunghihi-sales-customer-service-150-sentences.json"
+            : isLogisticsImportExportTemplate
+              ? "tiengtrunghihi-logistics-import-export-150-sentences.json"
+              : "tiengtrunghihi-office-communication-150-sentences.json",
 );
 const expectedTotal = isChinaDailyLifeTemplate ? 200 : 150;
-const maxHighlightWords = isChinaDailyLifeTemplate ? 2 : 3;
+const maxHighlightWords =
+  isChinaDailyLifeTemplate ||
+  isTravelAirportTemplate ||
+  isSalesCustomerServiceTemplate ||
+  isLogisticsImportExportTemplate
+    ? 2
+    : 3;
 const audioConcurrency = 3;
 const execFileAsync = promisify(execFile);
 let useEdgeTtsOnly = false;
@@ -77,14 +108,26 @@ const templateName = isFactoryTemplate
     ? "Làm quen và kết bạn - 150 câu"
     : isChinaDailyLifeTemplate
       ? "Sinh hoạt tại Trung Quốc - 200 câu"
-      : "Giao tiếp công sở - 150 câu";
+      : isTravelAirportTemplate
+        ? "Du lịch và sân bay - 150 câu"
+        : isSalesCustomerServiceTemplate
+          ? "Bán hàng và chăm sóc khách hàng - 150 câu"
+          : isLogisticsImportExportTemplate
+            ? "Xuất nhập khẩu và logistics - 150 câu"
+            : "Giao tiếp công sở - 150 câu";
 const templateDescription = isFactoryTemplate
   ? "150 câu tiếng Trung theo tình huống nhà máy và xưởng sản xuất: giao ca, vận hành máy, kiểm tra chất lượng, báo lỗi, bảo trì, an toàn lao động và phối hợp sản xuất. Mỗi câu có pinyin, nghĩa tiếng Việt, từ mới được highlight và audio tạo sẵn."
   : isFriendshipTemplate
     ? "150 câu tiếng Trung tự nhiên để làm quen và kết bạn: chào hỏi, giới thiệu bản thân, hỏi quê quán và nghề nghiệp, chia sẻ sở thích, xin WeChat, rủ đi chơi và hẹn gặp lại. Mỗi câu có pinyin, nghĩa tiếng Việt, từ mới được highlight và audio tạo sẵn."
     : isChinaDailyLifeTemplate
       ? "200 câu tiếng Trung HSK1-HSK3 dùng trong sinh hoạt tại Trung Quốc: thuê nhà, điện nước, sửa chữa, giao hàng, hỏi đường, đi lại, WeChat, thanh toán và xử lý vấn đề hằng ngày. Mỗi câu có pinyin, nghĩa tiếng Việt, 1-2 từ mới được highlight và audio tạo sẵn."
-      : "150 câu tiếng Trung theo tình huống công sở: trao đổi công việc, giao nhiệm vụ, báo tiến độ, họp, xin nghỉ và nhắn tin với đồng nghiệp. Mỗi câu có pinyin, nghĩa tiếng Việt, từ mới được highlight và audio tạo sẵn.";
+      : isTravelAirportTemplate
+        ? "150 câu tiếng Trung thực tế cho hành trình du lịch và sân bay: làm thủ tục, nhập cảnh, hành lý, phương tiện, khách sạn và tình huống khẩn cấp. Mỗi câu có pinyin, nghĩa tiếng Việt, 1-2 từ mới được highlight và audio tạo sẵn."
+        : isSalesCustomerServiceTemplate
+          ? "150 câu tiếng Trung thực tế cho bán hàng và chăm sóc khách hàng: tìm hiểu nhu cầu, tư vấn sản phẩm, báo giá, thương lượng, chốt đơn, phản hồi sau bán và xử lý khiếu nại. Mỗi câu có pinyin, nghĩa tiếng Việt, 1-2 từ mới được highlight và audio tạo sẵn."
+          : isLogisticsImportExportTemplate
+            ? "150 câu tiếng Trung thực tế cho xuất nhập khẩu và logistics: tìm nguồn hàng, hợp đồng, Incoterms, thanh toán, chứng từ, hải quan, kho bãi, vận tải, giao nhận và xử lý sự cố. Mỗi câu có pinyin, nghĩa tiếng Việt, 1-2 từ mới được highlight và audio tạo sẵn."
+            : "150 câu tiếng Trung theo tình huống công sở: trao đổi công việc, giao nhiệm vụ, báo tiến độ, họp, xin nghỉ và nhắn tin với đồng nghiệp. Mỗi câu có pinyin, nghĩa tiếng Việt, từ mới được highlight và audio tạo sẵn.";
 
 const officeCategories: CategorySpec[] = [
   {
@@ -699,13 +742,412 @@ const chinaDailyLifeCategories: CategorySpec[] = [
   },
 ];
 
+const travelAirportCategories: CategorySpec[] = [
+  {
+    id: "airport-check-in",
+    name: "Làm thủ tục tại sân bay",
+    count: 25,
+    scope:
+      "Đến sân bay, tìm quầy làm thủ tục, xuất trình hộ chiếu và vé, chọn chỗ ngồi, nhận thẻ lên máy bay, hỏi cửa ra máy bay, kiểm tra an ninh, đổi chuyến và xử lý chuyến bay chậm hoặc hủy.",
+    requiredSituations: [
+      "tìm nhà ga và quầy làm thủ tục",
+      "xuất trình hộ chiếu và vé điện tử",
+      "chọn chỗ ngồi cạnh cửa sổ hoặc lối đi",
+      "nhận thẻ lên máy bay",
+      "hỏi cửa ra máy bay",
+      "hỏi giờ bắt đầu lên máy bay",
+      "qua kiểm tra an ninh",
+      "bỏ chất lỏng và thiết bị điện tử ra kiểm tra",
+      "hỏi chuyến bay bị chậm",
+      "xử lý chuyến bay bị hủy",
+      "xin đổi chuyến",
+      "tìm quầy trung chuyển",
+    ],
+  },
+  {
+    id: "immigration-customs",
+    name: "Nhập cảnh và hải quan",
+    count: 25,
+    scope:
+      "Xếp hàng nhập cảnh, trình hộ chiếu và thị thực, trả lời mục đích chuyến đi, thời gian lưu trú và nơi ở, lấy dấu nhập cảnh, khai báo hải quan và hỏi quy định mang hàng hóa.",
+    requiredSituations: [
+      "tìm khu vực nhập cảnh",
+      "xếp hàng đúng làn hộ chiếu",
+      "xuất trình hộ chiếu và thị thực",
+      "nói mục đích du lịch",
+      "nói thời gian lưu trú",
+      "cung cấp địa chỉ khách sạn",
+      "trả lời có vé khứ hồi",
+      "xin hỗ trợ điền tờ khai",
+      "khai báo tiền mặt hoặc hàng hóa",
+      "hỏi đồ nào phải khai báo",
+      "đi qua cửa không khai báo",
+      "hỏi nơi kiểm tra hải quan",
+    ],
+  },
+  {
+    id: "baggage-services",
+    name: "Hành lý và dịch vụ hành lý",
+    count: 25,
+    scope:
+      "Cân và ký gửi hành lý, hỏi giới hạn cân nặng, hành lý xách tay, đồ dễ vỡ, lấy hành lý, báo thất lạc hoặc hư hỏng, nhận hành lý chậm và gửi đồ tại sân bay hoặc khách sạn.",
+    requiredSituations: [
+      "cân hành lý ký gửi",
+      "hỏi giới hạn cân nặng",
+      "trả phí hành lý quá cân",
+      "dán nhãn đồ dễ vỡ",
+      "hỏi kích thước hành lý xách tay",
+      "tìm băng chuyền nhận hành lý",
+      "hỏi hành lý chưa xuất hiện",
+      "báo vali bị thất lạc",
+      "mô tả màu sắc và hình dạng vali",
+      "báo vali bị hư hỏng",
+      "để lại địa chỉ giao hành lý",
+      "gửi hành lý tạm thời",
+    ],
+  },
+  {
+    id: "local-transport",
+    name: "Phương tiện và di chuyển",
+    count: 25,
+    scope:
+      "Đi từ sân bay vào thành phố bằng tàu điện, xe buýt, taxi hoặc xe đặt qua ứng dụng; mua vé, hỏi giá, điểm đón, đổi tuyến, thời gian di chuyển, địa chỉ xuống xe và thuê xe.",
+    requiredSituations: [
+      "tìm ga tàu điện sân bay",
+      "mua vé tàu hoặc xe buýt",
+      "hỏi chuyến cuối cùng",
+      "tìm điểm đón taxi",
+      "nói địa chỉ cho tài xế",
+      "hỏi có dùng đồng hồ tính cước",
+      "hỏi giá dự kiến",
+      "đặt xe bằng ứng dụng",
+      "xác nhận biển số xe",
+      "xin dừng ở đúng địa điểm",
+      "hỏi cách đổi tuyến",
+      "hỏi thời gian đến nơi",
+      "thuê xe và hỏi tiền đặt cọc",
+    ],
+  },
+  {
+    id: "hotel-stay",
+    name: "Khách sạn và lưu trú",
+    count: 25,
+    scope:
+      "Đặt phòng, xác nhận thông tin, nhận và trả phòng, đặt cọc, hỏi bữa sáng và tiện nghi, yêu cầu dọn phòng, báo thiết bị hỏng, đổi phòng, gửi hành lý và nhờ lễ tân hỗ trợ.",
+    requiredSituations: [
+      "xác nhận đặt phòng",
+      "đăng ký nhận phòng",
+      "xuất trình hộ chiếu",
+      "hỏi tiền đặt cọc",
+      "xin phòng không hút thuốc",
+      "hỏi giờ ăn sáng",
+      "hỏi mật khẩu Wi-Fi",
+      "yêu cầu dọn phòng",
+      "xin thêm khăn hoặc nước",
+      "báo điều hòa hoặc nước nóng bị hỏng",
+      "xin đổi phòng vì tiếng ồn",
+      "hỏi giờ trả phòng",
+      "gửi hành lý sau khi trả phòng",
+    ],
+  },
+  {
+    id: "travel-emergencies",
+    name: "Tình huống khẩn cấp khi du lịch",
+    count: 25,
+    scope:
+      "Nhờ giúp đỡ khi bị lạc, mất hộ chiếu hoặc ví, điện thoại hết pin, bị thương hoặc không khỏe, cần cảnh sát, bệnh viện, đại sứ quán, phiên dịch, bảo hiểm hoặc liên hệ người thân.",
+    requiredSituations: [
+      "nói mình bị lạc",
+      "xin dùng điện thoại",
+      "xin sạc điện thoại",
+      "báo mất hộ chiếu",
+      "báo mất ví hoặc thẻ ngân hàng",
+      "tìm đồn cảnh sát",
+      "liên hệ đại sứ quán",
+      "tìm bệnh viện hoặc nhà thuốc",
+      "nói triệu chứng cơ bản",
+      "gọi xe cứu thương",
+      "xin người phiên dịch",
+      "liên hệ bảo hiểm du lịch",
+      "gọi cho người thân",
+      "báo đồ bị đánh cắp",
+    ],
+  },
+];
+
+const salesCustomerServiceCategories: CategorySpec[] = [
+  {
+    id: "customer-needs",
+    name: "Chào hỏi và tìm hiểu nhu cầu",
+    count: 25,
+    scope:
+      "Đón tiếp khách, chủ động hỗ trợ, hỏi mục đích sử dụng, ngân sách, số lượng, kích thước, màu sắc, thời hạn cần hàng và xác nhận tiêu chí ưu tiên trước khi tư vấn.",
+    requiredSituations: [
+      "chào và hỏi khách cần hỗ trợ gì",
+      "hỏi mục đích sử dụng",
+      "hỏi ngân sách dự kiến",
+      "hỏi số lượng cần mua",
+      "hỏi kích thước hoặc thông số",
+      "hỏi màu sắc và kiểu dáng",
+      "hỏi thời gian cần nhận hàng",
+      "hỏi đã từng dùng sản phẩm chưa",
+      "xác nhận nhu cầu quan trọng nhất",
+      "hỏi mua cho cá nhân hay doanh nghiệp",
+      "ghi nhận thông tin liên hệ",
+      "nhắc lại nhu cầu để xác nhận",
+    ],
+  },
+  {
+    id: "product-consulting",
+    name: "Tư vấn và giới thiệu sản phẩm",
+    count: 25,
+    scope:
+      "Giới thiệu tính năng, công dụng, chất liệu, xuất xứ, thông số, ưu nhược điểm, cách dùng, bảo hành, hàng có sẵn, mẫu thay thế và so sánh các lựa chọn phù hợp.",
+    requiredSituations: [
+      "giới thiệu sản phẩm phù hợp",
+      "giải thích tính năng chính",
+      "nói về chất liệu",
+      "nói về xuất xứ",
+      "giải thích thông số",
+      "so sánh hai mẫu",
+      "nêu ưu điểm",
+      "nói rõ hạn chế",
+      "hướng dẫn cách sử dụng",
+      "giải thích thời hạn bảo hành",
+      "báo tình trạng còn hàng",
+      "đề xuất mẫu thay thế",
+      "cho khách dùng thử hoặc xem mẫu",
+    ],
+  },
+  {
+    id: "quotation-pricing",
+    name: "Báo giá và điều kiện bán hàng",
+    count: 25,
+    scope:
+      "Báo giá lẻ và giá sỉ, giải thích giá đã gồm thuế hay chưa, phí vận chuyển, chiết khấu theo số lượng, thời hạn hiệu lực của báo giá, phương thức thanh toán, đặt cọc và xuất hóa đơn.",
+    requiredSituations: [
+      "báo giá sản phẩm",
+      "phân biệt giá lẻ và giá sỉ",
+      "giải thích giá đã gồm thuế",
+      "báo phí vận chuyển",
+      "chiết khấu theo số lượng",
+      "thời hạn hiệu lực của báo giá",
+      "gửi bảng báo giá",
+      "xác nhận đơn vị tiền tệ",
+      "hỏi phương thức thanh toán",
+      "yêu cầu đặt cọc",
+      "xác nhận thời hạn thanh toán",
+      "xuất hóa đơn",
+    ],
+  },
+  {
+    id: "negotiation-order",
+    name: "Thương lượng và chốt đơn",
+    count: 25,
+    scope:
+      "Tiếp nhận đề nghị giảm giá, thương lượng số lượng và điều kiện giao hàng, xin phê duyệt giá, đưa phương án thay thế, xác nhận sản phẩm, số lượng, địa chỉ, thời gian giao và hoàn tất đơn hàng.",
+    requiredSituations: [
+      "khách đề nghị giảm giá",
+      "thương lượng mức chiết khấu",
+      "xin quản lý phê duyệt giá",
+      "đề xuất tăng số lượng để có giá tốt",
+      "thương lượng phí vận chuyển",
+      "thống nhất ngày giao hàng",
+      "đề xuất phương án thay thế",
+      "xác nhận mẫu và số lượng",
+      "xác nhận địa chỉ giao hàng",
+      "xác nhận thông tin người nhận",
+      "tóm tắt điều kiện đã thống nhất",
+      "chốt và xác nhận đơn hàng",
+    ],
+  },
+  {
+    id: "after-sales-follow-up",
+    name: "Theo dõi và chăm sóc sau bán",
+    count: 25,
+    scope:
+      "Thông báo trạng thái đơn, xác nhận giao hàng, hỏi trải nghiệm sử dụng, hướng dẫn kích hoạt bảo hành, nhắc lịch bảo trì, hỗ trợ đổi trả và tiếp nhận góp ý để duy trì quan hệ khách hàng.",
+    requiredSituations: [
+      "xác nhận đã nhận đơn hàng",
+      "thông báo đang chuẩn bị hàng",
+      "gửi mã vận đơn",
+      "thông báo giao hàng chậm",
+      "xác nhận khách đã nhận hàng",
+      "hỏi trải nghiệm sử dụng",
+      "hướng dẫn kích hoạt bảo hành",
+      "nhắc lịch bảo trì",
+      "hướng dẫn đổi hoặc trả hàng",
+      "gửi tài liệu hướng dẫn",
+      "cảm ơn phản hồi của khách",
+      "mời khách liên hệ khi cần hỗ trợ",
+    ],
+  },
+  {
+    id: "complaints-resolution",
+    name: "Phản hồi và xử lý khiếu nại",
+    count: 25,
+    scope:
+      "Lắng nghe khiếu nại về giao sai, thiếu hàng, hàng hỏng, chất lượng, phí, thái độ phục vụ hoặc hoàn tiền; xin lỗi đúng mức, xác minh chứng từ, đưa thời hạn xử lý và giải pháp cụ thể.",
+    requiredSituations: [
+      "xin lỗi vì trải nghiệm không tốt",
+      "hỏi rõ nội dung khiếu nại",
+      "xin mã đơn hàng",
+      "xin ảnh hoặc video sản phẩm lỗi",
+      "xác minh giao sai sản phẩm",
+      "xác minh thiếu số lượng",
+      "xử lý hàng hư hỏng",
+      "giải thích khoản phí",
+      "đề nghị đổi sản phẩm",
+      "xác nhận hoàn tiền",
+      "nói rõ thời gian xử lý",
+      "chuyển vụ việc cho bộ phận phụ trách",
+      "xác nhận khách đồng ý với giải pháp",
+    ],
+  },
+];
+
+const logisticsImportExportCategories: CategorySpec[] = [
+  {
+    id: "sourcing-purchasing",
+    name: "Tìm nguồn hàng và mua hàng",
+    count: 25,
+    scope:
+      "Tìm nhà cung cấp, gửi yêu cầu báo giá, hỏi số lượng đặt tối thiểu, xin mẫu, xác nhận quy cách, năng lực cung ứng, thời gian sản xuất, số lượng và tiến độ đơn mua.",
+    requiredSituations: [
+      "tìm và đánh giá nhà cung cấp",
+      "gửi yêu cầu báo giá",
+      "hỏi số lượng đặt tối thiểu",
+      "xin và xác nhận mẫu",
+      "xác nhận quy cách sản phẩm",
+      "hỏi năng lực cung ứng",
+      "hỏi thời gian sản xuất",
+      "xác nhận số lượng đặt hàng",
+      "đề nghị điều chỉnh đơn mua",
+      "theo dõi tiến độ chuẩn bị hàng",
+      "xác nhận chất lượng trước khi đặt",
+      "phê duyệt đơn mua",
+    ],
+  },
+  {
+    id: "contracts-trade-terms-payment",
+    name: "Hợp đồng, Incoterms và thanh toán",
+    count: 25,
+    scope:
+      "Trao đổi điều khoản hợp đồng, giá, tiền tệ, đặt cọc, thời hạn thanh toán, chuyển khoản, thư tín dụng, trách nhiệm chi phí, bảo hiểm và thời điểm chuyển giao rủi ro theo điều kiện thương mại.",
+    requiredSituations: [
+      "xác nhận điều khoản hợp đồng",
+      "thương lượng giá và tiền tệ",
+      "yêu cầu đặt cọc",
+      "xác nhận thời hạn thanh toán",
+      "thanh toán bằng chuyển khoản",
+      "mở thư tín dụng",
+      "xác nhận tài khoản nhận tiền",
+      "chọn điều kiện FOB",
+      "chọn điều kiện CIF",
+      "chọn điều kiện EXW",
+      "phân chia cước và phí bảo hiểm",
+      "xác định thời điểm chuyển giao rủi ro",
+    ],
+  },
+  {
+    id: "trade-documents",
+    name: "Chứng từ xuất nhập khẩu",
+    count: 25,
+    scope:
+      "Chuẩn bị, kiểm tra và sửa hóa đơn thương mại, phiếu đóng gói, vận đơn, chứng nhận xuất xứ, giấy phép, chứng thư kiểm dịch, chứng từ bảo hiểm và thông báo vận chuyển.",
+    requiredSituations: [
+      "gửi hóa đơn thương mại",
+      "kiểm tra phiếu đóng gói",
+      "xác nhận vận đơn",
+      "xin chứng nhận xuất xứ",
+      "chuẩn bị giấy phép nhập khẩu",
+      "gửi chứng thư kiểm dịch",
+      "kiểm tra bản gốc và bản sao",
+      "ký tên đóng dấu chứng từ",
+      "yêu cầu sửa chứng từ",
+      "đối chiếu thông tin giữa các chứng từ",
+      "gửi thông báo vận chuyển",
+      "bổ sung chứng từ còn thiếu",
+    ],
+  },
+  {
+    id: "customs-compliance",
+    name: "Hải quan và tuân thủ",
+    count: 25,
+    scope:
+      "Phân loại mã HS, khai báo trị giá, tính thuế, nộp hồ sơ, kiểm hóa, bổ sung tài liệu, xin giấy phép, xử lý luồng kiểm tra, theo dõi thông quan và nhận thông báo giải phóng hàng.",
+    requiredSituations: [
+      "xác nhận mã HS",
+      "khai báo trị giá hải quan",
+      "hỏi thuế nhập khẩu",
+      "nộp tờ khai hải quan",
+      "bổ sung hồ sơ",
+      "nhận thông báo kiểm hóa",
+      "phối hợp kiểm tra hàng",
+      "giải trình chênh lệch khai báo",
+      "kiểm tra hàng hạn chế nhập khẩu",
+      "theo dõi trạng thái thông quan",
+      "nhận thông báo giải phóng hàng",
+      "làm việc với đại lý khai báo",
+    ],
+  },
+  {
+    id: "warehouse-transport-delivery",
+    name: "Kho bãi, vận tải và giao nhận",
+    count: 25,
+    scope:
+      "Nhập xuất kho, kiểm kê, đóng gói, ghi nhãn, đặt chỗ vận chuyển, container, lịch tàu hoặc chuyến bay, theo dõi lô hàng, lấy hàng, giao hàng và ký nhận.",
+    requiredSituations: [
+      "xác nhận nhập kho",
+      "lập phiếu xuất kho",
+      "kiểm kê tồn kho",
+      "xác nhận quy cách đóng gói",
+      "dán nhãn vận chuyển",
+      "đặt chỗ vận tải",
+      "xác nhận container",
+      "hỏi lịch tàu hoặc chuyến bay",
+      "theo dõi vị trí lô hàng",
+      "xác nhận thời gian lấy hàng",
+      "xác nhận địa chỉ giao hàng",
+      "ký nhận và bàn giao hàng",
+    ],
+  },
+  {
+    id: "exceptions-claims",
+    name: "Sự cố, khiếu nại và bồi thường",
+    count: 25,
+    scope:
+      "Báo giao chậm, thiếu hàng, giao sai, mất hàng, hư hỏng, sai chứng từ, phí phát sinh, lưu container, thu thập bằng chứng, lập biên bản, yêu cầu bồi thường và theo dõi xử lý.",
+    requiredSituations: [
+      "báo giao hàng chậm",
+      "báo thiếu số lượng",
+      "báo giao sai hàng",
+      "báo mất hàng",
+      "báo hàng hư hỏng",
+      "báo bao bì bị rách",
+      "sửa chứng từ sai",
+      "hỏi phí lưu container",
+      "chụp ảnh và lưu bằng chứng",
+      "lập báo cáo bất thường",
+      "gửi yêu cầu bồi thường",
+      "theo dõi tiến độ giải quyết khiếu nại",
+    ],
+  },
+];
+
 const categories = isFactoryTemplate
   ? factoryCategories
   : isFriendshipTemplate
     ? friendshipCategories
     : isChinaDailyLifeTemplate
       ? chinaDailyLifeCategories
-      : officeCategories;
+      : isTravelAirportTemplate
+        ? travelAirportCategories
+        : isSalesCustomerServiceTemplate
+          ? salesCustomerServiceCategories
+          : isLogisticsImportExportTemplate
+            ? logisticsImportExportCategories
+            : officeCategories;
 
 const highlightWordSchema = z.object({
   chinese: z.string().min(1),
@@ -1630,13 +2072,517 @@ const chinaDailyLifeDataCorrections: Record<
     ],
   },
 };
+const travelAirportDataCorrections: Record<
+  string,
+  Partial<GeneratedSentence>
+> = {
+  "请问候机楼在哪里？": {
+    sentence_vi: "Xin hỏi nhà ga sân bay ở đâu?",
+  },
+  "飞机几点开始登机？": {
+    sentence_vi: "Việc lên máy bay bắt đầu lúc mấy giờ?",
+  },
+  "请问更改登机口在哪里？": {
+    sentence_cn: "请问新的登机口在哪里？",
+    sentence_pinyin: "Qǐngwèn xīn de dēngjīkǒu zài nǎlǐ?",
+    sentence_vi: "Xin hỏi cửa ra máy bay mới ở đâu?",
+    vocabulary: [
+      {
+        chinese: "登机口",
+        pinyin: "dēngjīkǒu",
+        meaning_vi: "cửa ra máy bay",
+      },
+    ],
+  },
+  "请帮我更换登机时间。": {
+    sentence_cn: "请帮我改签到其他航班。",
+    sentence_pinyin: "Qǐng bāng wǒ gǎiqiān dào qítā hángbān.",
+    sentence_vi: "Xin giúp tôi đổi sang chuyến bay khác.",
+    vocabulary: [
+      {
+        chinese: "改签",
+        pinyin: "gǎiqiān",
+        meaning_vi: "đổi chuyến",
+      },
+      {
+        chinese: "航班",
+        pinyin: "hángbān",
+        meaning_vi: "chuyến bay",
+      },
+    ],
+  },
+  "请问护照专用通道在哪里？": {
+    sentence_cn: "请问外国护照通道在哪里？",
+    sentence_pinyin: "Qǐngwèn wàiguó hùzhào tōngdào zài nǎlǐ?",
+    sentence_vi: "Xin hỏi làn dành cho hộ chiếu nước ngoài ở đâu?",
+    vocabulary: [
+      {
+        chinese: "外国护照",
+        pinyin: "wàiguó hùzhào",
+        meaning_vi: "hộ chiếu nước ngoài",
+      },
+      {
+        chinese: "通道",
+        pinyin: "tōngdào",
+        meaning_vi: "làn đi",
+      },
+    ],
+  },
+  "这是我的护照和有效签证，请查收。": {
+    sentence_cn: "这是我的护照和有效签证，请查验。",
+    sentence_pinyin:
+      "Zhè shì wǒ de hùzhào hé yǒuxiào qiānzhèng, qǐng cháyàn.",
+    sentence_vi:
+      "Đây là hộ chiếu và thị thực còn hiệu lực của tôi, xin kiểm tra.",
+    vocabulary: [
+      {
+        chinese: "有效签证",
+        pinyin: "yǒuxiào qiānzhèng",
+        meaning_vi: "thị thực còn hiệu lực",
+      },
+      {
+        chinese: "查验",
+        pinyin: "cháyàn",
+        meaning_vi: "kiểm tra",
+      },
+    ],
+  },
+  "请问红色通道是专门申报贵重物品的吗？": {
+    sentence_cn: "请问需要申报的物品要走红色通道吗？",
+    sentence_pinyin:
+      "Qǐngwèn xūyào shēnbào de wùpǐn yào zǒu hóngsè tōngdào ma?",
+    sentence_vi:
+      "Xin hỏi hàng hóa cần khai báo có phải đi qua làn đỏ không?",
+    vocabulary: [
+      {
+        chinese: "申报",
+        pinyin: "shēnbào",
+        meaning_vi: "khai báo",
+      },
+      {
+        chinese: "红色通道",
+        pinyin: "hóngsè tōngdào",
+        meaning_vi: "làn đỏ",
+      },
+    ],
+  },
+  "请问领取入境章盖章处在哪里？": {
+    sentence_cn: "请问在哪里盖入境章？",
+    sentence_pinyin: "Qǐngwèn zài nǎlǐ gài rùjìngzhāng?",
+    sentence_vi: "Xin hỏi đóng dấu nhập cảnh ở đâu?",
+    vocabulary: [
+      {
+        chinese: "入境章",
+        pinyin: "rùjìngzhāng",
+        meaning_vi: "dấu nhập cảnh",
+      },
+    ],
+  },
+  "我在海关申报了需要申报的物品。": {
+    sentence_cn: "我已经向海关申报了这些物品。",
+    sentence_pinyin: "Wǒ yǐjīng xiàng hǎiguān shēnbào le zhèxiē wùpǐn.",
+    sentence_vi: "Tôi đã khai báo những hàng hóa này với hải quan.",
+    vocabulary: [
+      {
+        chinese: "海关",
+        pinyin: "hǎiguān",
+        meaning_vi: "hải quan",
+      },
+      {
+        chinese: "申报",
+        pinyin: "shēnbào",
+        meaning_vi: "khai báo",
+      },
+    ],
+  },
+  "我的行李箱颜色是黑色，形状是硬壳的。": {
+    sentence_cn: "我的行李箱是黑色的硬壳箱。",
+    sentence_pinyin: "Wǒ de xínglixiāng shì hēisè de yìngké xiāng.",
+    sentence_vi: "Vali của tôi là loại vỏ cứng màu đen.",
+    vocabulary: [
+      {
+        chinese: "硬壳箱",
+        pinyin: "yìngké xiāng",
+        meaning_vi: "vali vỏ cứng",
+      },
+    ],
+  },
+  "我行李的箱子是红色的，比较大。": {
+    sentence_cn: "我的行李箱是红色的，尺寸比较大。",
+    sentence_pinyin:
+      "Wǒ de xínglixiāng shì hóngsè de, chǐcùn bǐjiào dà.",
+    sentence_vi: "Vali của tôi màu đỏ và có kích thước khá lớn.",
+    vocabulary: [
+      {
+        chinese: "尺寸",
+        pinyin: "chǐcùn",
+        meaning_vi: "kích thước",
+      },
+    ],
+  },
+  "我的托运行李是否可以带上这件礼物？": {
+    sentence_cn: "这件礼物可以放在托运行李里吗？",
+    sentence_pinyin: "Zhè jiàn lǐwù kěyǐ fàng zài tuōyùn xínglǐ lǐ ma?",
+    sentence_vi: "Món quà này có thể để trong hành lý ký gửi không?",
+    vocabulary: [
+      {
+        chinese: "托运行李",
+        pinyin: "tuōyùn xínglǐ",
+        meaning_vi: "hành lý ký gửi",
+      },
+    ],
+  },
+  "请司机去这个地址，谢谢。": {
+    sentence_cn: "请送我到这个地址，谢谢。",
+    sentence_pinyin: "Qǐng sòng wǒ dào zhège dìzhǐ, xièxie.",
+    sentence_vi: "Xin hãy đưa tôi đến địa chỉ này, cảm ơn.",
+    vocabulary: [
+      {
+        chinese: "地址",
+        pinyin: "dìzhǐ",
+        meaning_vi: "địa chỉ",
+      },
+    ],
+  },
+  "请问出租车有计价表吗？": {
+    sentence_cn: "请问出租车有计价器吗？",
+    sentence_pinyin: "Qǐngwèn chūzūchē yǒu jìjiàqì ma?",
+    sentence_vi: "Xin hỏi taxi có đồng hồ tính cước không?",
+    vocabulary: [
+      {
+        chinese: "计价器",
+        pinyin: "jìjiàqì",
+        meaning_vi: "đồng hồ tính cước",
+      },
+    ],
+  },
+  "请在这里帮我停车，谢谢。": {
+    sentence_cn: "请在这里停车，谢谢。",
+    sentence_pinyin: "Qǐng zài zhèlǐ tíngchē, xièxie.",
+    sentence_vi: "Xin hãy dừng xe tại đây, cảm ơn.",
+    vocabulary: [
+      {
+        chinese: "停车",
+        pinyin: "tíngchē",
+        meaning_vi: "dừng xe",
+      },
+    ],
+  },
+  "到目的地大概要多长时间？": {
+    sentence_vi: "Đến nơi mất khoảng bao lâu?",
+  },
+  "请问在哪儿可以租借汽车？": {
+    sentence_cn: "请问在哪儿可以租车？",
+    sentence_pinyin: "Qǐngwèn zài nǎr kěyǐ zūchē?",
+    sentence_vi: "Xin hỏi có thể thuê xe ở đâu?",
+    vocabulary: [
+      {
+        chinese: "租车",
+        pinyin: "zūchē",
+        meaning_vi: "thuê xe",
+      },
+    ],
+  },
+  "这趟公交车几号线？": {
+    sentence_cn: "这是几路公交车？",
+    sentence_pinyin: "Zhè shì jǐ lù gōngjiāochē?",
+    sentence_vi: "Đây là xe buýt tuyến số mấy?",
+    vocabulary: [
+      {
+        chinese: "几路",
+        pinyin: "jǐ lù",
+        meaning_vi: "tuyến số mấy",
+      },
+    ],
+  },
+  "这辆出租车是我的顺风车吗？": {
+    sentence_cn: "这是我预约的网约车吗？",
+    sentence_pinyin: "Zhè shì wǒ yùyuē de wǎngyuēchē ma?",
+    sentence_vi: "Đây có phải là xe tôi đã đặt qua ứng dụng không?",
+    vocabulary: [
+      {
+        chinese: "预约",
+        pinyin: "yùyuē",
+        meaning_vi: "đặt trước",
+      },
+      {
+        chinese: "网约车",
+        pinyin: "wǎngyuēchē",
+        meaning_vi: "xe đặt qua ứng dụng",
+      },
+    ],
+  },
+  "附近很吵，能换个更安静的房间吗？": {
+    sentence_cn: "外面太吵了，能换一个更安静的房间吗？",
+    sentence_pinyin:
+      "Wàimiàn tài chǎo le, néng huàn yí ge gèng ānjìng de fángjiān ma?",
+    sentence_vi: "Bên ngoài quá ồn, tôi có thể đổi sang phòng yên tĩnh hơn không?",
+    vocabulary: [
+      {
+        chinese: "安静",
+        pinyin: "ānjìng",
+        meaning_vi: "yên tĩnh",
+      },
+      {
+        chinese: "换",
+        pinyin: "huàn",
+        meaning_vi: "đổi",
+      },
+    ],
+  },
+  "请告诉我附近有没有餐厅推荐？": {
+    sentence_cn: "请问附近有推荐的餐厅吗？",
+    sentence_pinyin: "Qǐngwèn fùjìn yǒu tuījiàn de cāntīng ma?",
+    sentence_vi: "Xin hỏi gần đây có nhà hàng nào được đề xuất không?",
+    vocabulary: [
+      {
+        chinese: "推荐",
+        pinyin: "tuījiàn",
+        meaning_vi: "đề xuất",
+      },
+      {
+        chinese: "餐厅",
+        pinyin: "cāntīng",
+        meaning_vi: "nhà hàng",
+      },
+    ],
+  },
+  "请帮我预订明天早上的机场接送服务。": {
+    sentence_vi: "Xin giúp tôi đặt dịch vụ đưa đón sân bay vào sáng mai.",
+  },
+  "房间附近有停车场吗？": {
+    sentence_cn: "酒店附近有停车场吗？",
+    sentence_pinyin: "Jiǔdiàn fùjìn yǒu tíngchēchǎng ma?",
+    sentence_vi: "Gần khách sạn có bãi đỗ xe không?",
+    vocabulary: [
+      {
+        chinese: "停车场",
+        pinyin: "tíngchēchǎng",
+        meaning_vi: "bãi đỗ xe",
+      },
+    ],
+  },
+  "我需要联系中国大使馆，能帮忙吗？": {
+    sentence_cn: "我需要联系本国大使馆，能帮忙吗？",
+    sentence_pinyin: "Wǒ xūyào liánxì běnguó dàshǐguǎn, néng bāngmáng ma?",
+    sentence_vi:
+      "Tôi cần liên hệ đại sứ quán nước mình, bạn có thể giúp không?",
+    vocabulary: [
+      {
+        chinese: "本国",
+        pinyin: "běnguó",
+        meaning_vi: "nước mình",
+      },
+      {
+        chinese: "大使馆",
+        pinyin: "dàshǐguǎn",
+        meaning_vi: "đại sứ quán",
+      },
+    ],
+  },
+  "旅险号码是这个，请帮我联系保险公司。": {
+    sentence_cn: "我的旅游保险单号在这里，请帮我联系保险公司。",
+    sentence_pinyin:
+      "Wǒ de lǚyóu bǎoxiǎn dānhào zài zhèlǐ, qǐng bāng wǒ liánxì bǎoxiǎn gōngsī.",
+    sentence_vi:
+      "Mã hợp đồng bảo hiểm du lịch của tôi ở đây, xin giúp tôi liên hệ công ty bảo hiểm.",
+    vocabulary: [
+      {
+        chinese: "保险单号",
+        pinyin: "bǎoxiǎn dānhào",
+        meaning_vi: "mã hợp đồng bảo hiểm",
+      },
+      {
+        chinese: "保险公司",
+        pinyin: "bǎoxiǎn gōngsī",
+        meaning_vi: "công ty bảo hiểm",
+      },
+    ],
+  },
+  "我的手机被偷了，有人报警了吗？": {
+    sentence_cn: "我的手机被偷了，请帮我报警。",
+    sentence_pinyin: "Wǒ de shǒujī bèi tōu le, qǐng bāng wǒ bàojǐng.",
+    sentence_vi: "Điện thoại của tôi bị lấy cắp, xin giúp tôi báo cảnh sát.",
+    vocabulary: [
+      {
+        chinese: "被偷",
+        pinyin: "bèi tōu",
+        meaning_vi: "bị lấy cắp",
+      },
+      {
+        chinese: "报警",
+        pinyin: "bàojǐng",
+        meaning_vi: "báo cảnh sát",
+      },
+    ],
+  },
+  "我找不到月台，能帮我指路吗？": {
+    sentence_vi: "Tôi không tìm thấy sân ga, bạn có thể chỉ đường không?",
+  },
+  "我需要马上去医院，有紧急情况。": {
+    sentence_cn: "我需要马上去医院，这是紧急情况。",
+    sentence_pinyin: "Wǒ xūyào mǎshàng qù yīyuàn, zhè shì jǐnjí qíngkuàng.",
+    sentence_vi: "Tôi cần đến bệnh viện ngay, đây là tình huống khẩn cấp.",
+    vocabulary: [
+      {
+        chinese: "紧急情况",
+        pinyin: "jǐnjí qíngkuàng",
+        meaning_vi: "tình huống khẩn cấp",
+      },
+    ],
+  },
+};
+const salesCustomerServiceDataCorrections: Record<
+  string,
+  Partial<GeneratedSentence>
+> = {
+  "我们的产品保证原产地是国内知名工厂制造。": {
+    sentence_cn: "产品标签上清楚标明了原产地和生产厂家。",
+    sentence_pinyin:
+      "Chǎnpǐn biāoqiān shàng qīngchu biāomíng le yuánchǎndì hé shēngchǎn chǎngjiā.",
+    sentence_vi:
+      "Nhãn sản phẩm ghi rõ xuất xứ và nhà sản xuất.",
+    vocabulary: [
+      {
+        chinese: "原产地",
+        pinyin: "yuánchǎndì",
+        meaning_vi: "xuất xứ",
+      },
+      {
+        chinese: "生产厂家",
+        pinyin: "shēngchǎn chǎngjiā",
+        meaning_vi: "nhà sản xuất",
+      },
+    ],
+  },
+  "预付款需在发货前完成，感谢您的配合。": {
+    sentence_vi:
+      "Khoản trả trước cần được thanh toán trước khi giao hàng, cảm ơn quý khách hợp tác.",
+    vocabulary: [
+      {
+        chinese: "预付款",
+        pinyin: "yùfùkuǎn",
+        meaning_vi: "khoản trả trước",
+      },
+      {
+        chinese: "配合",
+        pinyin: "pèihé",
+        meaning_vi: "hợp tác",
+      },
+    ],
+  },
+  "恭喜您，您的订单已成功签收，祝您使用愉快。": {
+    sentence_cn: "您的订单已成功签收，感谢您的支持，祝您使用愉快。",
+    sentence_pinyin:
+      "Nín de dìngdān yǐ chénggōng qiānshōu, gǎnxiè nín de zhīchí, zhù nín shǐyòng yúkuài.",
+    sentence_vi:
+      "Đơn hàng đã được ký nhận thành công, cảm ơn quý khách ủng hộ và chúc quý khách sử dụng sản phẩm vui vẻ.",
+    vocabulary: [
+      {
+        chinese: "签收",
+        pinyin: "qiānshōu",
+        meaning_vi: "ký nhận hàng",
+      },
+      {
+        chinese: "愉快",
+        pinyin: "yúkuài",
+        meaning_vi: "vui vẻ, thoải mái",
+      },
+    ],
+  },
+  "我们确认您收到的订单与发货内容是否一致。": {
+    sentence_cn: "请您确认收到的商品与订单内容是否一致。",
+    sentence_pinyin:
+      "Qǐng nín quèrèn shōudào de shāngpǐn yǔ dìngdān nèiróng shìfǒu yízhì.",
+    sentence_vi:
+      "Xin quý khách xác nhận sản phẩm đã nhận có đúng với nội dung đơn hàng hay không.",
+    vocabulary: [
+      {
+        chinese: "确认",
+        pinyin: "quèrèn",
+        meaning_vi: "xác nhận",
+      },
+      {
+        chinese: "内容",
+        pinyin: "nèiróng",
+        meaning_vi: "nội dung",
+      },
+    ],
+  },
+};
+const logisticsImportExportDataCorrections: Record<
+  string,
+  Partial<GeneratedSentence>
+> = {
+  "请提供贵公司的产品供应商名单供我们参考。": {
+    sentence_cn: "请提供贵公司的产品目录供我们参考。",
+    sentence_pinyin:
+      "Qǐng tígōng guì gōngsī de chǎnpǐn mùlù gōng wǒmen cānkǎo.",
+    sentence_vi:
+      "Vui lòng cung cấp danh mục sản phẩm của quý công ty để chúng tôi tham khảo.",
+    vocabulary: [
+      {
+        chinese: "产品目录",
+        pinyin: "chǎnpǐn mùlù",
+        meaning_vi: "danh mục sản phẩm",
+      },
+    ],
+  },
+  "我们计划订购的数量是五千件，请确认是否可行。": {
+    sentence_cn: "请确认我们计划订购的数量是否可以按期供应。",
+    sentence_pinyin:
+      "Qǐng quèrèn wǒmen jìhuà dìnggòu de shùliàng shìfǒu kěyǐ ànqī gōngyìng.",
+    sentence_vi:
+      "Vui lòng xác nhận số lượng chúng tôi dự kiến đặt có thể được cung ứng đúng hạn hay không.",
+    vocabulary: [
+      {
+        chinese: "按期供应",
+        pinyin: "ànqī gōngyìng",
+        meaning_vi: "cung ứng đúng hạn",
+      },
+    ],
+  },
+  "请提供贵方的质量检验报告以便我们审核。": {
+    sentence_vi:
+      "Xin cung cấp báo cáo kiểm tra chất lượng của quý công ty để chúng tôi rà soát.",
+  },
+  "请及时通知我们航运的最新动态和到港时间。": {
+    sentence_vi:
+      "Vui lòng thông báo kịp thời cho chúng tôi thông tin vận tải đường biển mới nhất và thời gian đến cảng.",
+  },
+  "收到运输异常信息，烦请提供详细整改时间表。": {
+    sentence_pinyin:
+      "Shōudào yùnshū yìcháng xìnxī, fánqǐng tígōng xiángxì zhěnggǎi shíjiānbiǎo.",
+    sentence_vi:
+      "Đã nhận thông tin vận chuyển bất thường, vui lòng cung cấp tiến độ khắc phục chi tiết.",
+    vocabulary: [
+      {
+        chinese: "运输异常",
+        pinyin: "yùnshū yìcháng",
+        meaning_vi: "sự cố vận chuyển",
+      },
+      {
+        chinese: "整改时间表",
+        pinyin: "zhěnggǎi shíjiānbiǎo",
+        meaning_vi: "tiến độ khắc phục",
+      },
+    ],
+  },
+};
+
 const dataCorrections = isFactoryTemplate
   ? factoryDataCorrections
   : isFriendshipTemplate
     ? friendshipDataCorrections
     : isChinaDailyLifeTemplate
       ? chinaDailyLifeDataCorrections
-      : officeDataCorrections;
+      : isTravelAirportTemplate
+        ? travelAirportDataCorrections
+        : isSalesCustomerServiceTemplate
+          ? salesCustomerServiceDataCorrections
+          : isLogisticsImportExportTemplate
+            ? logisticsImportExportDataCorrections
+            : officeDataCorrections;
 
 function sqlLiteral(value: string) {
   return `'${value.replaceAll("'", "''")}'`;
@@ -1654,7 +2600,11 @@ function hasVietnameseAccent(value: string) {
 }
 
 function stripFormatting(value: string) {
-  return value.replaceAll("**", "").replaceAll("__", "").trim();
+  return value
+    .replaceAll("**", "")
+    .replaceAll("__", "")
+    .replace(/[【】\[\]]/gu, " ")
+    .trim();
 }
 
 function normalizeHighlight(word: HighlightWord): HighlightWord {
@@ -1802,7 +2752,13 @@ async function generateCategory(
               ? "friendship_situational_sentences"
               : isChinaDailyLifeTemplate
                 ? "china_daily_life_sentences"
-                : "office_communication_sentences",
+                : isTravelAirportTemplate
+                  ? "travel_airport_sentences"
+                  : isSalesCustomerServiceTemplate
+                    ? "sales_customer_service_sentences"
+                    : isLogisticsImportExportTemplate
+                      ? "logistics_import_export_sentences"
+                      : "office_communication_sentences",
           strict: true,
           schema: {
             type: "object",
@@ -1859,7 +2815,13 @@ async function generateCategory(
               ? "Bạn là giáo viên tiếng Trung giao tiếp cho người Việt muốn làm quen và kết bạn. Hãy tạo các câu tiếng Trung giản thể tự nhiên, thân thiện, lịch sự và thực tế, phù hợp trình độ HSK1-HSK3. Bao quát chào hỏi, giới thiệu bản thân, quê quán, công việc, sở thích, học ngôn ngữ, trao đổi liên lạc, rủ đi chơi, trò chuyện hằng ngày và hẹn gặp lại. Câu phải dài khoảng 5-22 chữ Hán, diễn đạt trọn ý, không dùng tên người cụ thể, không hỏi thông tin quá nhạy cảm, không tán tỉnh quá mức và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng vào câu. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và đúng sắc thái giao tiếp. Mỗi câu chọn 1-3 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ đó phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu."
               : isChinaDailyLifeTemplate
                 ? "Bạn là giáo viên tiếng Trung thực hành cho người Việt đang sống tại Trung Quốc. Hãy tạo câu tiếng Trung giản thể tự nhiên, rõ ràng và thực tế ở mức HSK1-HSK3, dùng được ngay trong đời sống. Nội dung bao quát thuê nhà, hợp đồng, điện nước, sửa chữa, giao hàng, hỏi đường, giao thông, WeChat, thanh toán, mua sắm và nhờ giúp đỡ. Ưu tiên mẫu nói lịch sự, an toàn, đúng văn hóa; không đưa lời khuyên pháp lý hoặc y tế tuyệt đối. Mỗi câu dài khoảng 6-24 chữ Hán, diễn đạt trọn ý, không dùng tên người hay địa chỉ cụ thể và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và phản ánh đúng ngữ cảnh. Mỗi câu chọn đúng 1-2 từ hoặc cụm từ mới quan trọng trong trường vocabulary; mỗi từ phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu."
-                : "Bạn là giáo viên tiếng Trung công sở cho người Việt. Hãy tạo các câu tiếng Trung giản thể tự nhiên, lịch sự và thực tế trong môi trường văn phòng hiện đại. Câu phải dài khoảng 8-28 chữ Hán, diễn đạt trọn ý, không dùng tên người hay tên công ty cụ thể và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng vào câu. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và đúng sắc thái công việc. Mỗi câu chọn 1-3 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ đó phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu.",
+                : isTravelAirportTemplate
+                  ? "Bạn là giáo viên tiếng Trung du lịch cho người Việt đi Trung Quốc. Hãy tạo câu tiếng Trung giản thể tự nhiên, lịch sự, rõ ràng và dùng được ngay trong hành trình thực tế. Nội dung phải bao quát làm thủ tục sân bay, kiểm tra an ninh, nhập cảnh, hải quan, hành lý, tàu điện, xe buýt, taxi, khách sạn và tình huống khẩn cấp. Ưu tiên cách nói mà hành khách thật sự dùng với nhân viên sân bay, hải quan, tài xế, lễ tân, cảnh sát hoặc nhân viên y tế; không đưa lời khuyên pháp lý hay y tế tuyệt đối. Mỗi câu dài khoảng 6-24 chữ Hán, diễn đạt trọn ý, không dùng tên người, số chuyến bay, địa chỉ hoặc khách sạn cụ thể và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và đúng ngữ cảnh du lịch. Mỗi câu chọn đúng 1-2 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu."
+                  : isSalesCustomerServiceTemplate
+                    ? "Bạn là giáo viên tiếng Trung thương mại chuyên đào tạo người Việt làm bán hàng và chăm sóc khách hàng. Hãy tạo câu tiếng Trung giản thể tự nhiên, lịch sự, chuyên nghiệp và dùng được ngay trong cửa hàng, kinh doanh trực tuyến, bán sỉ hoặc bộ phận chăm sóc khách hàng. Nội dung phải bao quát tìm hiểu nhu cầu, tư vấn sản phẩm, giải thích tính năng, báo giá, thuế và phí, thương lượng, chiết khấu, chốt đơn, giao hàng, theo dõi sau bán, đổi trả, hoàn tiền và xử lý khiếu nại. Phân biệt rõ lời của nhân viên với khách nhưng mỗi câu phải tự đứng độc lập, không chèn nhãn người nói. Không hứa vượt thẩm quyền, không gây áp lực mua hàng và không tranh cãi với khách. Mỗi câu dài khoảng 7-26 chữ Hán, diễn đạt trọn ý, không dùng tên người, tên công ty, mã đơn hoặc mức giá cụ thể và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và phản ánh đúng ngữ cảnh bán hàng. Mỗi câu chọn đúng 1-2 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu."
+                    : isLogisticsImportExportTemplate
+                      ? "Bạn là giáo viên tiếng Trung thương mại chuyên đào tạo người Việt làm xuất nhập khẩu và logistics. Hãy tạo câu tiếng Trung giản thể tự nhiên, chính xác, lịch sự và dùng được ngay khi trao đổi với nhà cung cấp, hãng vận tải, kho, đại lý hải quan hoặc khách hàng. Nội dung phải bao quát tìm nguồn hàng, đơn mua, hợp đồng, Incoterms, thanh toán quốc tế, chứng từ, mã HS, khai báo hải quan, kho bãi, đóng gói, vận tải, giao nhận, theo dõi lô hàng, sự cố và bồi thường. Dùng đúng thuật ngữ nghề nghiệp nhưng câu phải dễ hiểu và tự đứng độc lập; không chèn nhãn người nói. Không đưa lời khuyên pháp lý tuyệt đối, không bịa quy định hải quan và không dùng tên công ty, mã đơn, số container, mức giá hoặc tuyến vận chuyển cụ thể. Mỗi câu dài khoảng 8-28 chữ Hán, diễn đạt trọn ý và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và dùng đúng thuật ngữ xuất nhập khẩu. Mỗi câu chọn đúng 1-2 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu."
+                      : "Bạn là giáo viên tiếng Trung công sở cho người Việt. Hãy tạo các câu tiếng Trung giản thể tự nhiên, lịch sự và thực tế trong môi trường văn phòng hiện đại. Câu phải dài khoảng 8-28 chữ Hán, diễn đạt trọn ý, không dùng tên người hay tên công ty cụ thể và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng vào câu. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và đúng sắc thái công việc. Mỗi câu chọn 1-3 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ đó phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu.",
         },
         {
           role: "user",

@@ -256,6 +256,11 @@ export async function GET(request: Request) {
       created_at: template.created_at,
       already_added: Boolean(existingDeck),
       user_deck_id: existingDeck?.id || null,
+      // Keep the total for callers that only need a headline count, but expose
+      // the split so the dashboard can group vocabulary sets apart from
+      // sentence-practice sets and label them correctly ("N từ" vs "N câu").
+      word_count: getRelationCount(template.template_cards),
+      sentence_count: getRelationCount(template.template_sentence_cards),
       card_count:
         getRelationCount(template.template_cards) +
         getRelationCount(template.template_sentence_cards),

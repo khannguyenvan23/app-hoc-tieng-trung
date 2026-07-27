@@ -16,6 +16,8 @@ export type TemplateDeck = {
   description: string | null;
   level: string | null;
   card_count: number;
+  word_count?: number;
+  sentence_count?: number;
   already_added?: boolean;
   user_deck_id?: string | null;
   created_at: string;

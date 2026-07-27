@@ -598,15 +598,25 @@ export default function DashboardPage() {
     const match = (template.level || "").match(/HSK\s*(\d)/i);
     return match ? Number(match[1]) : 0;
   };
+  const isSentenceTemplate = (template: TemplateDeck) =>
+    Number(template.sentence_count || 0) > 0;
   const hskTemplates = templates
     .filter((template) => hskLevelOf(template) > 0)
     .sort((left, right) => hskLevelOf(left) - hskLevelOf(right));
-  const otherTemplates = templates.filter(
-    (template) => hskLevelOf(template) === 0,
+  // Non-HSK sets split by content: word sets ("N từ") vs sentence-practice sets
+  // ("N câu"), so learners pick the kind of practice they want.
+  const vocabTopicTemplates = templates.filter(
+    (template) => hskLevelOf(template) === 0 && !isSentenceTemplate(template),
+  );
+  const sentenceTemplates = templates.filter(
+    (template) => hskLevelOf(template) === 0 && isSentenceTemplate(template),
   );
 
   function renderTemplateCard(template: TemplateDeck) {
     const alreadyAdded = Boolean(template.already_added);
+    const countLabel = isSentenceTemplate(template)
+      ? `${template.sentence_count} câu`
+      : `${template.word_count ?? template.card_count} từ`;
 
     return (
       <div className="app-surface rounded-xl p-5" key={template.id}>
@@ -620,7 +630,7 @@ export default function DashboardPage() {
             ) : null}
           </div>
           <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-600 dark:bg-white/10 dark:text-zinc-400">
-            {template.card_count} thẻ
+            {countLabel}
           </span>
         </div>
         {template.description ? (
@@ -1020,13 +1030,23 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ) : null}
-              {otherTemplates.length > 0 ? (
+              {vocabTopicTemplates.length > 0 ? (
                 <div>
                   <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                    Chủ đề &amp; luyện câu
+                    Học từ vựng theo chủ đề
                   </h3>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {otherTemplates.map(renderTemplateCard)}
+                    {vocabTopicTemplates.map(renderTemplateCard)}
+                  </div>
+                </div>
+              ) : null}
+              {sentenceTemplates.length > 0 ? (
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                    Luyện câu
+                  </h3>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {sentenceTemplates.map(renderTemplateCard)}
                   </div>
                 </div>
               ) : null}
