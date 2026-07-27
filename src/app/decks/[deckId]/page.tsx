@@ -465,15 +465,19 @@ export default function DeckPage() {
                     Luyện câu
                   </span>
                 )}
-                <button
-                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
-                  disabled={shareLoading}
-                  onClick={createShareLink}
-                  type="button"
-                >
-                  <Icon name="share" size={16} />
-                  <ButtonLabel busy="Đang tạo..." idle="Chia sẻ" loading={shareLoading} />
-                </button>
+                {/* Decks copied from a template must not be re-shared — the
+                    template content belongs to the app, not the user. */}
+                {deck.source_template_slug ? null : (
+                  <button
+                    className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10 disabled:opacity-60"
+                    disabled={shareLoading}
+                    onClick={createShareLink}
+                    type="button"
+                  >
+                    <Icon name="share" size={16} />
+                    <ButtonLabel busy="Đang tạo..." idle="Chia sẻ" loading={shareLoading} />
+                  </button>
+                )}
                 <Link
                   className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-zinc-300 dark:border-white/15 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-white/10"
                   href={`/decks/${deck.id}/cards/new`}

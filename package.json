@@ -17,7 +17,9 @@
     "template:food": "tsx scripts/generate-food-template.ts",
     "template:housing": "tsx scripts/generate-housing-template.ts",
     "template:office-sentences": "tsx scripts/generate-office-sentences-template.ts",
-    "template:factory-sentences": "tsx scripts/generate-factory-sentences-template.ts"
+    "template:factory-sentences": "tsx scripts/generate-factory-sentences-template.ts",
+    "template:friendship-sentences": "tsx scripts/generate-friendship-sentences-template.ts",
+    "template:china-daily-life-sentences": "tsx scripts/generate-china-daily-life-sentences-template.ts"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.63.0",

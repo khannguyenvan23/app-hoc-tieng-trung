@@ -40,28 +40,51 @@ type OfficeSentenceCard = GeneratedSentence & {
 };
 
 const isFactoryTemplate = process.argv.includes("--factory");
+const isFriendshipTemplate = process.argv.includes("--friendship");
+const isChinaDailyLifeTemplate = process.argv.includes("--china-daily-life");
 const templateSlug = isFactoryTemplate
   ? "nha-may-xuong-150-cau"
-  : "giao-tiep-cong-so-150-cau";
+  : isFriendshipTemplate
+    ? "lam-quen-ket-ban-150-cau"
+    : isChinaDailyLifeTemplate
+      ? "sinh-hoat-tai-trung-quoc-200-cau"
+      : "giao-tiep-cong-so-150-cau";
 const outputPath = isFactoryTemplate
   ? "supabase/migrations/044_factory_150_sentences.sql"
-  : "supabase/migrations/043_office_communication_150_sentences.sql";
+  : isFriendshipTemplate
+    ? "supabase/migrations/045_friendship_150_sentences.sql"
+    : isChinaDailyLifeTemplate
+      ? "supabase/migrations/046_china_daily_life_200_sentences.sql"
+      : "supabase/migrations/043_office_communication_150_sentences.sql";
 const cachePath = path.join(
   os.tmpdir(),
   isFactoryTemplate
     ? "tiengtrunghihi-factory-150-sentences.json"
-    : "tiengtrunghihi-office-communication-150-sentences.json",
+    : isFriendshipTemplate
+      ? "tiengtrunghihi-friendship-150-sentences.json"
+      : isChinaDailyLifeTemplate
+        ? "tiengtrunghihi-china-daily-life-200-sentences.json"
+        : "tiengtrunghihi-office-communication-150-sentences.json",
 );
-const expectedTotal = 150;
+const expectedTotal = isChinaDailyLifeTemplate ? 200 : 150;
+const maxHighlightWords = isChinaDailyLifeTemplate ? 2 : 3;
 const audioConcurrency = 3;
 const execFileAsync = promisify(execFile);
 let useEdgeTtsOnly = false;
 const templateName = isFactoryTemplate
   ? "Nhà máy/xưởng - 150 câu"
-  : "Giao tiếp công sở - 150 câu";
+  : isFriendshipTemplate
+    ? "Làm quen và kết bạn - 150 câu"
+    : isChinaDailyLifeTemplate
+      ? "Sinh hoạt tại Trung Quốc - 200 câu"
+      : "Giao tiếp công sở - 150 câu";
 const templateDescription = isFactoryTemplate
   ? "150 câu tiếng Trung theo tình huống nhà máy và xưởng sản xuất: giao ca, vận hành máy, kiểm tra chất lượng, báo lỗi, bảo trì, an toàn lao động và phối hợp sản xuất. Mỗi câu có pinyin, nghĩa tiếng Việt, từ mới được highlight và audio tạo sẵn."
-  : "150 câu tiếng Trung theo tình huống công sở: trao đổi công việc, giao nhiệm vụ, báo tiến độ, họp, xin nghỉ và nhắn tin với đồng nghiệp. Mỗi câu có pinyin, nghĩa tiếng Việt, từ mới được highlight và audio tạo sẵn.";
+  : isFriendshipTemplate
+    ? "150 câu tiếng Trung tự nhiên để làm quen và kết bạn: chào hỏi, giới thiệu bản thân, hỏi quê quán và nghề nghiệp, chia sẻ sở thích, xin WeChat, rủ đi chơi và hẹn gặp lại. Mỗi câu có pinyin, nghĩa tiếng Việt, từ mới được highlight và audio tạo sẵn."
+    : isChinaDailyLifeTemplate
+      ? "200 câu tiếng Trung HSK1-HSK3 dùng trong sinh hoạt tại Trung Quốc: thuê nhà, điện nước, sửa chữa, giao hàng, hỏi đường, đi lại, WeChat, thanh toán và xử lý vấn đề hằng ngày. Mỗi câu có pinyin, nghĩa tiếng Việt, 1-2 từ mới được highlight và audio tạo sẵn."
+      : "150 câu tiếng Trung theo tình huống công sở: trao đổi công việc, giao nhiệm vụ, báo tiến độ, họp, xin nghỉ và nhắn tin với đồng nghiệp. Mỗi câu có pinyin, nghĩa tiếng Việt, từ mới được highlight và audio tạo sẵn.";
 
 const officeCategories: CategorySpec[] = [
   {
@@ -297,9 +320,392 @@ const factoryCategories: CategorySpec[] = [
   },
 ];
 
+const friendshipCategories: CategorySpec[] = [
+  {
+    id: "greetings-introduction",
+    name: "Chào hỏi và giới thiệu bản thân",
+    count: 20,
+    scope:
+      "Chào người mới gặp, giới thiệu tên, cách xưng hô, lý do có mặt, bày tỏ vui khi làm quen và mở đầu cuộc trò chuyện tự nhiên.",
+    requiredSituations: [
+      "chào lần đầu gặp mặt",
+      "giới thiệu tên",
+      "hỏi cách xưng hô",
+      "giới thiệu ngắn về bản thân",
+      "nói rất vui được làm quen",
+      "hỏi đã từng gặp nhau chưa",
+      "làm quen trong lớp học",
+      "làm quen tại sự kiện",
+      "giới thiệu một người bạn",
+      "bắt đầu trò chuyện lịch sự",
+    ],
+  },
+  {
+    id: "hometown-work",
+    name: "Quê quán, nơi ở, học tập và nghề nghiệp",
+    count: 20,
+    scope:
+      "Hỏi và trả lời về quốc tịch, quê quán, thành phố đang sống, trường học, chuyên ngành, công việc và thời gian ở địa phương hiện tại.",
+    requiredSituations: [
+      "hỏi quê quán",
+      "hỏi quốc tịch",
+      "hỏi đang sống ở đâu",
+      "hỏi đã ở đây bao lâu",
+      "hỏi trường đang học",
+      "hỏi chuyên ngành",
+      "hỏi nghề nghiệp",
+      "giới thiệu nơi làm việc",
+      "nói lý do đến thành phố",
+      "so sánh quê nhà và nơi đang sống",
+    ],
+  },
+  {
+    id: "hobbies-interests",
+    name: "Sở thích và thói quen",
+    count: 25,
+    scope:
+      "Trò chuyện về âm nhạc, phim ảnh, thể thao, đọc sách, nấu ăn, du lịch, trò chơi, thú cưng và hoạt động thường làm lúc rảnh.",
+    requiredSituations: [
+      "hỏi sở thích",
+      "âm nhạc yêu thích",
+      "phim đang xem",
+      "thể thao thường chơi",
+      "đọc sách",
+      "nấu ăn",
+      "du lịch",
+      "chụp ảnh",
+      "nuôi thú cưng",
+      "hoạt động cuối tuần",
+    ],
+  },
+  {
+    id: "language-learning",
+    name: "Học tập và học ngôn ngữ",
+    count: 15,
+    scope:
+      "Hỏi về quá trình học tiếng Trung hoặc tiếng Việt, trình độ, kỹ năng khó, cách luyện tập, nhờ sửa phát âm và đề nghị học cùng nhau.",
+    requiredSituations: [
+      "hỏi học tiếng Trung bao lâu",
+      "lý do học ngoại ngữ",
+      "trình độ hiện tại",
+      "kỹ năng khó nhất",
+      "luyện nghe",
+      "luyện nói",
+      "nhờ sửa phát âm",
+      "trao đổi ngôn ngữ",
+      "giới thiệu tài liệu học",
+      "rủ học cùng nhau",
+    ],
+  },
+  {
+    id: "contact-social",
+    name: "WeChat và thông tin liên lạc",
+    count: 15,
+    scope:
+      "Xin và trao đổi WeChat, số điện thoại, quét mã QR, gửi lời mời kết bạn, xác nhận đã nhận tin nhắn và giữ liên lạc.",
+    requiredSituations: [
+      "xin WeChat",
+      "đưa mã QR",
+      "quét mã kết bạn",
+      "xác nhận tài khoản",
+      "xin số điện thoại",
+      "gửi tin nhắn thử",
+      "không tìm thấy tài khoản",
+      "đổi thông tin liên lạc",
+      "hẹn nhắn lại",
+      "nói giữ liên lạc",
+    ],
+  },
+  {
+    id: "invitations-plans",
+    name: "Rủ đi ăn, uống cà phê và đi chơi",
+    count: 20,
+    scope:
+      "Mời bạn mới ăn cơm, uống cà phê, xem phim, tham quan, tập thể thao; hỏi thời gian rảnh, chọn địa điểm, đổi lịch và xác nhận cuộc hẹn.",
+    requiredSituations: [
+      "rủ đi ăn",
+      "rủ uống cà phê",
+      "rủ xem phim",
+      "rủ đi dạo",
+      "rủ chơi thể thao",
+      "hỏi cuối tuần có rảnh không",
+      "chọn địa điểm",
+      "chọn thời gian",
+      "đổi lịch hẹn",
+      "xác nhận cuộc hẹn",
+    ],
+  },
+  {
+    id: "daily-small-talk",
+    name: "Trò chuyện đời sống hằng ngày",
+    count: 15,
+    scope:
+      "Trò chuyện nhẹ về thời tiết, đồ ăn, giao thông, khu phố, lịch hôm nay, cuối tuần, cảm nhận về thành phố và những việc vừa xảy ra.",
+    requiredSituations: [
+      "nói về thời tiết",
+      "hỏi đã ăn chưa",
+      "món ăn yêu thích",
+      "giao thông",
+      "khu phố đang ở",
+      "kế hoạch hôm nay",
+      "cuối tuần vừa qua",
+      "cảm nhận về thành phố",
+      "hỏi hôm nay thế nào",
+      "chia sẻ chuyện vui nhỏ",
+    ],
+  },
+  {
+    id: "conversation-reactions",
+    name: "Phản hồi và duy trì cuộc trò chuyện",
+    count: 10,
+    scope:
+      "Thể hiện ngạc nhiên, đồng tình, quan tâm, hỏi thêm chi tiết, xác nhận đã hiểu, khen ngợi phù hợp và chuyển chủ đề tự nhiên.",
+    requiredSituations: [
+      "thể hiện đồng tình",
+      "thể hiện ngạc nhiên",
+      "hỏi thật không",
+      "hỏi thêm chi tiết",
+      "nói mình cũng vậy",
+      "khen sở thích",
+      "xác nhận đã hiểu",
+      "xin nhắc lại",
+      "chuyển chủ đề",
+      "khuyến khích kể tiếp",
+    ],
+  },
+  {
+    id: "goodbye-next-meeting",
+    name: "Tạm biệt và hẹn gặp lại",
+    count: 10,
+    scope:
+      "Kết thúc cuộc trò chuyện lịch sự, nói phải đi trước, cảm ơn, chúc một ngày tốt lành, hẹn gặp lại và xác nhận sẽ liên lạc sau.",
+    requiredSituations: [
+      "nói phải đi trước",
+      "cảm ơn vì cuộc trò chuyện",
+      "chúc một ngày vui vẻ",
+      "chúc về nhà an toàn",
+      "hẹn gặp lại",
+      "hẹn lần sau nói tiếp",
+      "hẹn nhắn tin sau",
+      "xác nhận cuộc hẹn tiếp theo",
+      "gửi lời chào bạn bè",
+      "tạm biệt tự nhiên",
+    ],
+  },
+];
+
+const chinaDailyLifeCategories: CategorySpec[] = [
+  {
+    id: "renting-contracts",
+    name: "Tìm nhà, thuê nhà và hợp đồng",
+    count: 30,
+    scope:
+      "Tìm phòng, liên hệ chủ nhà hoặc môi giới, xem nhà, hỏi nội thất, tiền thuê, tiền cọc, ký hợp đồng, nhận phòng, gia hạn và trả nhà.",
+    requiredSituations: [
+      "hỏi còn phòng không",
+      "đặt lịch xem nhà",
+      "hỏi vị trí và khoảng cách đến tàu điện",
+      "thuê nguyên căn hoặc ở ghép",
+      "kiểm tra nội thất",
+      "hỏi tiền thuê mỗi tháng",
+      "hỏi tiền cọc",
+      "thương lượng giá",
+      "đọc điều khoản hợp đồng",
+      "ký hợp đồng",
+      "nhận chìa khóa",
+      "ngày chuyển vào",
+      "gia hạn hợp đồng",
+      "báo trả nhà",
+      "nhận lại tiền cọc",
+    ],
+  },
+  {
+    id: "utilities-payments",
+    name: "Điện, nước, mạng và phí sinh hoạt",
+    count: 25,
+    scope:
+      "Hỏi cách tính và thanh toán điện, nước, gas, internet, phí quản lý; đọc đồng hồ, nhận hóa đơn, nạp tiền và xử lý khoản thu chưa rõ.",
+    requiredSituations: [
+      "hỏi tiền điện",
+      "hỏi tiền nước",
+      "hỏi tiền gas",
+      "hỏi phí quản lý",
+      "đăng ký internet",
+      "đọc đồng hồ điện",
+      "đọc đồng hồ nước",
+      "nhận hóa đơn",
+      "thanh toán đúng hạn",
+      "nạp tiền điện thoại",
+      "hỏi khoản phí lạ",
+      "xin biên lai",
+      "chuyển khoản tiền nhà",
+      "báo đã thanh toán",
+      "xin kiểm tra lại hóa đơn",
+    ],
+  },
+  {
+    id: "repairs-appliances",
+    name: "Thiết bị trong nhà và sửa chữa",
+    count: 25,
+    scope:
+      "Sử dụng và báo hỏng điều hòa, máy giặt, tủ lạnh, bình nóng lạnh, khóa cửa, đèn, vòi nước, đường ống; hẹn thợ và xác nhận phí sửa.",
+    requiredSituations: [
+      "điều hòa không lạnh",
+      "máy giặt không chạy",
+      "tủ lạnh có vấn đề",
+      "không có nước nóng",
+      "mất điện",
+      "mất nước",
+      "vòi nước bị rò",
+      "cống bị tắc",
+      "khóa cửa bị hỏng",
+      "đèn không sáng",
+      "gọi ban quản lý",
+      "hẹn thợ đến nhà",
+      "mô tả lỗi",
+      "hỏi phí sửa chữa",
+      "xác nhận đã sửa xong",
+    ],
+  },
+  {
+    id: "delivery-addresses",
+    name: "Giao hàng, đồ ăn và địa chỉ",
+    count: 25,
+    scope:
+      "Đặt đồ ăn, mua hàng trực tuyến, ghi địa chỉ, chỉ tòa nhà và tầng, liên hệ shipper, lấy hàng ở tủ, kiểm tra bưu kiện, đổi hoặc trả hàng.",
+    requiredSituations: [
+      "ghi địa chỉ nhận hàng",
+      "nói số tòa và số phòng",
+      "chỉ tầng và lối vào",
+      "gọi shipper",
+      "xin giao tận cửa",
+      "để hàng ở lễ tân",
+      "lấy hàng ở tủ thông minh",
+      "đọc mã lấy hàng",
+      "đơn giao chậm",
+      "không liên lạc được shipper",
+      "giao nhầm địa chỉ",
+      "thiếu món ăn",
+      "bưu kiện bị hỏng",
+      "đổi hàng",
+      "trả hàng và hoàn tiền",
+    ],
+  },
+  {
+    id: "directions-transport",
+    name: "Hỏi đường và giao thông",
+    count: 30,
+    scope:
+      "Hỏi và chỉ đường, tìm ga tàu điện, bến xe, lối ra, đổi tuyến, mua vé, gọi taxi, đi xe đạp công cộng và xử lý khi đi nhầm.",
+    requiredSituations: [
+      "hỏi đường đến một địa điểm",
+      "đi thẳng",
+      "rẽ trái hoặc rẽ phải",
+      "qua ngã tư",
+      "tìm ga tàu điện",
+      "tìm đúng lối ra",
+      "mua vé tàu",
+      "nạp thẻ giao thông",
+      "đổi tuyến tàu",
+      "hỏi còn bao nhiêu ga",
+      "đi nhầm hướng",
+      "lỡ chuyến xe",
+      "tìm bến xe buýt",
+      "gọi taxi",
+      "nói điểm đến cho tài xế",
+      "hỏi thời gian di chuyển",
+      "gặp tắc đường",
+      "thuê xe đạp công cộng",
+      "quét mã mở xe",
+      "hỏi đường quay về",
+    ],
+  },
+  {
+    id: "wechat-digital-services",
+    name: "WeChat, điện thoại và dịch vụ số",
+    count: 20,
+    scope:
+      "Thêm liên hệ WeChat, quét QR, gửi vị trí, gọi video, dùng nhóm chat, thanh toán điện tử, nạp tiền, đổi số điện thoại và xử lý lỗi tài khoản.",
+    requiredSituations: [
+      "thêm WeChat",
+      "quét mã QR",
+      "gửi vị trí",
+      "gửi tin nhắn thoại",
+      "gọi video",
+      "tham gia nhóm chat",
+      "tắt thông báo",
+      "dùng WeChat Pay",
+      "quét mã thanh toán",
+      "xác nhận số tiền",
+      "thanh toán thất bại",
+      "số dư không đủ",
+      "đổi số điện thoại",
+      "quên mật khẩu",
+      "tài khoản bị khóa",
+    ],
+  },
+  {
+    id: "shopping-daily-errands",
+    name: "Mua sắm và việc sinh hoạt thường ngày",
+    count: 20,
+    scope:
+      "Đi siêu thị, chợ, hiệu thuốc, giặt đồ, cắt tóc, in tài liệu, gửi bưu phẩm, mua sim và hỏi các dịch vụ thường dùng quanh nơi ở.",
+    requiredSituations: [
+      "hỏi giá",
+      "tìm sản phẩm trong siêu thị",
+      "hỏi túi đựng hàng",
+      "cân rau quả",
+      "mua thuốc thông thường",
+      "hỏi hiệu thuốc gần nhất",
+      "giặt quần áo",
+      "sấy quần áo",
+      "đặt lịch cắt tóc",
+      "in và photocopy",
+      "gửi bưu phẩm",
+      "mua sim điện thoại",
+      "đăng ký gói dữ liệu",
+      "hỏi giờ mở cửa",
+      "xin hóa đơn",
+    ],
+  },
+  {
+    id: "daily-problems-help",
+    name: "Xử lý vấn đề và nhờ giúp đỡ",
+    count: 25,
+    scope:
+      "Nhờ người khác giúp, báo mất đồ, tìm cảnh sát hoặc bệnh viện, mô tả vấn đề cơ bản, khiếu nại dịch vụ lịch sự và xử lý các tình huống bất tiện hằng ngày.",
+    requiredSituations: [
+      "nhờ nói chậm lại",
+      "xin nhắc lại",
+      "nói không hiểu",
+      "nhờ viết địa chỉ",
+      "mượn điện thoại",
+      "điện thoại hết pin",
+      "mất ví",
+      "mất hộ chiếu",
+      "tìm đồn cảnh sát",
+      "tìm bệnh viện",
+      "nói bị đau hoặc sốt",
+      "xin người phiên dịch",
+      "báo tiếng ồn",
+      "xin hàng xóm hỗ trợ",
+      "khiếu nại dịch vụ",
+      "yêu cầu đổi phòng",
+      "báo khóa ngoài cửa",
+      "hỏi số khẩn cấp",
+      "xác nhận vấn đề đã giải quyết",
+      "cảm ơn vì đã giúp đỡ",
+    ],
+  },
+];
+
 const categories = isFactoryTemplate
   ? factoryCategories
-  : officeCategories;
+  : isFriendshipTemplate
+    ? friendshipCategories
+    : isChinaDailyLifeTemplate
+      ? chinaDailyLifeCategories
+      : officeCategories;
 
 const highlightWordSchema = z.object({
   chinese: z.string().min(1),
@@ -314,7 +720,7 @@ const responseSchema = z.object({
       sentence_cn: z.string().min(3),
       sentence_pinyin: z.string().min(3),
       sentence_vi: z.string().min(3),
-      vocabulary: z.array(highlightWordSchema).min(1).max(3),
+      vocabulary: z.array(highlightWordSchema).min(1).max(maxHighlightWords),
     }),
   ),
 });
@@ -571,9 +977,666 @@ const factoryDataCorrections: Record<
       "Vui lòng xác nhận tất cả thiết bị đã sẵn sàng để quá trình sản xuất diễn ra thuận lợi.",
   },
 };
+const friendshipDataCorrections: Record<
+  string,
+  Partial<GeneratedSentence>
+> = {
+  "请问，我们怎么称呼你？": {
+    sentence_cn: "请问，我该怎么称呼你？",
+    sentence_pinyin: "Qǐngwèn, wǒ gāi zěnme chēnghu nǐ?",
+    sentence_vi: "Xin hỏi, tôi nên xưng hô với bạn thế nào?",
+    vocabulary: [
+      {
+        chinese: "称呼",
+        pinyin: "chēnghu",
+        meaning_vi: "xưng hô, cách gọi",
+      },
+    ],
+  },
+  "你平时喜欢做什么工作？": {
+    sentence_cn: "你平时喜欢参加什么活动？",
+    sentence_pinyin: "Nǐ píngshí xǐhuan cānjiā shénme huódòng?",
+    sentence_vi: "Bạn thường thích tham gia hoạt động gì?",
+    vocabulary: [
+      {
+        chinese: "参加",
+        pinyin: "cānjiā",
+        meaning_vi: "tham gia",
+      },
+      {
+        chinese: "活动",
+        pinyin: "huódòng",
+        meaning_vi: "hoạt động",
+      },
+    ],
+  },
+  "你每天上学几点钟开始？": {
+    sentence_cn: "你每天几点开始上课？",
+    sentence_pinyin: "Nǐ měitiān jǐ diǎn kāishǐ shàngkè?",
+    sentence_vi: "Mỗi ngày bạn bắt đầu học lúc mấy giờ?",
+    vocabulary: [
+      {
+        chinese: "上课",
+        pinyin: "shàngkè",
+        meaning_vi: "lên lớp, học",
+      },
+    ],
+  },
+  "你喜欢听现场音乐会的感觉吗？": {
+    sentence_cn: "你喜欢去现场听音乐会吗？",
+    sentence_pinyin: "Nǐ xǐhuan qù xiànchǎng tīng yīnyuèhuì ma?",
+    sentence_vi: "Bạn có thích đến nghe hòa nhạc trực tiếp không?",
+    vocabulary: [
+      {
+        chinese: "现场",
+        pinyin: "xiànchǎng",
+        meaning_vi: "trực tiếp, tại chỗ",
+      },
+      {
+        chinese: "音乐会",
+        pinyin: "yīnyuèhuì",
+        meaning_vi: "buổi hòa nhạc",
+      },
+    ],
+  },
+  "你可以帮我扫一下你的微信二维码吗？": {
+    sentence_cn: "我可以扫一下你的微信二维码吗？",
+    sentence_pinyin: "Wǒ kěyǐ sǎo yíxià nǐ de Wēixìn èrwéimǎ ma?",
+    sentence_vi: "Mình có thể quét mã QR WeChat của bạn không?",
+    vocabulary: [
+      {
+        chinese: "扫",
+        pinyin: "sǎo",
+        meaning_vi: "quét",
+      },
+      {
+        chinese: "二维码",
+        pinyin: "èrwéimǎ",
+        meaning_vi: "mã QR",
+      },
+    ],
+  },
+  "谢谢你，我会经常联系你的。": {
+    sentence_cn: "谢谢你，以后我们常联系吧。",
+    sentence_pinyin: "Xièxie nǐ, yǐhòu wǒmen cháng liánxì ba.",
+    sentence_vi: "Cảm ơn bạn, sau này chúng ta thường xuyên liên lạc nhé.",
+    vocabulary: [
+      {
+        chinese: "联系",
+        pinyin: "liánxì",
+        meaning_vi: "liên lạc",
+      },
+    ],
+  },
+  "请问，我可以给你发一条消息吗？": {
+    sentence_vi: "Xin hỏi, mình có thể gửi cho bạn một tin nhắn không?",
+  },
+  "我已经加了你微信，期待我们的聊天。": {
+    sentence_cn: "我已经加了你的微信，期待以后多聊天。",
+    sentence_pinyin:
+      "Wǒ yǐjīng jiā le nǐ de Wēixìn, qídài yǐhòu duō liáotiān.",
+    sentence_vi:
+      "Mình đã thêm WeChat của bạn rồi, mong sau này được trò chuyện nhiều hơn.",
+    vocabulary: [
+      {
+        chinese: "期待",
+        pinyin: "qídài",
+        meaning_vi: "mong đợi",
+      },
+      {
+        chinese: "聊天",
+        pinyin: "liáotiān",
+        meaning_vi: "trò chuyện",
+      },
+    ],
+  },
+  "我们改时间怎么样？我这天有事。": {
+    sentence_cn: "我们换个时间怎么样？我那天有事。",
+    sentence_pinyin:
+      "Wǒmen huàn gè shíjiān zěnmeyàng? Wǒ nà tiān yǒu shì.",
+    sentence_vi:
+      "Chúng ta đổi sang thời gian khác được không? Hôm đó tôi có việc.",
+    vocabulary: [
+      {
+        chinese: "换个时间",
+        pinyin: "huàn gè shíjiān",
+        meaning_vi: "đổi sang thời gian khác",
+      },
+    ],
+  },
+  "你今天吃饭了吗？我们一起去吧！": {
+    sentence_cn: "你吃饭了吗？要不要一起去？",
+    sentence_pinyin: "Nǐ chīfàn le ma? Yào bú yào yìqǐ qù?",
+    sentence_vi: "Bạn ăn cơm chưa? Có muốn cùng đi không?",
+    vocabulary: [
+      {
+        chinese: "吃饭",
+        pinyin: "chīfàn",
+        meaning_vi: "ăn cơm",
+      },
+      {
+        chinese: "一起",
+        pinyin: "yìqǐ",
+        meaning_vi: "cùng nhau",
+      },
+    ],
+  },
+  "今天你有什么计划？我们可以一起活动。": {
+    sentence_cn: "今天你有什么计划？我们可以一起出去走走。",
+    sentence_pinyin:
+      "Jīntiān nǐ yǒu shénme jìhuà? Wǒmen kěyǐ yìqǐ chūqù zǒuzou.",
+    sentence_vi:
+      "Hôm nay bạn có kế hoạch gì? Chúng ta có thể cùng ra ngoài đi dạo.",
+    vocabulary: [
+      {
+        chinese: "计划",
+        pinyin: "jìhuà",
+        meaning_vi: "kế hoạch",
+      },
+      {
+        chinese: "出去走走",
+        pinyin: "chūqù zǒuzou",
+        meaning_vi: "ra ngoài đi dạo",
+      },
+    ],
+  },
+  "刚才我遇到一个有趣的故事，想和你分享。": {
+    sentence_cn: "刚才我听到一个有趣的故事，想和你分享。",
+    sentence_pinyin:
+      "Gāngcái wǒ tīngdào yí ge yǒuqù de gùshi, xiǎng hé nǐ fēnxiǎng.",
+    sentence_vi:
+      "Vừa rồi tôi nghe một câu chuyện thú vị và muốn chia sẻ với bạn.",
+    vocabulary: [
+      {
+        chinese: "听到",
+        pinyin: "tīngdào",
+        meaning_vi: "nghe thấy",
+      },
+      {
+        chinese: "分享",
+        pinyin: "fēnxiǎng",
+        meaning_vi: "chia sẻ",
+      },
+    ],
+  },
+  "我也觉得你的兴趣爱好很有趣。": {
+    sentence_cn: "我也觉得你的爱好很有意思。",
+    sentence_pinyin: "Wǒ yě juéde nǐ de àihào hěn yǒuyìsi.",
+    sentence_vi: "Tôi cũng thấy sở thích của bạn rất thú vị.",
+    vocabulary: [
+      {
+        chinese: "爱好",
+        pinyin: "àihào",
+        meaning_vi: "sở thích",
+      },
+      {
+        chinese: "有意思",
+        pinyin: "yǒuyìsi",
+        meaning_vi: "thú vị",
+      },
+    ],
+  },
+  "真的吗？你的经验听起来很特别！": {
+    sentence_cn: "真的吗？你的经历听起来很特别！",
+    sentence_pinyin:
+      "Zhēn de ma? Nǐ de jīnglì tīng qǐlái hěn tèbié!",
+    sentence_vi: "Thật sao? Trải nghiệm của bạn nghe rất đặc biệt!",
+    vocabulary: [
+      {
+        chinese: "经历",
+        pinyin: "jīnglì",
+        meaning_vi: "trải nghiệm",
+      },
+      {
+        chinese: "特别",
+        pinyin: "tèbié",
+        meaning_vi: "đặc biệt",
+      },
+    ],
+  },
+  "我也这样想，和你一样有同感。": {
+    sentence_cn: "我也这么想，真的很有同感。",
+    sentence_pinyin: "Wǒ yě zhème xiǎng, zhēn de hěn yǒu tónggǎn.",
+    sentence_vi: "Tôi cũng nghĩ vậy, thực sự rất đồng cảm.",
+    vocabulary: [
+      {
+        chinese: "同感",
+        pinyin: "tónggǎn",
+        meaning_vi: "sự đồng cảm",
+      },
+    ],
+  },
+  "你喜欢这个爱好，真是很棒！": {
+    sentence_cn: "这个爱好听起来真不错！",
+    sentence_pinyin: "Zhège àihào tīng qǐlái zhēn búcuò!",
+    sentence_vi: "Sở thích này nghe thật hay!",
+    vocabulary: [
+      {
+        chinese: "爱好",
+        pinyin: "àihào",
+        meaning_vi: "sở thích",
+      },
+      {
+        chinese: "不错",
+        pinyin: "búcuò",
+        meaning_vi: "khá hay, không tệ",
+      },
+    ],
+  },
+  "我明白你的意思，非常清楚。": {
+    sentence_cn: "我明白你的意思了。",
+    sentence_pinyin: "Wǒ míngbai nǐ de yìsi le.",
+    sentence_vi: "Tôi hiểu ý bạn rồi.",
+    vocabulary: [
+      {
+        chinese: "明白",
+        pinyin: "míngbai",
+        meaning_vi: "hiểu",
+      },
+      {
+        chinese: "意思",
+        pinyin: "yìsi",
+        meaning_vi: "ý, ý nghĩa",
+      },
+    ],
+  },
+  "我们下次再见，好吗？期待再聊！": {
+    sentence_cn: "我们下次再见吧，期待再聊！",
+    sentence_pinyin: "Wǒmen xià cì zàijiàn ba, qídài zài liáo!",
+    sentence_vi: "Hẹn lần sau gặp lại nhé, mong được trò chuyện tiếp!",
+    vocabulary: [
+      {
+        chinese: "期待",
+        pinyin: "qídài",
+        meaning_vi: "mong đợi",
+      },
+    ],
+  },
+  "谢谢你的时间，我们保持联系不丢失。": {
+    sentence_cn: "谢谢你抽时间来，我们保持联系吧。",
+    sentence_pinyin:
+      "Xièxie nǐ chōu shíjiān lái, wǒmen bǎochí liánxì ba.",
+    sentence_vi:
+      "Cảm ơn bạn đã dành thời gian đến đây, chúng ta giữ liên lạc nhé.",
+    vocabulary: [
+      {
+        chinese: "抽时间",
+        pinyin: "chōu shíjiān",
+        meaning_vi: "dành thời gian",
+      },
+      {
+        chinese: "保持联系",
+        pinyin: "bǎochí liánxì",
+        meaning_vi: "giữ liên lạc",
+      },
+    ],
+  },
+  "朋友们好，再见！祝你们生活愉快。": {
+    sentence_cn: "大家再见，祝你们生活愉快！",
+    sentence_pinyin: "Dàjiā zàijiàn, zhù nǐmen shēnghuó yúkuài!",
+    sentence_vi: "Tạm biệt mọi người, chúc các bạn luôn vui vẻ!",
+    vocabulary: [
+      {
+        chinese: "生活愉快",
+        pinyin: "shēnghuó yúkuài",
+        meaning_vi: "cuộc sống vui vẻ",
+      },
+    ],
+  },
+};
+const chinaDailyLifeDataCorrections: Record<
+  string,
+  Partial<GeneratedSentence>
+> = {
+  "房间影响邻居安静吗？": {
+    sentence_cn: "请问这里的隔音效果怎么样？",
+    sentence_pinyin: "Qǐngwèn zhèlǐ de géyīn xiàoguǒ zěnmeyàng?",
+    sentence_vi: "Xin hỏi khả năng cách âm ở đây thế nào?",
+    vocabulary: [
+      {
+        chinese: "隔音效果",
+        pinyin: "géyīn xiàoguǒ",
+        meaning_vi: "khả năng cách âm",
+      },
+    ],
+  },
+  "请问您们的缴费截止日期是几号？": {
+    sentence_cn: "请问你们的缴费截止日期是几号？",
+    sentence_pinyin:
+      "Qǐngwèn nǐmen de jiǎofèi jiézhǐ rìqī shì jǐ hào?",
+    sentence_vi: "Xin hỏi hạn chót đóng phí là ngày mấy?",
+    vocabulary: [
+      {
+        chinese: "截止日期",
+        pinyin: "jiézhǐ rìqī",
+        meaning_vi: "hạn chót",
+      },
+    ],
+  },
+  "我预约了明天下午两个小时的维修时间。": {
+    sentence_cn: "我预约了明天下午两点上门维修。",
+    sentence_pinyin:
+      "Wǒ yùyuē le míngtiān xiàwǔ liǎng diǎn shàngmén wéixiū.",
+    sentence_vi:
+      "Tôi đã hẹn thợ đến sửa tại nhà lúc hai giờ chiều mai.",
+    vocabulary: [
+      {
+        chinese: "预约",
+        pinyin: "yùyuē",
+        meaning_vi: "đặt lịch, hẹn trước",
+      },
+      {
+        chinese: "上门维修",
+        pinyin: "shàngmén wéixiū",
+        meaning_vi: "đến tận nhà sửa chữa",
+      },
+    ],
+  },
+  "修好了空调，请帮我确认一下。": {
+    sentence_cn: "空调已经修好了，请帮我确认一下。",
+    sentence_pinyin:
+      "Kōngtiáo yǐjīng xiū hǎo le, qǐng bāng wǒ quèrèn yíxià.",
+    sentence_vi: "Điều hòa đã sửa xong, xin giúp tôi xác nhận lại.",
+    vocabulary: [
+      {
+        chinese: "修好",
+        pinyin: "xiū hǎo",
+        meaning_vi: "sửa xong",
+      },
+      {
+        chinese: "确认",
+        pinyin: "quèrèn",
+        meaning_vi: "xác nhận",
+      },
+    ],
+  },
+  "您的外卖迟到了，请问还要等多久？": {
+    sentence_cn: "我的外卖迟到了，请问还要等多久？",
+    sentence_pinyin:
+      "Wǒ de wàimài chídào le, qǐngwèn hái yào děng duōjiǔ?",
+    sentence_vi:
+      "Đồ ăn của tôi bị giao trễ, xin hỏi còn phải đợi bao lâu?",
+    vocabulary: [
+      {
+        chinese: "外卖",
+        pinyin: "wàimài",
+        meaning_vi: "đồ ăn giao tận nơi",
+      },
+      {
+        chinese: "迟到",
+        pinyin: "chídào",
+        meaning_vi: "đến muộn, giao trễ",
+      },
+    ],
+  },
+  "请问包裹什么时候可以退换？": {
+    sentence_cn: "请问这件商品可以退换吗？",
+    sentence_pinyin: "Qǐngwèn zhè jiàn shāngpǐn kěyǐ tuìhuàn ma?",
+    sentence_vi: "Xin hỏi sản phẩm này có thể đổi trả không?",
+    vocabulary: [
+      {
+        chinese: "商品",
+        pinyin: "shāngpǐn",
+        meaning_vi: "sản phẩm, hàng hóa",
+      },
+      {
+        chinese: "退换",
+        pinyin: "tuìhuàn",
+        meaning_vi: "đổi trả",
+      },
+    ],
+  },
+  "快递单号是123456，请查收。": {
+    sentence_cn: "这是我的快递单号，请帮我查询。",
+    sentence_pinyin: "Zhè shì wǒ de kuàidì dānhào, qǐng bāng wǒ cháxún.",
+    sentence_vi: "Đây là mã vận đơn của tôi, xin giúp tôi kiểm tra.",
+    vocabulary: [
+      {
+        chinese: "快递单号",
+        pinyin: "kuàidì dānhào",
+        meaning_vi: "mã vận đơn",
+      },
+      {
+        chinese: "查询",
+        pinyin: "cháxún",
+        meaning_vi: "tra cứu, kiểm tra",
+      },
+    ],
+  },
+  "这件商品想换货，需要多少钱？": {
+    sentence_cn: "请问换货需要另外收费吗？",
+    sentence_pinyin: "Qǐngwèn huànhuò xūyào lìngwài shōufèi ma?",
+    sentence_vi: "Xin hỏi đổi hàng có cần trả thêm phí không?",
+    vocabulary: [
+      {
+        chinese: "换货",
+        pinyin: "huànhuò",
+        meaning_vi: "đổi hàng",
+      },
+      {
+        chinese: "另外收费",
+        pinyin: "lìngwài shōufèi",
+        meaning_vi: "thu thêm phí",
+      },
+    ],
+  },
+  "我想告诉司机目的地是火车站。": {
+    sentence_cn: "师傅，我要去火车站。",
+    sentence_pinyin: "Shīfu, wǒ yào qù huǒchēzhàn.",
+    sentence_vi: "Bác tài, tôi muốn đến ga tàu hỏa.",
+    vocabulary: [
+      {
+        chinese: "师傅",
+        pinyin: "shīfu",
+        meaning_vi: "bác tài, cách gọi lịch sự",
+      },
+      {
+        chinese: "火车站",
+        pinyin: "huǒchēzhàn",
+        meaning_vi: "ga tàu hỏa",
+      },
+    ],
+  },
+  "请问拖车电话是多少？": {
+    sentence_cn: "请问道路救援电话是多少？",
+    sentence_pinyin: "Qǐngwèn dàolù jiùyuán diànhuà shì duōshao?",
+    sentence_vi: "Xin hỏi số điện thoại cứu hộ đường bộ là bao nhiêu?",
+    vocabulary: [
+      {
+        chinese: "道路救援",
+        pinyin: "dàolù jiùyuán",
+        meaning_vi: "cứu hộ đường bộ",
+      },
+    ],
+  },
+  "请问附近有几个地铁出口？": {
+    sentence_cn: "请问哪个出口离商场最近？",
+    sentence_pinyin: "Qǐngwèn nǎge chūkǒu lí shāngchǎng zuì jìn?",
+    sentence_vi: "Xin hỏi lối ra nào gần trung tâm mua sắm nhất?",
+    vocabulary: [
+      {
+        chinese: "出口",
+        pinyin: "chūkǒu",
+        meaning_vi: "lối ra",
+      },
+      {
+        chinese: "商场",
+        pinyin: "shāngchǎng",
+        meaning_vi: "trung tâm mua sắm",
+      },
+    ],
+  },
+  "我发给你我的位置，可以方便你来找我。": {
+    sentence_cn: "我把位置发给你，这样你更容易找到我。",
+    sentence_pinyin:
+      "Wǒ bǎ wèizhì fā gěi nǐ, zhèyàng nǐ gèng róngyì zhǎodào wǒ.",
+    sentence_vi: "Tôi gửi vị trí cho bạn để bạn dễ tìm thấy tôi hơn.",
+    vocabulary: [
+      {
+        chinese: "位置",
+        pinyin: "wèizhì",
+        meaning_vi: "vị trí",
+      },
+      {
+        chinese: "容易",
+        pinyin: "róngyì",
+        meaning_vi: "dễ dàng",
+      },
+    ],
+  },
+  "我用微信支付买了二十块的东西。": {
+    sentence_cn: "我用微信支付买了二十块钱的东西。",
+    sentence_pinyin:
+      "Wǒ yòng Wēixìn Zhīfù mǎi le èrshí kuài qián de dōngxi.",
+    sentence_vi:
+      "Tôi đã dùng WeChat Pay mua món đồ trị giá hai mươi tệ.",
+    vocabulary: [
+      {
+        chinese: "微信支付",
+        pinyin: "Wēixìn Zhīfù",
+        meaning_vi: "thanh toán WeChat",
+      },
+    ],
+  },
+  "微信里的群聊消息非常多，如何关闭？": {
+    sentence_cn: "群聊消息太多了，我可以设置免打扰吗？",
+    sentence_pinyin:
+      "Qúnliáo xiāoxi tài duō le, wǒ kěyǐ shèzhì miǎn dǎrǎo ma?",
+    sentence_vi:
+      "Tin nhắn nhóm quá nhiều, tôi có thể bật chế độ không làm phiền không?",
+    vocabulary: [
+      {
+        chinese: "群聊消息",
+        pinyin: "qúnliáo xiāoxi",
+        meaning_vi: "tin nhắn nhóm",
+      },
+      {
+        chinese: "免打扰",
+        pinyin: "miǎn dǎrǎo",
+        meaning_vi: "không làm phiền",
+      },
+    ],
+  },
+  "你们这里最近有卖退烧药吗？": {
+    sentence_cn: "请问你们这里有退烧药吗？",
+    sentence_pinyin: "Qǐngwèn nǐmen zhèlǐ yǒu tuìshāoyào ma?",
+    sentence_vi: "Xin hỏi ở đây có thuốc hạ sốt không?",
+    vocabulary: [
+      {
+        chinese: "退烧药",
+        pinyin: "tuìshāoyào",
+        meaning_vi: "thuốc hạ sốt",
+      },
+    ],
+  },
+  "我想预约明天下午理发时间。": {
+    sentence_cn: "我想预约明天下午理发。",
+    sentence_pinyin: "Wǒ xiǎng yùyuē míngtiān xiàwǔ lǐfà.",
+    sentence_vi: "Tôi muốn đặt lịch cắt tóc vào chiều mai.",
+    vocabulary: [
+      {
+        chinese: "预约",
+        pinyin: "yùyuē",
+        meaning_vi: "đặt lịch",
+      },
+      {
+        chinese: "理发",
+        pinyin: "lǐfà",
+        meaning_vi: "cắt tóc",
+      },
+    ],
+  },
+  "我需要寄一个包裹，请问在哪儿？": {
+    sentence_cn: "我需要寄一个包裹，请问去哪里办理？",
+    sentence_pinyin: "Wǒ xūyào jì yí ge bāoguǒ, qǐngwèn qù nǎlǐ bànlǐ?",
+    sentence_vi: "Tôi cần gửi một bưu kiện, xin hỏi phải đến đâu làm thủ tục?",
+    vocabulary: [
+      {
+        chinese: "包裹",
+        pinyin: "bāoguǒ",
+        meaning_vi: "bưu kiện",
+      },
+      {
+        chinese: "办理",
+        pinyin: "bànlǐ",
+        meaning_vi: "làm thủ tục",
+      },
+    ],
+  },
+  "我昨天丢了钱包，请问应该怎么办？": {
+    sentence_cn: "我昨天把钱包弄丢了，请问应该怎么办？",
+    sentence_pinyin:
+      "Wǒ zuótiān bǎ qiánbāo nòng diū le, qǐngwèn yīnggāi zěnme bàn?",
+    sentence_vi: "Hôm qua tôi làm mất ví, xin hỏi tôi nên làm gì?",
+    vocabulary: [
+      {
+        chinese: "弄丢",
+        pinyin: "nòng diū",
+        meaning_vi: "làm mất",
+      },
+      {
+        chinese: "怎么办",
+        pinyin: "zěnme bàn",
+        meaning_vi: "làm thế nào",
+      },
+    ],
+  },
+  "我的护照找不到了，您能帮我吗？": {
+    sentence_cn: "我的护照不见了，您能帮我吗？",
+    sentence_pinyin: "Wǒ de hùzhào bú jiàn le, nín néng bāng wǒ ma?",
+    sentence_vi: "Hộ chiếu của tôi bị mất rồi, ông/bà có thể giúp tôi không?",
+    vocabulary: [
+      {
+        chinese: "护照",
+        pinyin: "hùzhào",
+        meaning_vi: "hộ chiếu",
+      },
+      {
+        chinese: "不见",
+        pinyin: "bú jiàn",
+        meaning_vi: "biến mất, không thấy",
+      },
+    ],
+  },
+  "请问，附近最近的派出所在哪里？": {
+    sentence_cn: "请问最近的派出所在哪里？",
+    sentence_pinyin: "Qǐngwèn zuìjìn de pàichūsuǒ zài nǎlǐ?",
+    sentence_vi: "Xin hỏi đồn cảnh sát gần nhất ở đâu?",
+    vocabulary: [
+      {
+        chinese: "派出所",
+        pinyin: "pàichūsuǒ",
+        meaning_vi: "đồn cảnh sát",
+      },
+    ],
+  },
+  "您好，可以请邻居帮忙照看一下门吗？": {
+    sentence_cn: "我不在家时，可以请邻居帮忙收快递吗？",
+    sentence_pinyin:
+      "Wǒ bú zài jiā shí, kěyǐ qǐng línjū bāngmáng shōu kuàidì ma?",
+    sentence_vi:
+      "Khi tôi không ở nhà, có thể nhờ hàng xóm nhận hàng giúp không?",
+    vocabulary: [
+      {
+        chinese: "邻居",
+        pinyin: "línjū",
+        meaning_vi: "hàng xóm",
+      },
+      {
+        chinese: "收快递",
+        pinyin: "shōu kuàidì",
+        meaning_vi: "nhận hàng giao",
+      },
+    ],
+  },
+};
 const dataCorrections = isFactoryTemplate
   ? factoryDataCorrections
-  : officeDataCorrections;
+  : isFriendshipTemplate
+    ? friendshipDataCorrections
+    : isChinaDailyLifeTemplate
+      ? chinaDailyLifeDataCorrections
+      : officeDataCorrections;
 
 function sqlLiteral(value: string) {
   return `'${value.replaceAll("'", "''")}'`;
@@ -639,8 +1702,11 @@ function rejectionReason(
   if (!hasVietnameseAccent(card.sentence_vi)) {
     return "nghĩa tiếng Việt chưa có dấu";
   }
-  if (card.vocabulary.length < 1 || card.vocabulary.length > 3) {
-    return "mỗi câu phải có từ một đến ba từ mới";
+  if (
+    card.vocabulary.length < 1 ||
+    card.vocabulary.length > maxHighlightWords
+  ) {
+    return `mỗi câu phải có từ một đến ${maxHighlightWords} từ mới`;
   }
 
   const seenWords = new Set<string>();
@@ -732,7 +1798,11 @@ async function generateCategory(
         json_schema: {
           name: isFactoryTemplate
             ? "factory_situational_sentences"
-            : "office_communication_sentences",
+            : isFriendshipTemplate
+              ? "friendship_situational_sentences"
+              : isChinaDailyLifeTemplate
+                ? "china_daily_life_sentences"
+                : "office_communication_sentences",
           strict: true,
           schema: {
             type: "object",
@@ -761,7 +1831,7 @@ async function generateCategory(
                     vocabulary: {
                       type: "array",
                       minItems: 1,
-                      maxItems: 3,
+                      maxItems: maxHighlightWords,
                       items: {
                         type: "object",
                         additionalProperties: false,
@@ -785,7 +1855,11 @@ async function generateCategory(
           role: "system",
           content: isFactoryTemplate
             ? "Bạn là giáo viên tiếng Trung chuyên ngành nhà máy và xưởng sản xuất cho người Việt đi làm. Hãy tạo các câu tiếng Trung giản thể tự nhiên, chính xác và thực tế mà công nhân, tổ trưởng, kỹ thuật viên và nhân viên chất lượng thường dùng. Ưu tiên cách nói rõ ràng, dễ áp dụng tại hiện trường; không tạo khẩu hiệu chung chung và không đưa hướng dẫn nguy hiểm trái quy trình. Câu phải dài khoảng 8-30 chữ Hán, diễn đạt trọn ý, không dùng tên người hay tên công ty cụ thể và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới, chữ viết tắt tiếng Anh hoặc ký hiệu định dạng vào câu. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và dùng đúng thuật ngữ sản xuất. Mỗi câu chọn 1-3 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ đó phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu."
-            : "Bạn là giáo viên tiếng Trung công sở cho người Việt. Hãy tạo các câu tiếng Trung giản thể tự nhiên, lịch sự và thực tế trong môi trường văn phòng hiện đại. Câu phải dài khoảng 8-28 chữ Hán, diễn đạt trọn ý, không dùng tên người hay tên công ty cụ thể và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng vào câu. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và đúng sắc thái công việc. Mỗi câu chọn 1-3 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ đó phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu.",
+            : isFriendshipTemplate
+              ? "Bạn là giáo viên tiếng Trung giao tiếp cho người Việt muốn làm quen và kết bạn. Hãy tạo các câu tiếng Trung giản thể tự nhiên, thân thiện, lịch sự và thực tế, phù hợp trình độ HSK1-HSK3. Bao quát chào hỏi, giới thiệu bản thân, quê quán, công việc, sở thích, học ngôn ngữ, trao đổi liên lạc, rủ đi chơi, trò chuyện hằng ngày và hẹn gặp lại. Câu phải dài khoảng 5-22 chữ Hán, diễn đạt trọn ý, không dùng tên người cụ thể, không hỏi thông tin quá nhạy cảm, không tán tỉnh quá mức và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng vào câu. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và đúng sắc thái giao tiếp. Mỗi câu chọn 1-3 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ đó phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu."
+              : isChinaDailyLifeTemplate
+                ? "Bạn là giáo viên tiếng Trung thực hành cho người Việt đang sống tại Trung Quốc. Hãy tạo câu tiếng Trung giản thể tự nhiên, rõ ràng và thực tế ở mức HSK1-HSK3, dùng được ngay trong đời sống. Nội dung bao quát thuê nhà, hợp đồng, điện nước, sửa chữa, giao hàng, hỏi đường, giao thông, WeChat, thanh toán, mua sắm và nhờ giúp đỡ. Ưu tiên mẫu nói lịch sự, an toàn, đúng văn hóa; không đưa lời khuyên pháp lý hoặc y tế tuyệt đối. Mỗi câu dài khoảng 6-24 chữ Hán, diễn đạt trọn ý, không dùng tên người hay địa chỉ cụ thể và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và phản ánh đúng ngữ cảnh. Mỗi câu chọn đúng 1-2 từ hoặc cụm từ mới quan trọng trong trường vocabulary; mỗi từ phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu."
+                : "Bạn là giáo viên tiếng Trung công sở cho người Việt. Hãy tạo các câu tiếng Trung giản thể tự nhiên, lịch sự và thực tế trong môi trường văn phòng hiện đại. Câu phải dài khoảng 8-28 chữ Hán, diễn đạt trọn ý, không dùng tên người hay tên công ty cụ thể và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng vào câu. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và đúng sắc thái công việc. Mỗi câu chọn 1-3 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ đó phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu.",
         },
         {
           role: "user",
@@ -875,7 +1949,12 @@ async function buildSentences() {
       validateCategory(spec, categoryCards, excludedSentences);
       console.log(`[data] Dùng cache ${spec.name}: ${spec.count} câu.`);
       continue;
-    } catch {
+    } catch (error) {
+      console.warn(
+        `[data] Cache ${spec.name} không hợp lệ, sẽ tạo bù: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
       cached = otherCards;
     }
 
@@ -1050,7 +2129,7 @@ function buildMigration(cards: OfficeSentenceCard[]) {
     .map((card) => sqlLiteral(card.sentence_cn))
     .join(", ");
 
-  return `-- Add a reusable 150-sentence situational deck with highlighted vocabulary and audio.
+  return `-- Add a reusable ${expectedTotal}-sentence situational deck with highlighted vocabulary and audio.
 insert into public.template_decks (slug, name, description, level)
 values (
   '${templateSlug}',
