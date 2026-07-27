@@ -20,7 +20,6 @@ type NumberSetting = {
     | "daily_new_sentence_limit"
     | "graduating_interval_days"
     | "easy_interval_days"
-    | "review_again_interval_minutes"
     | "hard_interval_multiplier"
     | "easy_bonus"
     | "interval_modifier"
@@ -142,14 +141,6 @@ const lapseSettings: NumberSetting[] = [
     max: 365,
     step: 1,
     suffix: "ngày",
-  },
-  {
-    key: "review_again_interval_minutes",
-    label: "Again fallback",
-    min: 1,
-    max: 1440,
-    step: 1,
-    suffix: "phút",
   },
 ];
 
