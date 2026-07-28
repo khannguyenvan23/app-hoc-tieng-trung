@@ -30,7 +30,11 @@ async function createAndUploadSpeechAtPath(
     return null;
   }
 
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    maxRetries: 2,
+    timeout: 60_000,
+  });
   const response = await openai.audio.speech.create({
     model: process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts",
     voice: process.env.OPENAI_TTS_VOICE || "alloy",
@@ -71,6 +75,22 @@ export async function getOrCreateTemplateSpeech(
   if (await audioObjectExists(path)) {
     return getPublicAudioUrl(path);
   }
+
+  return createAndUploadSpeechAtPath(path, text, "31536000");
+}
+
+export async function createOrReplaceTemplateSpeech(
+  templateSlug: string,
+  kind: "word" | "sentence",
+  text: string | null,
+) {
+  if (!text) {
+    return null;
+  }
+
+  const textHash = createHash("sha256").update(text).digest("hex").slice(0, 24);
+  const safeSlug = templateSlug.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
+  const path = `templates/${safeSlug}/${kind}-${textHash}.mp3`;
 
   return createAndUploadSpeechAtPath(path, text, "31536000");
 }

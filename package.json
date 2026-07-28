@@ -10,11 +10,17 @@
     "test:srs": "tsx --test test/srs-logic.test.ts test/sentence-diff.test.ts test/pinyin-align.test.ts",
     "sim:srs": "tsx scripts/simulate-srs.ts",
     "audio:templates": "tsx scripts/prepare-template-audio.ts",
+    "repair:hsk1": "tsx scripts/repair-hsk-template.ts --slug=hsk1-co-ban",
+    "repair:hsk2": "tsx scripts/repair-hsk-template.ts --slug=hsk2-co-ban",
+    "repair:hsk3": "tsx scripts/repair-hsk-template.ts --slug=hsk3-co-ban --repair-pinyin",
+    "repair:hsk4": "tsx scripts/repair-hsk-template.ts --slug=hsk4-co-ban",
     "examples:hsk6": "tsx scripts/generate-hsk6-examples.ts",
     "template:travel": "tsx scripts/generate-travel-template.ts",
     "template:factory": "tsx scripts/generate-factory-template.ts",
     "template:logistics": "tsx scripts/generate-logistics-import-export-template.ts",
     "template:construction": "tsx scripts/generate-construction-template.ts",
+    "template:commercial": "tsx scripts/generate-commercial-template.ts",
+    "template:electronics": "tsx scripts/generate-electronics-template.ts",
     "template:shopping": "tsx scripts/generate-shopping-template.ts",
     "template:food": "tsx scripts/generate-food-template.ts",
     "template:housing": "tsx scripts/generate-housing-template.ts",
@@ -24,7 +30,9 @@
     "template:china-daily-life-sentences": "tsx scripts/generate-china-daily-life-sentences-template.ts",
     "template:travel-airport-sentences": "tsx scripts/generate-travel-airport-sentences-template.ts",
     "template:sales-customer-service-sentences": "tsx scripts/generate-sales-customer-service-sentences-template.ts",
-    "template:logistics-import-export-sentences": "tsx scripts/generate-logistics-import-export-sentences-template.ts"
+    "template:logistics-import-export-sentences": "tsx scripts/generate-logistics-import-export-sentences-template.ts",
+    "template:commercial-sentences": "tsx scripts/generate-commercial-sentences-template.ts",
+    "template:work-calls-messages-sentences": "tsx scripts/generate-work-calls-messages-sentences-template.ts"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.63.0",

@@ -154,6 +154,11 @@ export default function OptionsPage() {
   const [loading, setLoading] = useState(configured);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  // Raw text being typed per field. A number input bound straight to a number
+  // leaves stray input like "02" stuck, because React won't re-sync the DOM
+  // when the parsed number is unchanged. Holding the raw string fixes that; it
+  // is normalized back to a clean number on blur.
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!configured) {
@@ -185,16 +190,43 @@ export default function OptionsPage() {
   }, [configured]);
 
   function updateNumberSetting(setting: NumberSetting, value: string) {
+    setDrafts((current) => ({ ...current, [setting.key]: value }));
+
     const numericValue = Number(value);
+    if (value.trim() !== "" && Number.isFinite(numericValue)) {
+      setSettings((current) => ({
+        ...current,
+        [setting.key]: clamp(numericValue, setting.min, setting.max),
+      }));
+    }
+    setMessage("");
+  }
+
+  // On blur, snap the field back to the clamped number and drop the draft, so
+  // stray input like "02" or an empty box becomes a clean, valid value.
+  function commitNumberSetting(setting: NumberSetting) {
+    const raw = drafts[setting.key];
+    setDrafts((current) => {
+      const next = { ...current };
+      delete next[setting.key];
+      return next;
+    });
+
+    if (raw === undefined) {
+      return;
+    }
+
+    const numericValue = Number(raw);
     setSettings((current) => ({
       ...current,
       [setting.key]: clamp(
-        Number.isFinite(numericValue) ? numericValue : setting.min,
+        raw.trim() !== "" && Number.isFinite(numericValue)
+          ? numericValue
+          : setting.min,
         setting.min,
         setting.max,
       ),
     }));
-    setMessage("");
   }
 
   function updateLearningSteps(value: string) {
@@ -209,6 +241,7 @@ export default function OptionsPage() {
 
   function resetDefaults() {
     setSettings(defaultStudySettings);
+    setDrafts({});
     setMessage("");
   }
 
@@ -316,12 +349,13 @@ export default function OptionsPage() {
                       disabled={loading}
                       max={setting.max}
                       min={setting.min}
+                      onBlur={() => commitNumberSetting(setting)}
                       onChange={(event) =>
                         updateNumberSetting(setting, event.target.value)
                       }
                       step={setting.step}
                       type="number"
-                      value={settings[setting.key]}
+                      value={drafts[setting.key] ?? String(settings[setting.key])}
                     />
                     <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 text-sm text-zinc-500 dark:text-zinc-400">
                       {setting.suffix}
@@ -362,12 +396,13 @@ export default function OptionsPage() {
                         disabled={loading}
                         max={setting.max}
                         min={setting.min}
+                        onBlur={() => commitNumberSetting(setting)}
                         onChange={(event) =>
                           updateNumberSetting(setting, event.target.value)
                         }
                         step={setting.step}
                         type="number"
-                        value={settings[setting.key]}
+                        value={drafts[setting.key] ?? String(settings[setting.key])}
                       />
                       <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 text-sm text-zinc-500 dark:text-zinc-400">
                         {setting.suffix}
@@ -414,12 +449,13 @@ export default function OptionsPage() {
                       disabled={loading}
                       max={setting.max}
                       min={setting.min}
+                      onBlur={() => commitNumberSetting(setting)}
                       onChange={(event) =>
                         updateNumberSetting(setting, event.target.value)
                       }
                       step={setting.step}
                       type="number"
-                      value={settings[setting.key]}
+                      value={drafts[setting.key] ?? String(settings[setting.key])}
                     />
                     <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 text-sm text-zinc-500 dark:text-zinc-400">
                       {setting.suffix}
@@ -456,12 +492,13 @@ export default function OptionsPage() {
                         disabled={loading}
                         max={setting.max}
                         min={setting.min}
+                        onBlur={() => commitNumberSetting(setting)}
                         onChange={(event) =>
                           updateNumberSetting(setting, event.target.value)
                         }
                         step={setting.step}
                         type="number"
-                        value={settings[setting.key]}
+                        value={drafts[setting.key] ?? String(settings[setting.key])}
                       />
                       <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 px-3 text-sm text-zinc-500 dark:text-zinc-400">
                         {setting.suffix}

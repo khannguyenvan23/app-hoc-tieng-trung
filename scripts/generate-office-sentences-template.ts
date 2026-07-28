@@ -49,6 +49,12 @@ const isSalesCustomerServiceTemplate = process.argv.includes(
 const isLogisticsImportExportTemplate = process.argv.includes(
   "--logistics-import-export",
 );
+const isCommercialContractNegotiationTemplate = process.argv.includes(
+  "--commercial-contract-negotiation",
+);
+const isWorkCallsMessagesTemplate = process.argv.includes(
+  "--work-calls-messages",
+);
 const templateSlug = isFactoryTemplate
   ? "nha-may-xuong-150-cau"
   : isFriendshipTemplate
@@ -61,7 +67,11 @@ const templateSlug = isFactoryTemplate
           ? "ban-hang-cham-soc-khach-hang-150-cau"
           : isLogisticsImportExportTemplate
             ? "xuat-nhap-khau-logistics-150-cau"
-            : "giao-tiep-cong-so-150-cau";
+            : isCommercialContractNegotiationTemplate
+              ? "thuong-mai-hop-dong-dam-phan-150-cau"
+              : isWorkCallsMessagesTemplate
+                ? "dien-thoai-nhan-tin-cong-viec-100-cau"
+                : "giao-tiep-cong-so-150-cau";
 const outputPath = isFactoryTemplate
   ? "supabase/migrations/044_factory_150_sentences.sql"
   : isFriendshipTemplate
@@ -74,7 +84,11 @@ const outputPath = isFactoryTemplate
           ? "supabase/migrations/048_sales_customer_service_150_sentences.sql"
           : isLogisticsImportExportTemplate
             ? "supabase/migrations/050_logistics_import_export_150_sentences.sql"
-            : "supabase/migrations/043_office_communication_150_sentences.sql";
+            : isCommercialContractNegotiationTemplate
+              ? "supabase/migrations/053_commercial_contract_negotiation_150_sentences.sql"
+              : isWorkCallsMessagesTemplate
+                ? "supabase/migrations/054_work_calls_messages_100_sentences.sql"
+                : "supabase/migrations/043_office_communication_150_sentences.sql";
 const cachePath = path.join(
   os.tmpdir(),
   isFactoryTemplate
@@ -89,14 +103,24 @@ const cachePath = path.join(
             ? "tiengtrunghihi-sales-customer-service-150-sentences.json"
             : isLogisticsImportExportTemplate
               ? "tiengtrunghihi-logistics-import-export-150-sentences.json"
-              : "tiengtrunghihi-office-communication-150-sentences.json",
+              : isCommercialContractNegotiationTemplate
+                ? "tiengtrunghihi-commercial-contract-negotiation-150-sentences.json"
+                : isWorkCallsMessagesTemplate
+                  ? "tiengtrunghihi-work-calls-messages-100-sentences.json"
+                  : "tiengtrunghihi-office-communication-150-sentences.json",
 );
-const expectedTotal = isChinaDailyLifeTemplate ? 200 : 150;
+const expectedTotal = isChinaDailyLifeTemplate
+  ? 200
+  : isWorkCallsMessagesTemplate
+    ? 100
+    : 150;
 const maxHighlightWords =
   isChinaDailyLifeTemplate ||
   isTravelAirportTemplate ||
   isSalesCustomerServiceTemplate ||
-  isLogisticsImportExportTemplate
+  isLogisticsImportExportTemplate ||
+  isCommercialContractNegotiationTemplate ||
+  isWorkCallsMessagesTemplate
     ? 2
     : 3;
 const audioConcurrency = 3;
@@ -114,7 +138,11 @@ const templateName = isFactoryTemplate
           ? "Bán hàng và chăm sóc khách hàng - 150 câu"
           : isLogisticsImportExportTemplate
             ? "Xuất nhập khẩu và logistics - 150 câu"
-            : "Giao tiếp công sở - 150 câu";
+            : isCommercialContractNegotiationTemplate
+              ? "Thương mại, hợp đồng và đàm phán - 150 câu"
+              : isWorkCallsMessagesTemplate
+                ? "Điện thoại và nhắn tin công việc - 100 câu"
+                : "Giao tiếp công sở - 150 câu";
 const templateDescription = isFactoryTemplate
   ? "150 câu tiếng Trung theo tình huống nhà máy và xưởng sản xuất: giao ca, vận hành máy, kiểm tra chất lượng, báo lỗi, bảo trì, an toàn lao động và phối hợp sản xuất. Mỗi câu có pinyin, nghĩa tiếng Việt, từ mới được highlight và audio tạo sẵn."
   : isFriendshipTemplate
@@ -127,7 +155,11 @@ const templateDescription = isFactoryTemplate
           ? "150 câu tiếng Trung thực tế cho bán hàng và chăm sóc khách hàng: tìm hiểu nhu cầu, tư vấn sản phẩm, báo giá, thương lượng, chốt đơn, phản hồi sau bán và xử lý khiếu nại. Mỗi câu có pinyin, nghĩa tiếng Việt, 1-2 từ mới được highlight và audio tạo sẵn."
           : isLogisticsImportExportTemplate
             ? "150 câu tiếng Trung thực tế cho xuất nhập khẩu và logistics: tìm nguồn hàng, hợp đồng, Incoterms, thanh toán, chứng từ, hải quan, kho bãi, vận tải, giao nhận và xử lý sự cố. Mỗi câu có pinyin, nghĩa tiếng Việt, 1-2 từ mới được highlight và audio tạo sẵn."
-            : "150 câu tiếng Trung theo tình huống công sở: trao đổi công việc, giao nhiệm vụ, báo tiến độ, họp, xin nghỉ và nhắn tin với đồng nghiệp. Mỗi câu có pinyin, nghĩa tiếng Việt, từ mới được highlight và audio tạo sẵn.";
+            : isCommercialContractNegotiationTemplate
+              ? "150 câu tiếng Trung thực tế cho thương mại, hợp đồng và đàm phán: báo giá, chiết khấu, điều khoản, ký kết, thanh toán, công nợ, đại lý, hậu mãi và xử lý tranh chấp. Mỗi câu có pinyin, nghĩa tiếng Việt, 1-2 từ mới được highlight và audio tạo sẵn."
+              : isWorkCallsMessagesTemplate
+                ? "100 câu tiếng Trung thực tế để gọi điện và nhắn tin trong công việc: mở đầu cuộc gọi, chuyển máy, để lại lời nhắn, hẹn gọi lại, xác nhận thông tin, nhắn WeChat và xử lý liên lạc gián đoạn. Mỗi câu có pinyin, nghĩa tiếng Việt, 1-2 từ mới được highlight và audio tạo sẵn."
+                : "150 câu tiếng Trung theo tình huống công sở: trao đổi công việc, giao nhiệm vụ, báo tiến độ, họp, xin nghỉ và nhắn tin với đồng nghiệp. Mỗi câu có pinyin, nghĩa tiếng Việt, từ mới được highlight và audio tạo sẵn.";
 
 const officeCategories: CategorySpec[] = [
   {
@@ -1135,6 +1167,233 @@ const logisticsImportExportCategories: CategorySpec[] = [
   },
 ];
 
+const commercialContractNegotiationCategories: CategorySpec[] = [
+  {
+    id: "quotations-pricing",
+    name: "Báo giá và chính sách giá",
+    count: 25,
+    scope:
+      "Hỏi và gửi báo giá, xác nhận đơn vị tiền tệ, thời hạn hiệu lực, thuế, phí, số lượng tối thiểu, giá theo số lượng và giải thích các thành phần trong báo giá.",
+    requiredSituations: [
+      "yêu cầu báo giá chính thức",
+      "gửi bảng báo giá",
+      "xác nhận đơn vị tiền tệ",
+      "hỏi giá đã gồm thuế chưa",
+      "hỏi phí phát sinh",
+      "xác nhận thời hạn hiệu lực của báo giá",
+      "hỏi số lượng đặt tối thiểu",
+      "hỏi giá theo số lượng",
+      "so sánh hai phương án giá",
+      "giải thích thành phần báo giá",
+      "đề nghị cập nhật báo giá",
+      "xác nhận giá cuối cùng",
+    ],
+  },
+  {
+    id: "negotiation-discounts",
+    name: "Thương lượng và chiết khấu",
+    count: 25,
+    scope:
+      "Đề xuất và phản hồi mức giá, chiết khấu, số lượng, thời gian giao, điều kiện thanh toán, ưu đãi cho hợp tác dài hạn và phương án nhượng bộ có điều kiện.",
+    requiredSituations: [
+      "đề nghị giảm giá",
+      "đề nghị chiết khấu theo số lượng",
+      "giải thích giới hạn giảm giá",
+      "đưa ra giá mục tiêu",
+      "đề nghị nhượng bộ hai bên",
+      "đổi giá lấy số lượng lớn hơn",
+      "đổi chiết khấu lấy thanh toán sớm",
+      "thương lượng thời gian giao",
+      "thương lượng điều kiện thanh toán",
+      "ưu đãi cho hợp tác dài hạn",
+      "đưa ra phương án thay thế",
+      "xác nhận kết quả đàm phán",
+    ],
+  },
+  {
+    id: "contract-terms-signing",
+    name: "Điều khoản, ký kết và gia hạn hợp đồng",
+    count: 25,
+    scope:
+      "Rà soát phạm vi, quyền và nghĩa vụ, tiêu chuẩn nghiệm thu, bảo mật, vi phạm, chấm dứt, sửa đổi, ký đóng dấu, hiệu lực và gia hạn hợp đồng.",
+    requiredSituations: [
+      "gửi dự thảo hợp đồng",
+      "rà soát điều khoản",
+      "xác nhận phạm vi hợp tác",
+      "làm rõ quyền và nghĩa vụ",
+      "thống nhất tiêu chuẩn nghiệm thu",
+      "bổ sung điều khoản bảo mật",
+      "sửa điều khoản vi phạm",
+      "thống nhất điều kiện chấm dứt",
+      "đề nghị sửa đổi phụ lục",
+      "ký tên và đóng dấu",
+      "xác nhận ngày có hiệu lực",
+      "đề nghị gia hạn hợp đồng",
+    ],
+  },
+  {
+    id: "orders-payment-delivery",
+    name: "Đơn hàng, thanh toán và giao hàng",
+    count: 25,
+    scope:
+      "Xác nhận đơn, đặt cọc, lịch thanh toán, tài khoản nhận tiền, hóa đơn, lịch giao, thay đổi số lượng, theo dõi tiến độ và xác nhận hoàn tất nghĩa vụ.",
+    requiredSituations: [
+      "xác nhận đơn đặt hàng",
+      "xác nhận tiền đặt cọc",
+      "thống nhất lịch thanh toán",
+      "xác minh tài khoản nhận tiền",
+      "gửi chứng từ thanh toán",
+      "yêu cầu xuất hóa đơn",
+      "xác nhận lịch giao hàng",
+      "đề nghị thay đổi số lượng",
+      "theo dõi tiến độ thực hiện đơn",
+      "báo chậm giao hàng",
+      "xác nhận đã nhận đủ hàng",
+      "xác nhận hoàn tất thanh toán",
+    ],
+  },
+  {
+    id: "receivables-reconciliation",
+    name: "Công nợ, hóa đơn và đối soát",
+    count: 25,
+    scope:
+      "Đối chiếu số dư, kiểm tra hóa đơn, xác nhận khoản phải thu hoặc phải trả, xử lý chênh lệch, nhắc thanh toán, lập biên bản và xác nhận công nợ.",
+    requiredSituations: [
+      "gửi bảng đối chiếu công nợ",
+      "xác nhận số dư đầu kỳ",
+      "kiểm tra khoản phải thu",
+      "kiểm tra khoản phải trả",
+      "đối chiếu hóa đơn",
+      "phát hiện chênh lệch",
+      "yêu cầu bổ sung chứng từ",
+      "giải thích khoản khấu trừ",
+      "nhắc khoản thanh toán đến hạn",
+      "đề nghị lịch thanh toán",
+      "lập biên bản đối soát",
+      "xác nhận công nợ cuối kỳ",
+    ],
+  },
+  {
+    id: "partnership-after-sales-disputes",
+    name: "Đối tác, hậu mãi và xử lý tranh chấp",
+    count: 25,
+    scope:
+      "Trao đổi với đại lý và nhà phân phối, chính sách khu vực, hỗ trợ bán hàng, bảo hành, đổi trả, khiếu nại, thu thập bằng chứng, phương án khắc phục và giải quyết tranh chấp.",
+    requiredSituations: [
+      "đề nghị hợp tác đại lý",
+      "trao đổi chính sách phân phối",
+      "xác nhận khu vực bán hàng",
+      "hỏi hỗ trợ quảng bá",
+      "xác nhận chính sách bảo hành",
+      "yêu cầu đổi hoặc trả hàng",
+      "tiếp nhận khiếu nại",
+      "yêu cầu cung cấp bằng chứng",
+      "đề xuất phương án khắc phục",
+      "thương lượng mức bồi thường",
+      "xử lý bất đồng hợp đồng",
+      "xác nhận kết quả giải quyết",
+    ],
+  },
+];
+
+const workCallsMessagesCategories: CategorySpec[] = [
+  {
+    id: "starting-receiving-calls",
+    name: "Mở đầu và tiếp nhận cuộc gọi",
+    count: 20,
+    scope:
+      "Chào hỏi qua điện thoại, giới thiệu bản thân và công ty, hỏi người cần gặp, xác nhận mục đích cuộc gọi, kiểm tra người nghe có tiện nói chuyện và phản hồi khi nhận cuộc gọi.",
+    requiredSituations: [
+      "chào và giới thiệu qua điện thoại",
+      "hỏi người cần gặp",
+      "xác nhận đúng số điện thoại",
+      "nói rõ mục đích cuộc gọi",
+      "hỏi người nghe có tiện nói chuyện",
+      "xác nhận danh tính người gọi",
+      "tiếp nhận cuộc gọi từ khách hàng",
+      "tiếp nhận cuộc gọi từ đối tác",
+      "xin người gọi chờ một chút",
+      "cảm ơn người gọi",
+    ],
+  },
+  {
+    id: "transferring-messages-callbacks",
+    name: "Chuyển máy, để lại lời nhắn và gọi lại",
+    count: 20,
+    scope:
+      "Chuyển cuộc gọi, báo người cần gặp đang bận hoặc vắng mặt, xin tên và số liên hệ, ghi lời nhắn, nhắc gọi lại, hẹn thời gian gọi và xác nhận đã chuyển thông tin.",
+    requiredSituations: [
+      "chuyển máy cho đồng nghiệp",
+      "báo máy lẻ đang bận",
+      "báo người cần gặp đang họp",
+      "báo người cần gặp vắng mặt",
+      "xin tên người gọi",
+      "xin số điện thoại liên hệ",
+      "đề nghị để lại lời nhắn",
+      "ghi lại nội dung lời nhắn",
+      "hẹn giờ gọi lại",
+      "xác nhận sẽ chuyển lời",
+    ],
+  },
+  {
+    id: "confirming-work-information",
+    name: "Xác nhận thông tin công việc qua điện thoại",
+    count: 20,
+    scope:
+      "Xác nhận lịch hẹn, thời gian họp, địa chỉ, email, tên tài liệu, số lượng, tiến độ, yêu cầu công việc và nhắc gửi lại thông tin bằng văn bản.",
+    requiredSituations: [
+      "xác nhận lịch hẹn",
+      "xác nhận thời gian họp",
+      "xác nhận địa điểm",
+      "đọc lại địa chỉ email",
+      "xác nhận tên tài liệu",
+      "xác nhận số lượng",
+      "hỏi tiến độ công việc",
+      "làm rõ yêu cầu",
+      "đọc lại thông tin quan trọng",
+      "đề nghị gửi xác nhận bằng văn bản",
+    ],
+  },
+  {
+    id: "wechat-work-messages",
+    name: "Nhắn tin WeChat trong công việc",
+    count: 20,
+    scope:
+      "Thêm liên hệ, gửi lời mời kết bạn, nhắn mở đầu, gửi tài liệu và hình ảnh, nhắc phản hồi, báo tiến độ, xin xác nhận, tạo nhóm và kết thúc trao đổi lịch sự.",
+    requiredSituations: [
+      "xin thêm WeChat",
+      "gửi lời mời kết bạn",
+      "tự giới thiệu trong tin nhắn",
+      "gửi tài liệu qua WeChat",
+      "gửi hình ảnh hoặc vị trí",
+      "nhắc kiểm tra tin nhắn",
+      "nhắc phản hồi",
+      "báo tiến độ ngắn",
+      "tạo nhóm làm việc",
+      "xác nhận đã nhận thông tin",
+    ],
+  },
+  {
+    id: "connection-problems-etiquette",
+    name: "Sự cố liên lạc và phép lịch sự",
+    count: 20,
+    scope:
+      "Xử lý tín hiệu yếu, nghe không rõ, cuộc gọi bị ngắt, nhầm số, tiếng ồn, yêu cầu nói chậm hoặc nhắc lại, chuyển sang nhắn tin và kết thúc cuộc gọi chuyên nghiệp.",
+    requiredSituations: [
+      "tín hiệu điện thoại yếu",
+      "nghe không rõ",
+      "đề nghị nói chậm",
+      "đề nghị nhắc lại",
+      "cuộc gọi bị ngắt",
+      "gọi nhầm số",
+      "môi trường quá ồn",
+      "đề nghị chuyển sang nhắn tin",
+      "xin lỗi vì làm phiền",
+      "kết thúc cuộc gọi lịch sự",
+    ],
+  },
+];
+
 const categories = isFactoryTemplate
   ? factoryCategories
   : isFriendshipTemplate
@@ -1147,7 +1406,11 @@ const categories = isFactoryTemplate
           ? salesCustomerServiceCategories
           : isLogisticsImportExportTemplate
             ? logisticsImportExportCategories
-            : officeCategories;
+            : isCommercialContractNegotiationTemplate
+              ? commercialContractNegotiationCategories
+              : isWorkCallsMessagesTemplate
+                ? workCallsMessagesCategories
+                : officeCategories;
 
 const highlightWordSchema = z.object({
   chinese: z.string().min(1),
@@ -2569,6 +2832,124 @@ const logisticsImportExportDataCorrections: Record<
     ],
   },
 };
+const commercialContractNegotiationDataCorrections: Record<
+  string,
+  Partial<GeneratedSentence>
+> = {
+  "双方签署的对账确认书具有法律效力。": {
+    sentence_cn: "请确认双方是否需要签署对账确认书。",
+    sentence_pinyin:
+      "Qǐng quèrèn shuāngfāng shìfǒu xūyào qiānshǔ duìzhàng quèrènshū.",
+    sentence_vi:
+      "Vui lòng xác nhận hai bên có cần ký biên bản đối soát hay không.",
+    vocabulary: [
+      {
+        chinese: "对账确认书",
+        pinyin: "duìzhàng quèrènshū",
+        meaning_vi: "biên bản xác nhận đối soát",
+      },
+    ],
+  },
+};
+const workCallsMessagesDataCorrections: Record<
+  string,
+  Partial<GeneratedSentence>
+> = {
+  "您方便给我介绍一下您的背景吗？": {
+    sentence_cn: "方便说明一下您负责的业务吗？",
+    sentence_pinyin: "Fāngbiàn shuōmíng yíxià nín fùzé de yèwù ma?",
+    sentence_vi:
+      "Anh/chị có tiện cho biết mình phụ trách mảng công việc nào không?",
+    vocabulary: [
+      {
+        chinese: "负责的业务",
+        pinyin: "fùzé de yèwù",
+        meaning_vi: "mảng công việc phụ trách",
+      },
+    ],
+  },
+  "请确认，我已经将您的信息转达了。": {
+    sentence_cn: "您的信息我已经转达给相关同事了。",
+    sentence_pinyin:
+      "Nín de xìnxī wǒ yǐjīng zhuǎndá gěi xiāngguān tóngshì le.",
+    sentence_vi:
+      "Tôi đã chuyển thông tin của anh/chị cho đồng nghiệp phụ trách.",
+    vocabulary: [
+      {
+        chinese: "转达",
+        pinyin: "zhuǎndá",
+        meaning_vi: "chuyển lời, truyền đạt",
+      },
+    ],
+  },
+  "请问您找的同事现在正在开会。": {
+    sentence_cn: "您要找的同事现在正在开会。",
+    sentence_pinyin:
+      "Nín yào zhǎo de tóngshì xiànzài zhèngzài kāihuì.",
+    sentence_vi: "Đồng nghiệp anh/chị cần gặp hiện đang họp.",
+    vocabulary: [
+      {
+        chinese: "正在开会",
+        pinyin: "zhèngzài kāihuì",
+        meaning_vi: "đang họp",
+      },
+    ],
+  },
+  "请问确认订单数量必须是多少？": {
+    sentence_cn: "请问您需要确认的订单数量是多少？",
+    sentence_pinyin:
+      "Qǐngwèn nín xūyào quèrèn de dìngdān shùliàng shì duōshao?",
+    sentence_vi:
+      "Xin hỏi số lượng đơn hàng anh/chị cần xác nhận là bao nhiêu?",
+    vocabulary: [
+      {
+        chinese: "订单数量",
+        pinyin: "dìngdān shùliàng",
+        meaning_vi: "số lượng đơn hàng",
+      },
+    ],
+  },
+  "您好，我是市场部的张先生。": {
+    sentence_cn: "您好，我是这个项目的联络人。",
+    sentence_pinyin: "Nínhǎo, wǒ shì zhège xiàngmù de liánluòrén.",
+    sentence_vi: "Xin chào, tôi là người liên hệ của dự án này.",
+    vocabulary: [
+      {
+        chinese: "联络人",
+        pinyin: "liánluòrén",
+        meaning_vi: "người liên hệ",
+      },
+    ],
+  },
+  "信号有点弱，您能稍微靠近手机吗？": {
+    sentence_cn: "信号有点弱，您能换到信号好一点的位置吗？",
+    sentence_pinyin:
+      "Xìnhào yǒudiǎn ruò, nín néng huàn dào xìnhào hǎo yìdiǎn de wèizhì ma?",
+    sentence_vi:
+      "Tín hiệu hơi yếu, anh/chị có thể chuyển sang chỗ có tín hiệu tốt hơn không?",
+    vocabulary: [
+      {
+        chinese: "信号",
+        pinyin: "xìnhào",
+        meaning_vi: "tín hiệu",
+      },
+    ],
+  },
+  "对不起，刚才电话好像没接通，我们再拨一次。": {
+    sentence_cn: "对不起，刚才电话断了，我们重新联系一下。",
+    sentence_pinyin:
+      "Duìbuqǐ, gāngcái diànhuà duàn le, wǒmen chóngxīn liánxì yíxià.",
+    sentence_vi:
+      "Xin lỗi, cuộc gọi vừa bị ngắt, chúng ta kết nối lại nhé.",
+    vocabulary: [
+      {
+        chinese: "重新联系",
+        pinyin: "chóngxīn liánxì",
+        meaning_vi: "liên hệ lại",
+      },
+    ],
+  },
+};
 
 const dataCorrections = isFactoryTemplate
   ? factoryDataCorrections
@@ -2582,7 +2963,11 @@ const dataCorrections = isFactoryTemplate
           ? salesCustomerServiceDataCorrections
           : isLogisticsImportExportTemplate
             ? logisticsImportExportDataCorrections
-            : officeDataCorrections;
+            : isCommercialContractNegotiationTemplate
+              ? commercialContractNegotiationDataCorrections
+              : isWorkCallsMessagesTemplate
+                ? workCallsMessagesDataCorrections
+                : officeDataCorrections;
 
 function sqlLiteral(value: string) {
   return `'${value.replaceAll("'", "''")}'`;
@@ -2758,7 +3143,11 @@ async function generateCategory(
                     ? "sales_customer_service_sentences"
                     : isLogisticsImportExportTemplate
                       ? "logistics_import_export_sentences"
-                      : "office_communication_sentences",
+                      : isCommercialContractNegotiationTemplate
+                        ? "commercial_contract_negotiation_sentences"
+                        : isWorkCallsMessagesTemplate
+                          ? "work_calls_messages_sentences"
+                          : "office_communication_sentences",
           strict: true,
           schema: {
             type: "object",
@@ -2821,7 +3210,11 @@ async function generateCategory(
                     ? "Bạn là giáo viên tiếng Trung thương mại chuyên đào tạo người Việt làm bán hàng và chăm sóc khách hàng. Hãy tạo câu tiếng Trung giản thể tự nhiên, lịch sự, chuyên nghiệp và dùng được ngay trong cửa hàng, kinh doanh trực tuyến, bán sỉ hoặc bộ phận chăm sóc khách hàng. Nội dung phải bao quát tìm hiểu nhu cầu, tư vấn sản phẩm, giải thích tính năng, báo giá, thuế và phí, thương lượng, chiết khấu, chốt đơn, giao hàng, theo dõi sau bán, đổi trả, hoàn tiền và xử lý khiếu nại. Phân biệt rõ lời của nhân viên với khách nhưng mỗi câu phải tự đứng độc lập, không chèn nhãn người nói. Không hứa vượt thẩm quyền, không gây áp lực mua hàng và không tranh cãi với khách. Mỗi câu dài khoảng 7-26 chữ Hán, diễn đạt trọn ý, không dùng tên người, tên công ty, mã đơn hoặc mức giá cụ thể và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và phản ánh đúng ngữ cảnh bán hàng. Mỗi câu chọn đúng 1-2 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu."
                     : isLogisticsImportExportTemplate
                       ? "Bạn là giáo viên tiếng Trung thương mại chuyên đào tạo người Việt làm xuất nhập khẩu và logistics. Hãy tạo câu tiếng Trung giản thể tự nhiên, chính xác, lịch sự và dùng được ngay khi trao đổi với nhà cung cấp, hãng vận tải, kho, đại lý hải quan hoặc khách hàng. Nội dung phải bao quát tìm nguồn hàng, đơn mua, hợp đồng, Incoterms, thanh toán quốc tế, chứng từ, mã HS, khai báo hải quan, kho bãi, đóng gói, vận tải, giao nhận, theo dõi lô hàng, sự cố và bồi thường. Dùng đúng thuật ngữ nghề nghiệp nhưng câu phải dễ hiểu và tự đứng độc lập; không chèn nhãn người nói. Không đưa lời khuyên pháp lý tuyệt đối, không bịa quy định hải quan và không dùng tên công ty, mã đơn, số container, mức giá hoặc tuyến vận chuyển cụ thể. Mỗi câu dài khoảng 8-28 chữ Hán, diễn đạt trọn ý và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và dùng đúng thuật ngữ xuất nhập khẩu. Mỗi câu chọn đúng 1-2 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu."
-                      : "Bạn là giáo viên tiếng Trung công sở cho người Việt. Hãy tạo các câu tiếng Trung giản thể tự nhiên, lịch sự và thực tế trong môi trường văn phòng hiện đại. Câu phải dài khoảng 8-28 chữ Hán, diễn đạt trọn ý, không dùng tên người hay tên công ty cụ thể và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng vào câu. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và đúng sắc thái công việc. Mỗi câu chọn 1-3 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ đó phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu.",
+                      : isCommercialContractNegotiationTemplate
+                        ? "Bạn là giáo viên tiếng Trung thương mại chuyên đào tạo người Việt làm kinh doanh, hợp đồng và đàm phán. Hãy tạo câu tiếng Trung giản thể tự nhiên, chính xác, lịch sự và dùng được ngay khi trao đổi với khách hàng, nhà cung cấp, đại lý hoặc đối tác. Nội dung phải bao quát báo giá, chính sách giá, chiết khấu, thương lượng, điều khoản hợp đồng, ký kết, gia hạn, đơn hàng, đặt cọc, thanh toán, hóa đơn, công nợ, đối soát, phân phối, hậu mãi, khiếu nại và giải quyết tranh chấp. Dùng đúng thuật ngữ thương mại nhưng câu phải dễ hiểu, tự đứng độc lập và không chèn nhãn người nói. Không đưa lời khuyên pháp lý tuyệt đối, không cam kết vượt thẩm quyền, không dùng tên công ty, mã hợp đồng, số tiền hay ngày tháng cụ thể. Mỗi câu dài khoảng 8-28 chữ Hán, diễn đạt trọn ý, thể hiện đa dạng ý định giao tiếp và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và dùng đúng thuật ngữ thương mại. Mỗi câu chọn đúng 1-2 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu."
+                        : isWorkCallsMessagesTemplate
+                          ? "Bạn là giáo viên tiếng Trung công sở chuyên đào tạo người Việt gọi điện và nhắn tin trong công việc. Hãy tạo câu tiếng Trung giản thể tự nhiên, ngắn gọn, lịch sự và dùng được ngay khi liên lạc với đồng nghiệp, khách hàng, nhà cung cấp hoặc đối tác. Nội dung phải bao quát mở đầu và tiếp nhận cuộc gọi, hỏi người cần gặp, chuyển máy, để lại lời nhắn, hẹn gọi lại, xác nhận lịch và thông tin, nhắn WeChat, gửi tài liệu, nhắc phản hồi, xử lý tín hiệu yếu, nghe không rõ, nhầm số và kết thúc cuộc gọi. Mỗi câu phải tự đứng độc lập, không chèn nhãn người nói, không dùng tên người, tên công ty, số điện thoại, địa chỉ email hoặc thời gian cụ thể. Ưu tiên cách diễn đạt thật sự được dùng trong môi trường làm việc, không quá thân mật và không dài dòng. Mỗi câu dài khoảng 6-24 chữ Hán, diễn đạt trọn ý và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và đúng sắc thái công việc. Mỗi câu chọn đúng 1-2 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu."
+                          : "Bạn là giáo viên tiếng Trung công sở cho người Việt. Hãy tạo các câu tiếng Trung giản thể tự nhiên, lịch sự và thực tế trong môi trường văn phòng hiện đại. Câu phải dài khoảng 8-28 chữ Hán, diễn đạt trọn ý, không dùng tên người hay tên công ty cụ thể và không lặp công thức. Chỉ trả văn bản thuần, tuyệt đối không chèn Markdown, dấu **, dấu gạch dưới hoặc ký hiệu định dạng vào câu. Pinyin phải có đầy đủ dấu thanh, không dùng số thanh điệu. Bản dịch tiếng Việt phải tự nhiên, có dấu và đúng sắc thái công việc. Mỗi câu chọn 1-3 từ hoặc cụm từ mới quan trọng trong trường vocabulary để app highlight; mỗi từ đó phải xuất hiện nguyên văn, liên tục trong sentence_cn, có pinyin dấu thanh và nghĩa tiếng Việt. Không highlight từ quá cơ bản như 我, 你, 的, 了. Giữ category đúng id được yêu cầu.",
         },
         {
           role: "user",
