@@ -19,6 +19,7 @@ type DueReviewOptions = {
   deckId: string | null; // null => every deck
   weakOnly: boolean;
   dueCutoff: string;
+  learnAheadCutoff?: string;
 };
 
 export async function fetchDueReviewRows<TRow>(
@@ -65,7 +66,34 @@ export async function fetchDueReviewRows<TRow>(
     .limit(NEW_LIMIT);
 
   const [learned, fresh] = await Promise.all([learnedQuery, newQuery]);
+  let learningAheadRows: unknown[] = [];
+
+  if (
+    options.learnAheadCutoff &&
+    new Date(options.learnAheadCutoff).getTime() >
+      new Date(options.dueCutoff).getTime()
+  ) {
+    const learningAhead = await withDeck(
+      supabase
+        .from(source.table)
+        .select(columns)
+        .gt("review_count", 0)
+        .gte("learning_step", 0)
+        .gt("next_review_at", options.dueCutoff)
+        .lte("next_review_at", options.learnAheadCutoff),
+    )
+      .order("next_review_at", { ascending: true })
+      .limit(LEARNED_LIMIT);
+
+    if (!learningAhead.error) {
+      learningAheadRows = learningAhead.data || [];
+    }
+  }
 
   // Learned cards first; buildStudyQueue re-sorts and caps the new ones.
-  return [...(learned.data || []), ...(fresh.data || [])] as TRow[];
+  return [
+    ...(learned.data || []),
+    ...learningAheadRows,
+    ...(fresh.data || []),
+  ] as TRow[];
 }

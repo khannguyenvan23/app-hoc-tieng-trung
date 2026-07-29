@@ -38,7 +38,7 @@ import {
   countWaitingNewItems,
   getNextPendingStudyAt,
   getNextStudyQueueIndex,
-  isDueForStudy,
+  isAvailableForStudy,
   shouldRequeueInCurrentSession,
 } from "@/lib/study-queue";
 import {
@@ -114,6 +114,12 @@ function dueReviewCutoff() {
   return new Date(Date.now() + 60_000).toISOString();
 }
 
+function learnAheadReviewCutoff(settings: StudySettings) {
+  return new Date(
+    Date.now() + settings.learn_ahead_limit_minutes * 60_000,
+  ).toISOString();
+}
+
 function buildSentenceStudyQueue(
   reviews: DueSentenceReview[],
   remainingNewSentences: number,
@@ -137,19 +143,35 @@ function countWaitingNewSentences(
 function getRestoredSentenceStudyIndex(
   reviews: DueSentenceReview[],
   storageKey: string,
+  learnAheadLimitMinutes: number,
 ) {
   const storedIndex = getStoredReviewIndex(
     reviews,
     storageKey,
     (review) => review.sentence_cards?.id,
   );
-  const nextStudyIndex = getNextStudyQueueIndex(reviews, storedIndex);
+  const nextStudyIndex = getNextStudyQueueIndex(
+    reviews,
+    storedIndex,
+    new Date(),
+    undefined,
+    learnAheadLimitMinutes,
+  );
 
   return nextStudyIndex >= 0 ? nextStudyIndex : storedIndex;
 }
 
-function getPendingSentenceStudyAt(reviews: DueSentenceReview[]) {
-  return getNextStudyQueueIndex(reviews) >= 0
+function getPendingSentenceStudyAt(
+  reviews: DueSentenceReview[],
+  learnAheadLimitMinutes: number,
+) {
+  return getNextStudyQueueIndex(
+    reviews,
+    0,
+    new Date(),
+    undefined,
+    learnAheadLimitMinutes,
+  ) >= 0
     ? null
     : getNextPendingStudyAt(reviews);
 }
@@ -160,6 +182,13 @@ function getSentenceAudioUrl(card: SentenceCard | null | undefined) {
 
 type SentenceAudioData = {
   sentenceAudioUrl: string | null;
+};
+
+type SavedReviewSchedule = {
+  next_review_at?: string;
+  interval_days?: number;
+  ease_factor?: number;
+  learning_step?: number;
 };
 
 export default function StudySentencesPage() {
@@ -189,6 +218,7 @@ export default function StudySentencesPage() {
   });
   const repairingReviewsRef = useRef(false);
   const pendingReviewSavesRef = useRef<Promise<void>[]>([]);
+  const ratingInFlightRef = useRef(false);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [decksLoaded, setDecksLoaded] = useState(!configured);
   const [weakOnly] = useState(() => isWeakStudyRequest());
@@ -264,6 +294,7 @@ export default function StudySentencesPage() {
     null,
   );
   const [repairingReviews, setRepairingReviews] = useState(false);
+  const [savingRating, setSavingRating] = useState(false);
   const [studySettings, setStudySettings] =
     useState<StudySettings>(defaultStudySettings);
   const [settingsLoaded, setSettingsLoaded] = useState(!configured);
@@ -470,6 +501,7 @@ export default function StudySentencesPage() {
         deckId: deckId === allDecksValue ? null : deckId,
         weakOnly,
         dueCutoff: dueReviewCutoff(),
+        learnAheadCutoff: learnAheadReviewCutoff(studySettings),
       },
     );
     setNewSentencesStudiedToday(studiedToday);
@@ -497,10 +529,21 @@ export default function StudySentencesPage() {
       reviewQueue.length,
     );
     setReviews(reviewQueue);
-    setScheduledReloadAt(getPendingSentenceStudyAt(reviewQueue));
+    setScheduledReloadAt(
+      getPendingSentenceStudyAt(
+        reviewQueue,
+        studySettings.learn_ahead_limit_minutes,
+      ),
+    );
     setSessionTotal(sessionProgress.total);
     setSessionAnswered(sessionProgress.answered);
-    setIndex(getRestoredSentenceStudyIndex(reviewQueue, storageKey));
+    setIndex(
+      getRestoredSentenceStudyIndex(
+        reviewQueue,
+        storageKey,
+        studySettings.learn_ahead_limit_minutes,
+      ),
+    );
     setShowAnswer(false);
     setSentenceAnswer("");
     setWritingResult("");
@@ -663,6 +706,7 @@ export default function StudySentencesPage() {
           deckId: selectedDeckId === allDecksValue ? null : selectedDeckId,
           weakOnly,
           dueCutoff: dueReviewCutoff(),
+          learnAheadCutoff: learnAheadReviewCutoff(studySettings),
         },
       );
 
@@ -751,8 +795,19 @@ export default function StudySentencesPage() {
             setSessionTotal(retryQueueProgress.total);
             setSessionAnswered(retryQueueProgress.answered);
             setReviews(retryQueue);
-            setScheduledReloadAt(getPendingSentenceStudyAt(retryQueue));
-            setIndex(getRestoredSentenceStudyIndex(retryQueue, storageKey));
+            setScheduledReloadAt(
+              getPendingSentenceStudyAt(
+                retryQueue,
+                studySettings.learn_ahead_limit_minutes,
+              ),
+            );
+            setIndex(
+              getRestoredSentenceStudyIndex(
+                retryQueue,
+                storageKey,
+                studySettings.learn_ahead_limit_minutes,
+              ),
+            );
             setShowAnswer(false);
             setSentenceAnswer("");
             setWritingResult("");
@@ -797,8 +852,19 @@ export default function StudySentencesPage() {
       setSessionTotal(sessionProgress.total);
       setSessionAnswered(sessionProgress.answered);
       setReviews(reviewQueue);
-      setScheduledReloadAt(getPendingSentenceStudyAt(reviewQueue));
-      setIndex(getRestoredSentenceStudyIndex(reviewQueue, storageKey));
+      setScheduledReloadAt(
+        getPendingSentenceStudyAt(
+          reviewQueue,
+          studySettings.learn_ahead_limit_minutes,
+        ),
+      );
+      setIndex(
+        getRestoredSentenceStudyIndex(
+          reviewQueue,
+          storageKey,
+          studySettings.learn_ahead_limit_minutes,
+        ),
+      );
       setShowAnswer(false);
       setSentenceAnswer("");
       setWritingResult("");
@@ -1133,16 +1199,78 @@ export default function StudySentencesPage() {
     setWritingResult("wrong");
   }
 
-  function queueReviewSave(promise: Promise<Response>, errorMessage: string) {
+  function reconcileSavedReview(
+    reviewId: string,
+    schedule: SavedReviewSchedule,
+  ) {
+    if (
+      !schedule.next_review_at ||
+      typeof schedule.interval_days !== "number" ||
+      typeof schedule.ease_factor !== "number"
+    ) {
+      return;
+    }
+
+    setReviews((currentReviews) => {
+      let changed = false;
+      const nextReviews = currentReviews.map((review) => {
+        if (review.id !== reviewId) {
+          return review;
+        }
+
+        changed = true;
+        return {
+          ...review,
+          next_review_at: schedule.next_review_at!,
+          interval_days: schedule.interval_days!,
+          ease_factor: schedule.ease_factor!,
+          learning_step:
+            typeof schedule.learning_step === "number"
+              ? schedule.learning_step
+              : review.learning_step,
+        };
+      });
+
+      if (changed) {
+        const storageKey = getStudySessionKey(
+          "sentence",
+          selectedDeckId,
+          weakOnly,
+        );
+        saveStoredReviewQueue(storageKey, nextReviews);
+      }
+
+      return nextReviews;
+    });
+  }
+
+  function queueReviewSave(
+    promise: Promise<Response>,
+    errorMessage: string,
+    onSuccess: (schedule: SavedReviewSchedule) => void,
+  ) {
     const trackedPromise = promise
-      .then((response) => {
+      .then(async (response) => {
+        const data = (await response.json().catch(() => null)) as
+          | SavedReviewSchedule
+          | null;
+
         if (!response.ok) {
           throw new Error(errorMessage);
+        }
+
+        if (data) {
+          onSuccess(data);
         }
       })
       .catch((error) => {
         console.error(error);
         alert(errorMessage);
+        reloadReviewsRef.current();
+      })
+      .finally(() => {
+        ratingInFlightRef.current = false;
+        setSavingRating(false);
       });
 
     pendingReviewSavesRef.current.push(trackedPromise);
@@ -1178,10 +1306,12 @@ export default function StudySentencesPage() {
 
   function rate(rating: ReviewRating) {
     const current = reviews[index];
-    if (!current?.sentence_cards) {
+    if (!current?.sentence_cards || ratingInFlightRef.current) {
       return;
     }
 
+    ratingInFlightRef.current = true;
+    setSavingRating(true);
     stopSentenceAudio();
     const wasNewSentence = Number(current.review_count || 0) === 0;
     const optimisticNextReview = getNextReview(
@@ -1209,6 +1339,7 @@ export default function StudySentencesPage() {
         }),
       }),
       "Khong the luu ket qua luyen cau.",
+      (schedule) => reconcileSavedReview(current.id, schedule),
     );
 
     if (wasNewSentence) {
@@ -1252,7 +1383,13 @@ export default function StudySentencesPage() {
       // one left, so the "waiting for the next step" screen shows and the card
       // comes back after its learning step instead of ending the session.
       const requeuedReviews = [...remainingReviews, reviewedCurrent];
-      const nextStudyIndex = getNextStudyQueueIndex(requeuedReviews, index);
+      const nextStudyIndex = getNextStudyQueueIndex(
+        requeuedReviews,
+        index,
+        new Date(),
+        undefined,
+        studySettings.learn_ahead_limit_minutes,
+      );
       const nextIndex =
         nextStudyIndex >= 0
           ? nextStudyIndex
@@ -1304,7 +1441,13 @@ export default function StudySentencesPage() {
         void loadReviews();
       });
     } else {
-      const nextStudyIndex = getNextStudyQueueIndex(remainingReviews, index);
+      const nextStudyIndex = getNextStudyQueueIndex(
+        remainingReviews,
+        index,
+        new Date(),
+        undefined,
+        studySettings.learn_ahead_limit_minutes,
+      );
       const nextIndex =
         nextStudyIndex >= 0
           ? nextStudyIndex
@@ -1342,7 +1485,13 @@ export default function StudySentencesPage() {
       }
 
       if (reviews.length > 0) {
-        const nextStudyIndex = getNextStudyQueueIndex(reviews, index);
+        const nextStudyIndex = getNextStudyQueueIndex(
+          reviews,
+          index,
+          new Date(),
+          undefined,
+          studySettings.learn_ahead_limit_minutes,
+        );
         if (nextStudyIndex >= 0) {
           setScheduledReloadAt(null);
           setIndex(nextStudyIndex);
@@ -1362,7 +1511,14 @@ export default function StudySentencesPage() {
       window.clearTimeout(immediate);
       window.clearInterval(interval);
     };
-  }, [scheduledReloadAt, reviews, index, loading, repairingReviews]);
+  }, [
+    scheduledReloadAt,
+    reviews,
+    index,
+    loading,
+    repairingReviews,
+    studySettings.learn_ahead_limit_minutes,
+  ]);
 
   useEffect(() => {
     keyboardActionsRef.current = {
@@ -1385,7 +1541,12 @@ export default function StudySentencesPage() {
 
   const queuedCurrent = reviews[index];
   const current =
-    queuedCurrent && isDueForStudy(queuedCurrent.next_review_at)
+    queuedCurrent &&
+    isAvailableForStudy(
+      queuedCurrent,
+      new Date(),
+      studySettings.learn_ahead_limit_minutes,
+    )
       ? queuedCurrent
       : undefined;
   const card = current?.sentence_cards;
@@ -1720,6 +1881,7 @@ export default function StudySentencesPage() {
                   ) : null}
 
                   <RatingButtons
+                    disabled={savingRating}
                     onRate={rate}
                     review={current}
                     settings={studySettings}

@@ -15,6 +15,38 @@ type StoredStudyProgress = {
 
 const maxStoredQueueAgeMs = 12 * 60 * 60 * 1000;
 
+export function mergeStoredReviewQueue<TReview extends ReviewLike>(
+  reviews: TReview[],
+  storedReviews: TReview[],
+  getItemId?: (review: TReview) => string | null | undefined,
+) {
+  const freshByReviewId = new Map(reviews.map((review) => [review.id, review]));
+  const freshByItemId = new Map(
+    getItemId
+      ? reviews.flatMap((review) => {
+          const itemId = getItemId(review);
+          return itemId ? [[itemId, review] as const] : [];
+        })
+      : [],
+  );
+  const usedReviewIds = new Set<string>();
+  const mergedStoredReviews = storedReviews.map((storedReview) => {
+    const freshReview =
+      freshByReviewId.get(storedReview.id) ||
+      (getItemId
+        ? freshByItemId.get(getItemId(storedReview) || "")
+        : undefined);
+    const review = freshReview || storedReview;
+    usedReviewIds.add(review.id);
+    return review;
+  });
+
+  return [
+    ...mergedStoredReviews,
+    ...reviews.filter((review) => !usedReviewIds.has(review.id)),
+  ];
+}
+
 export function getStudySessionKey(
   kind: "word" | "sentence",
   deckId: string,
@@ -122,30 +154,17 @@ export function restoreStoredReviewQueue<TReview extends ReviewLike>(
       ? storedQueue.reviews.filter(shouldKeepStoredReview)
       : storedQueue.reviews;
 
-    const storedReviewIds = new Set(
-      storedReviews.map((review) => review.id),
+    const mergedReviews = mergeStoredReviewQueue(
+      reviews,
+      storedReviews,
+      getItemId,
     );
-    const storedItemIds = new Set(
-      getItemId
-        ? storedReviews
-            .map((review) => getItemId(review))
-            .filter(Boolean)
-        : [],
-    );
-    const freshReviews = reviews.filter((review) => {
-      if (storedReviewIds.has(review.id)) {
-        return false;
-      }
-
-      const itemId = getItemId?.(review);
-      return !itemId || !storedItemIds.has(itemId);
-    });
 
     if (storedReviews.length !== storedQueue.reviews.length) {
-      saveStoredReviewQueue(storageKey, storedReviews);
+      saveStoredReviewQueue(storageKey, mergedReviews);
     }
 
-    return [...storedReviews, ...freshReviews];
+    return mergedReviews;
   } catch {
     window.localStorage.removeItem(`${storageKey}:queue`);
     return reviews;

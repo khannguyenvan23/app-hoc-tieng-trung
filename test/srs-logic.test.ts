@@ -8,11 +8,13 @@ import {
 import { getReviewQueueStats } from "../src/lib/review-queue-stats.ts";
 import { getImmediateDueAt } from "../src/lib/immediate-due.ts";
 import { defaultStudySettings } from "../src/lib/study-settings.ts";
+import { mergeStoredReviewQueue } from "../src/lib/study-session.ts";
 import {
   buildStudyQueue,
   countWaitingNewItems,
   getNextPendingStudyAt,
   getNextStudyQueueIndex,
+  isAvailableForStudy,
   shouldRequeueInCurrentSession,
   type StudyQueueReview,
 } from "../src/lib/study-queue.ts";
@@ -604,4 +606,86 @@ test("a short learning step waits its interval instead of surfacing early", () =
     next_review_at: new Date(baseNow.getTime() - 60_000).toISOString(),
   };
   assert.equal(getNextStudyQueueIndex([soonLearning, dueNow], 0, baseNow), 1);
+});
+
+test("learn ahead only surfaces learning cards after every due card", () => {
+  const learningA = {
+    ...makeReview(1, 1),
+    interval_days: 0,
+    learning_step: 0,
+    next_review_at: addMinutesIso(baseNow, 10),
+  };
+  const dueB = {
+    ...makeReview(2, 0),
+    next_review_at: addMinutesIso(baseNow, -1),
+  };
+  const dueC = {
+    ...makeReview(3, 0),
+    next_review_at: addMinutesIso(baseNow, -1),
+  };
+  const dueD = {
+    ...makeReview(4, 0),
+    next_review_at: addMinutesIso(baseNow, -1),
+  };
+
+  const queue = [dueB, dueC, dueD, learningA];
+  assert.equal(getNextStudyQueueIndex(queue, 0, baseNow, 0, 20), 0);
+  assert.equal(getNextStudyQueueIndex(queue.slice(1), 0, baseNow, 0, 20), 0);
+  assert.equal(getNextStudyQueueIndex(queue.slice(2), 0, baseNow, 0, 20), 0);
+  assert.equal(getNextStudyQueueIndex([learningA], 0, baseNow, 0, 20), 0);
+});
+
+test("learn ahead zero waits exactly and never pulls review cards forward", () => {
+  const learningSoon = {
+    ...makeReview(1, 1),
+    interval_days: 0,
+    learning_step: 0,
+    next_review_at: addMinutesIso(baseNow, 10),
+  };
+  const reviewTomorrow = {
+    ...makeReview(2, 10),
+    interval_days: 1,
+    learning_step: -1,
+    next_review_at: addDaysIso(baseNow, 1),
+  };
+
+  assert.equal(getNextStudyQueueIndex([learningSoon], 0, baseNow, 0, 0), -1);
+  assert.equal(
+    getNextStudyQueueIndex([reviewTomorrow], 0, baseNow, 0, 1440),
+    -1,
+  );
+  assert.equal(isAvailableForStudy(learningSoon, baseNow, 20, 0), true);
+  assert.equal(isAvailableForStudy(reviewTomorrow, baseNow, 1440, 0), false);
+});
+
+test("restoring a queue keeps its order but fresh server schedules win", () => {
+  const storedA = {
+    ...makeReview(1, 1),
+    next_review_at: addMinutesIso(baseNow, 3),
+  };
+  const storedB = {
+    ...makeReview(2, 1),
+    next_review_at: addMinutesIso(baseNow, 10),
+  };
+  const freshA = {
+    ...storedA,
+    next_review_at: addDaysIso(baseNow, 1),
+  };
+  const freshB = {
+    ...storedB,
+    next_review_at: addMinutesIso(baseNow, 6),
+  };
+  const freshC = makeReview(3, 0);
+
+  const merged = mergeStoredReviewQueue(
+    [freshA, freshB, freshC],
+    [storedB, storedA],
+  );
+
+  assert.deepEqual(
+    merged.map((review) => review.id),
+    [storedB.id, storedA.id, freshC.id],
+  );
+  assert.equal(merged[0].next_review_at, freshB.next_review_at);
+  assert.equal(merged[1].next_review_at, freshA.next_review_at);
 });

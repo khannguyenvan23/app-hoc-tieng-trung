@@ -5,6 +5,7 @@ export type InsertionOrder = (typeof insertionOrders)[number];
 export type StudySettings = {
   daily_new_card_limit: number;
   daily_new_sentence_limit: number;
+  learn_ahead_limit_minutes: number;
   learning_steps: string;
   graduating_interval_days: number;
   easy_interval_days: number;
@@ -24,6 +25,7 @@ export type StudySettings = {
 export const defaultStudySettings: StudySettings = {
   daily_new_card_limit: 10,
   daily_new_sentence_limit: 5,
+  learn_ahead_limit_minutes: 20,
   learning_steps: "10m",
   graduating_interval_days: 1,
   easy_interval_days: 4,
@@ -129,6 +131,12 @@ export function normalizeStudySettings(value: unknown): StudySettings {
       0,
       100,
       defaultStudySettings.daily_new_sentence_limit,
+    ),
+    learn_ahead_limit_minutes: clampInteger(
+      source.learn_ahead_limit_minutes,
+      0,
+      1440,
+      defaultStudySettings.learn_ahead_limit_minutes,
     ),
     learning_steps: normalizeLearningSteps(source.learning_steps),
     graduating_interval_days: clampInteger(

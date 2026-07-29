@@ -2,6 +2,8 @@ import type { StudySettings } from "./study-settings";
 
 export type StudyQueueReview = {
   review_count: number | null;
+  interval_days?: number | null;
+  learning_step?: number | null;
   next_review_at: string;
 };
 
@@ -80,11 +82,49 @@ export function isDueForStudy(
   return new Date(nextReviewAt).getTime() <= now.getTime() + graceMs;
 }
 
+export function isLearningOrRelearning<TReview extends StudyQueueReview>(
+  review: TReview,
+) {
+  if (Number(review.review_count || 0) <= 0) {
+    return false;
+  }
+
+  if (review.learning_step !== null && review.learning_step !== undefined) {
+    return Number(review.learning_step) >= 0;
+  }
+
+  return Number(review.interval_days || 0) <= 0;
+}
+
+export function isAvailableForStudy<TReview extends StudyQueueReview>(
+  review: TReview,
+  now = new Date(),
+  learnAheadLimitMinutes = 0,
+  graceMs = DEFAULT_DUE_GRACE_MS,
+) {
+  if (isDueForStudy(review.next_review_at, now, graceMs)) {
+    return true;
+  }
+
+  if (
+    learnAheadLimitMinutes <= 0 ||
+    !isLearningOrRelearning(review)
+  ) {
+    return false;
+  }
+
+  return (
+    new Date(review.next_review_at).getTime() <=
+    now.getTime() + learnAheadLimitMinutes * 60_000
+  );
+}
+
 export function getNextStudyQueueIndex<TReview extends StudyQueueReview>(
   reviews: TReview[],
   preferredIndex = 0,
   now = new Date(),
   graceMs = DEFAULT_DUE_GRACE_MS,
+  learnAheadLimitMinutes = 0,
 ) {
   if (reviews.length === 0) {
     return -1;
@@ -97,6 +137,23 @@ export function getNextStudyQueueIndex<TReview extends StudyQueueReview>(
 
     if (isDueForStudy(reviews[index].next_review_at, now, graceMs)) {
       return index;
+    }
+  }
+
+  if (learnAheadLimitMinutes > 0) {
+    for (let offset = 0; offset < reviews.length; offset += 1) {
+      const index = (startIndex + offset) % reviews.length;
+
+      if (
+        isAvailableForStudy(
+          reviews[index],
+          now,
+          learnAheadLimitMinutes,
+          graceMs,
+        )
+      ) {
+        return index;
+      }
     }
   }
 

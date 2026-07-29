@@ -18,6 +18,7 @@ type NumberSetting = {
     StudySettings,
     | "daily_new_card_limit"
     | "daily_new_sentence_limit"
+    | "learn_ahead_limit_minutes"
     | "graduating_interval_days"
     | "easy_interval_days"
     | "hard_interval_multiplier"
@@ -54,6 +55,15 @@ const dailySettings: NumberSetting[] = [
     suffix: "câu",
   },
 ];
+
+const learnAheadSetting: NumberSetting = {
+  key: "learn_ahead_limit_minutes",
+  label: "Learn ahead limit",
+  min: 0,
+  max: 1440,
+  step: 1,
+  suffix: "phút",
+};
 
 const newCardSettings: NumberSetting[] = [
   {
@@ -384,6 +394,35 @@ export default function OptionsPage() {
                   placeholder="10m hoặc 3m 8m"
                   value={settings.learning_steps}
                 />
+              </label>
+
+              <label className="block text-sm font-medium">
+                {learnAheadSetting.label}
+                <div className="mt-2 flex overflow-hidden rounded-md border border-zinc-300 bg-white focus-within:border-teal-700 dark:border-white/15 dark:bg-[#171a19]">
+                  <input
+                    className="min-h-10 w-full px-3 py-2 outline-none"
+                    disabled={loading}
+                    max={learnAheadSetting.max}
+                    min={learnAheadSetting.min}
+                    onBlur={() => commitNumberSetting(learnAheadSetting)}
+                    onChange={(event) =>
+                      updateNumberSetting(learnAheadSetting, event.target.value)
+                    }
+                    step={learnAheadSetting.step}
+                    type="number"
+                    value={
+                      drafts[learnAheadSetting.key] ??
+                      String(settings[learnAheadSetting.key])
+                    }
+                  />
+                  <span className="flex min-w-16 items-center justify-center border-l border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-400">
+                    {learnAheadSetting.suffix}
+                  </span>
+                </div>
+                <span className="mt-1 block text-xs font-normal text-zinc-500 dark:text-zinc-400">
+                  Khi hết thẻ đang đến hạn, cho phép học sớm thẻ đang học trong
+                  khoảng này. Đặt 0 để chờ đúng giờ.
+                </span>
               </label>
 
               <div className="grid gap-4 sm:grid-cols-2">

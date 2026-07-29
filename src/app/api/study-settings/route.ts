@@ -12,6 +12,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 const updateSchema = z.object({
   daily_new_card_limit: z.number().int().min(0).max(100),
   daily_new_sentence_limit: z.number().int().min(0).max(100),
+  learn_ahead_limit_minutes: z.number().int().min(0).max(1440),
   learning_steps: z
     .string()
     .trim()
