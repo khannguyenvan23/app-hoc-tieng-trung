@@ -67,12 +67,10 @@ export function shouldRequeueInCurrentSession(
   return minutesUntilDue < 23 * 60;
 }
 
-// Small default grace only absorbs client/server clock skew. The study pages
-// pass LEARN_AHEAD_GRACE_MS instead, so a learning card whose step is only a
-// few minutes away is surfaced right away rather than blocking on the "waiting
-// for the next step" screen — same idea as Anki's learn-ahead limit.
+// A small grace that only absorbs client/server clock skew — a card is due
+// when its time has (almost) arrived. Short steps therefore wait their full
+// interval; the study pages show a live countdown while waiting.
 const DEFAULT_DUE_GRACE_MS = 60_000;
-export const LEARN_AHEAD_GRACE_MS = 20 * 60_000;
 
 export function isDueForStudy(
   nextReviewAt: string,

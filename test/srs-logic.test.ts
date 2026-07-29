@@ -13,7 +13,6 @@ import {
   countWaitingNewItems,
   getNextPendingStudyAt,
   getNextStudyQueueIndex,
-  LEARN_AHEAD_GRACE_MS,
   shouldRequeueInCurrentSession,
   type StudyQueueReview,
 } from "../src/lib/study-queue.ts";
@@ -482,36 +481,24 @@ test("study queue skips learning items until their scheduled time", () => {
   );
 });
 
-test("learn-ahead grace surfaces a card due within minutes instead of waiting", () => {
+test("a short learning step waits its interval instead of surfacing early", () => {
+  // A card whose step is a few minutes out is not "due" yet: the study page
+  // shows a countdown and reveals it when the time actually arrives.
   const soonLearning = {
     ...makeReview(1, 1),
     next_review_at: new Date(baseNow.getTime() + 3 * 60_000).toISOString(),
   };
 
-  // Strict grace (the default) still treats a 3-minute step as not-yet-due.
   assert.equal(getNextStudyQueueIndex([soonLearning], 0, baseNow), -1);
-
-  // Learn-ahead grace surfaces it right away, so no idle waiting screen.
   assert.equal(
-    getNextStudyQueueIndex([soonLearning], 0, baseNow, LEARN_AHEAD_GRACE_MS),
-    0,
-  );
-  assert.equal(
-    getNextPendingStudyAt([soonLearning], baseNow, LEARN_AHEAD_GRACE_MS),
-    null,
+    getNextPendingStudyAt([soonLearning], baseNow),
+    soonLearning.next_review_at,
   );
 
-  // A card an hour out is beyond the window, so the waiting screen still shows.
-  const farLearning = {
-    ...makeReview(2, 1),
-    next_review_at: new Date(baseNow.getTime() + 60 * 60_000).toISOString(),
+  // A genuinely-due card is still picked ahead of the waiting one.
+  const dueNow = {
+    ...makeReview(2, 0),
+    next_review_at: new Date(baseNow.getTime() - 60_000).toISOString(),
   };
-  assert.equal(
-    getNextStudyQueueIndex([farLearning], 0, baseNow, LEARN_AHEAD_GRACE_MS),
-    -1,
-  );
-  assert.equal(
-    getNextPendingStudyAt([farLearning], baseNow, LEARN_AHEAD_GRACE_MS),
-    farLearning.next_review_at,
-  );
+  assert.equal(getNextStudyQueueIndex([soonLearning, dueNow], 0, baseNow), 1);
 });

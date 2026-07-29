@@ -253,6 +253,14 @@ export function addDays(date: Date, days: number) {
   return nextDate;
 }
 
+// A live "M:SS" label for the wait-for-next-card countdown.
+export function formatCountdownLabel(ms: number) {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
 export function formatMinutesAsViDuration(minutes: number) {
   if (minutes < 60) {
     return `${minutes} phút`;

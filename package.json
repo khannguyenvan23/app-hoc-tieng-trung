@@ -14,6 +14,8 @@
     "repair:hsk2": "tsx scripts/repair-hsk-template.ts --slug=hsk2-co-ban",
     "repair:hsk3": "tsx scripts/repair-hsk-template.ts --slug=hsk3-co-ban --repair-pinyin",
     "repair:hsk4": "tsx scripts/repair-hsk-template.ts --slug=hsk4-co-ban",
+    "repair:hsk5": "tsx scripts/repair-hsk-template.ts --slug=hsk5-co-ban",
+    "repair:hsk6": "tsx scripts/repair-hsk-template.ts --slug=hsk6-co-ban",
     "examples:hsk6": "tsx scripts/generate-hsk6-examples.ts",
     "template:travel": "tsx scripts/generate-travel-template.ts",
     "template:factory": "tsx scripts/generate-factory-template.ts",

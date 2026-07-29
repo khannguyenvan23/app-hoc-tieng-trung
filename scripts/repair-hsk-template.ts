@@ -1,9 +1,10 @@
-import { spawnSync } from "node:child_process";
+import { execFile, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { promisify } from "node:util";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   createOrReplaceTemplateSpeech,
@@ -35,6 +36,44 @@ const templateConfigs = {
     migration:
       "supabase/migrations/059_hsk4_complete_pinyin_audio.sql",
   },
+  "hsk5-co-ban": {
+    name: "HSK5 cơ bản",
+    expectedCardCount: 1300,
+    migration:
+      "supabase/migrations/060_hsk5_complete_examples_pinyin_audio.sql",
+    migrationChunkSize: 200,
+    migrationParts: [
+      "supabase/migrations/060_hsk5_complete_examples_pinyin_audio_part_01.sql",
+      "supabase/migrations/061_hsk5_complete_examples_pinyin_audio_part_02.sql",
+      "supabase/migrations/062_hsk5_complete_examples_pinyin_audio_part_03.sql",
+      "supabase/migrations/063_hsk5_complete_examples_pinyin_audio_part_04.sql",
+      "supabase/migrations/064_hsk5_complete_examples_pinyin_audio_part_05.sql",
+      "supabase/migrations/065_hsk5_complete_examples_pinyin_audio_part_06.sql",
+      "supabase/migrations/066_hsk5_complete_examples_pinyin_audio_part_07.sql",
+    ],
+  },
+  "hsk6-co-ban": {
+    name: "HSK6 cơ bản",
+    expectedCardCount: 2500,
+    migration:
+      "supabase/migrations/067_hsk6_complete_examples_pinyin_audio.sql",
+    migrationChunkSize: 200,
+    migrationParts: [
+      "supabase/migrations/067_hsk6_complete_examples_pinyin_audio_part_01.sql",
+      "supabase/migrations/068_hsk6_complete_examples_pinyin_audio_part_02.sql",
+      "supabase/migrations/069_hsk6_complete_examples_pinyin_audio_part_03.sql",
+      "supabase/migrations/070_hsk6_complete_examples_pinyin_audio_part_04.sql",
+      "supabase/migrations/071_hsk6_complete_examples_pinyin_audio_part_05.sql",
+      "supabase/migrations/072_hsk6_complete_examples_pinyin_audio_part_06.sql",
+      "supabase/migrations/073_hsk6_complete_examples_pinyin_audio_part_07.sql",
+      "supabase/migrations/074_hsk6_complete_examples_pinyin_audio_part_08.sql",
+      "supabase/migrations/075_hsk6_complete_examples_pinyin_audio_part_09.sql",
+      "supabase/migrations/076_hsk6_complete_examples_pinyin_audio_part_10.sql",
+      "supabase/migrations/077_hsk6_complete_examples_pinyin_audio_part_11.sql",
+      "supabase/migrations/078_hsk6_complete_examples_pinyin_audio_part_12.sql",
+      "supabase/migrations/079_hsk6_complete_examples_pinyin_audio_part_13.sql",
+    ],
+  },
 } as const;
 
 const requestedSlug =
@@ -53,6 +92,7 @@ const EXPECTED_CARD_COUNT = templateConfig.expectedCardCount;
 const AUDIO_BUCKET = "card-audio";
 const EDGE_TTS_VOICE = "zh-CN-XiaoxiaoNeural";
 const OUTPUT_PATH = resolve(process.cwd(), templateConfig.migration);
+const execFileAsync = promisify(execFile);
 
 type HskCard = {
   id: string;
@@ -66,6 +106,8 @@ type HskCard = {
   sentence_audio_url: string | null;
   position: number;
   original_example_cn: string;
+  original_meaning_vi: string;
+  original_pinyin: string;
 };
 
 type RepairedCard = HskCard & {
@@ -78,13 +120,30 @@ let openAiTtsUnavailable = process.argv.includes("--edge-tts");
 const useGoogleTts = process.argv.includes("--google-tts");
 const rebuildWithOpenAi = process.argv.includes("--openai-rebuild");
 const repairSentencePinyin = process.argv.includes("--repair-pinyin");
+const requestedConcurrency = Number(
+  process.argv
+    .find((argument) => argument.startsWith("--concurrency="))
+    ?.slice("--concurrency=".length) || "1",
+);
+const repairConcurrency = Number.isInteger(requestedConcurrency)
+  ? Math.min(Math.max(requestedConcurrency, 1), 4)
+  : 1;
 
 const exampleCorrections: Partial<
   Record<
     keyof typeof templateConfigs,
     Record<
       string,
-      Pick<HskCard, "example_cn" | "example_pinyin" | "example_vi">
+      Partial<
+        Pick<
+          HskCard,
+          | "pinyin"
+          | "meaning_vi"
+          | "example_cn"
+          | "example_pinyin"
+          | "example_vi"
+        >
+      >
     >
   >
 > = {
@@ -128,6 +187,25 @@ const exampleCorrections: Partial<
       example_cn: "教室里有很多学生。",
       example_pinyin: "Jiàoshì lǐ yǒu hěn duō xuésheng.",
       example_vi: "Trong lớp học có rất nhiều học sinh.",
+    },
+  },
+  "hsk5-co-ban": {
+    与其: {
+      meaning_vi: "thay vì; thà... còn hơn",
+    },
+    身份: {
+      example_cn: "他的身份已经得到确认。",
+      example_pinyin: "Tā de shēnfèn yǐjīng dédào quèrèn.",
+      example_vi: "Danh tính của anh ấy đã được xác nhận.",
+    },
+  },
+  "hsk6-co-ban": {
+    "喂（动词）": {
+      pinyin: "wèi",
+      meaning_vi: "cho ăn; nuôi",
+      example_cn: "妈妈每天按时喂小猫。",
+      example_pinyin: "Māma měitiān ànshí wèi xiǎomāo.",
+      example_vi: "Mẹ cho mèo con ăn đúng giờ mỗi ngày.",
     },
   },
 };
@@ -294,7 +372,7 @@ async function createEdgeTemplateSpeech(
   const outputPath = join(temporaryDirectory, "speech.mp3");
 
   try {
-    const result = spawnSync(
+    await execFileAsync(
       "edge-tts",
       [
         "--voice",
@@ -311,10 +389,8 @@ async function createEdgeTemplateSpeech(
       },
     );
 
-    if (result.status !== 0 || !existsSync(outputPath)) {
-      throw new Error(
-        `Edge TTS không tạo được audio: ${result.stderr || result.stdout}`,
-      );
+    if (!existsSync(outputPath)) {
+      throw new Error("Edge TTS không tạo được file audio.");
     }
 
     const supabase = createSupabaseAdminClient();
@@ -434,7 +510,11 @@ function buildValues(cards: RepairedCard[]) {
         `    (${[
           card.chinese,
           card.original_example_cn,
+          card.original_meaning_vi,
+          card.original_pinyin,
           card.example_cn,
+          card.meaning_vi,
+          card.pinyin,
           card.repaired_example_pinyin,
           card.example_vi,
           card.repaired_word_audio_url,
@@ -450,13 +530,17 @@ function buildMigration(cards: RepairedCard[]) {
   const values = buildValues(cards);
 
   return `-- Complete ${TEMPLATE_NAME} with sentence pinyin and cached audio.
--- Existing user copies are refreshed only when their Chinese example still matches
--- the template example, so user-edited content is left untouched.
+-- Existing user copies are refreshed when their Chinese example still matches
+-- the template or was missing, so completed user-edited content is left untouched.
 
 with repaired_hsk (
   chinese,
   original_example_cn,
+  original_meaning_vi,
+  original_pinyin,
   example_cn,
+  meaning_vi,
+  pinyin,
   example_pinyin,
   example_vi,
   word_audio_url,
@@ -467,6 +551,8 @@ ${values}
 )
 update public.template_cards as card
 set
+  pinyin = repaired.pinyin,
+  meaning_vi = repaired.meaning_vi,
   example_cn = repaired.example_cn,
   example_pinyin = repaired.example_pinyin,
   example_vi = repaired.example_vi,
@@ -481,7 +567,11 @@ where card.template_deck_id = deck.id
 with repaired_hsk (
   chinese,
   original_example_cn,
+  original_meaning_vi,
+  original_pinyin,
   example_cn,
+  meaning_vi,
+  pinyin,
   example_pinyin,
   example_vi,
   word_audio_url,
@@ -492,6 +582,14 @@ ${values}
 )
 update public.cards as card
 set
+  pinyin = case
+    when card.pinyin = repaired.original_pinyin then repaired.pinyin
+    else card.pinyin
+  end,
+  meaning_vi = case
+    when card.meaning_vi = repaired.original_meaning_vi then repaired.meaning_vi
+    else card.meaning_vi
+  end,
   example_cn = repaired.example_cn,
   example_pinyin = repaired.example_pinyin,
   example_vi = repaired.example_vi,
@@ -509,7 +607,10 @@ where card.deck_id = deck.id
     )
   )
   and card.chinese = repaired.chinese
-  and card.example_cn = repaired.original_example_cn;
+  and (
+    card.example_cn is not distinct from repaired.original_example_cn
+    or card.example_cn is null
+  );
 `;
 }
 
@@ -568,7 +669,7 @@ async function updateExistingUserCopies(
   let updatedCount = 0;
 
   for (const card of cards) {
-    const { data, error } = await supabase
+    let updateQuery = supabase
       .from("cards")
       .update({
         example_cn: card.example_cn,
@@ -578,15 +679,85 @@ async function updateExistingUserCopies(
         sentence_audio_url: card.repaired_sentence_audio_url,
       })
       .in("deck_id", deckIds)
-      .eq("chinese", card.chinese)
-      .eq("example_cn", card.original_example_cn)
-      .select("id");
+      .eq("chinese", card.chinese);
+
+    updateQuery =
+      card.original_example_cn == null
+        ? updateQuery.is("example_cn", null)
+        : updateQuery.eq("example_cn", card.original_example_cn);
+
+    const { data, error } = await updateQuery.select("id");
 
     if (error) {
       throw error;
     }
 
     updatedCount += data?.length || 0;
+
+    if (card.meaning_vi !== card.original_meaning_vi) {
+      const { error: meaningError } = await supabase
+        .from("cards")
+        .update({ meaning_vi: card.meaning_vi })
+        .in("deck_id", deckIds)
+        .eq("chinese", card.chinese)
+        .eq("meaning_vi", card.original_meaning_vi);
+
+      if (meaningError) {
+        throw meaningError;
+      }
+    }
+
+    if (card.pinyin !== card.original_pinyin) {
+      const { error: pinyinError } = await supabase
+        .from("cards")
+        .update({ pinyin: card.pinyin })
+        .in("deck_id", deckIds)
+        .eq("chinese", card.chinese)
+        .eq("pinyin", card.original_pinyin);
+
+      if (pinyinError) {
+        throw pinyinError;
+      }
+    }
+  }
+
+  const { data: incompleteCopies, error: incompleteCopyError } = await supabase
+    .from("cards")
+    .select("id, chinese")
+    .in("deck_id", deckIds)
+    .is("example_cn", null);
+
+  if (incompleteCopyError) {
+    throw incompleteCopyError;
+  }
+
+  const repairedByChinese = new Map(cards.map((card) => [card.chinese, card]));
+
+  for (const incompleteCopy of incompleteCopies || []) {
+    const repaired = repairedByChinese.get(incompleteCopy.chinese);
+
+    if (!repaired) {
+      continue;
+    }
+
+    const { error } = await supabase
+      .from("cards")
+      .update({
+        pinyin: repaired.pinyin,
+        meaning_vi: repaired.meaning_vi,
+        example_cn: repaired.example_cn,
+        example_pinyin: repaired.repaired_example_pinyin,
+        example_vi: repaired.example_vi,
+        word_audio_url: repaired.repaired_word_audio_url,
+        sentence_audio_url: repaired.repaired_sentence_audio_url,
+      })
+      .eq("id", incompleteCopy.id);
+
+    if (error) {
+      throw error;
+    }
+
+    updatedCount += 1;
   }
 
   return updatedCount;
@@ -606,26 +777,40 @@ async function main() {
     throw deckError;
   }
 
-  const { data, error: cardError } = await supabase
-    .from("template_cards")
-    .select(
-      "id, chinese, pinyin, meaning_vi, example_cn, example_pinyin, example_vi, word_audio_url, sentence_audio_url, position",
-    )
-    .eq("template_deck_id", templateDeck.id)
-    .order("position", { ascending: true });
+  const data: Omit<
+      HskCard,
+      "original_example_cn" | "original_meaning_vi" | "original_pinyin"
+  >[] = [];
 
-  if (cardError) {
-    throw cardError;
+  for (let from = 0; ; from += 1000) {
+    const { data: page, error: cardError } = await supabase
+      .from("template_cards")
+      .select(
+        "id, chinese, pinyin, meaning_vi, example_cn, example_pinyin, example_vi, word_audio_url, sentence_audio_url, position",
+      )
+      .eq("template_deck_id", templateDeck.id)
+      .order("position", { ascending: true })
+      .range(from, from + 999);
+
+    if (cardError) {
+      throw cardError;
+    }
+
+    data.push(...(page || []));
+
+    if (!page || page.length < 1000) {
+      break;
+    }
   }
 
   const corrections = exampleCorrections[TEMPLATE_SLUG] || {};
-  const cards = ((data || []) as Omit<HskCard, "original_example_cn">[]).map(
-    (card) => ({
-      ...card,
-      original_example_cn: card.example_cn,
-      ...corrections[card.chinese],
-    }),
-  );
+  const cards = data.map((card) => ({
+    ...card,
+    original_example_cn: card.example_cn,
+    original_meaning_vi: card.meaning_vi,
+    original_pinyin: card.pinyin,
+    ...corrections[card.chinese],
+  }));
   validateCards(cards);
 
   const repairedPinyin = repairSentencePinyin
@@ -637,9 +822,9 @@ async function main() {
       ? `[pinyin] Đang chuẩn hóa ${cards.length} câu ${TEMPLATE_NAME}...`
       : `[pinyin] Giữ nguyên ${cards.length} câu pinyin đã có dấu.`,
   );
-  const repairedCards: RepairedCard[] = [];
+  const repairedCards = new Array<RepairedCard>(cards.length);
 
-  for (let index = 0; index < cards.length; index += 1) {
+  async function repairCard(index: number) {
     const card = cards[index];
     const examplePinyin = repairedPinyin[index];
 
@@ -648,10 +833,11 @@ async function main() {
     }
 
     console.log(`[audio ${index + 1}/${cards.length}] ${card.chinese}`);
+    const spokenWord = card.chinese.replace(/[（(].*$/, "").trim();
     const [wordAudioUrl, sentenceAudioUrl] = await Promise.all([
       rebuildWithOpenAi
-        ? createTemplateSpeech("word", card.chinese)
-        : card.word_audio_url || createTemplateSpeech("word", card.chinese),
+        ? createTemplateSpeech("word", spokenWord)
+        : card.word_audio_url || createTemplateSpeech("word", spokenWord),
       rebuildWithOpenAi
         ? createTemplateSpeech("sentence", card.example_cn)
         : card.sentence_audio_url ||
@@ -665,6 +851,8 @@ async function main() {
     const { error: updateError } = await supabase
       .from("template_cards")
       .update({
+        pinyin: card.pinyin,
+        meaning_vi: card.meaning_vi,
         example_cn: card.example_cn,
         example_pinyin: examplePinyin,
         example_vi: card.example_vi,
@@ -677,13 +865,26 @@ async function main() {
       throw updateError;
     }
 
-    repairedCards.push({
+    repairedCards[index] = {
       ...card,
       repaired_example_pinyin: examplePinyin,
       repaired_word_audio_url: wordAudioUrl,
       repaired_sentence_audio_url: sentenceAudioUrl,
-    });
+    };
   }
+
+  console.log(`[audio] Xử lý đồng thời ${repairConcurrency} thẻ.`);
+  await Promise.all(
+    Array.from({ length: repairConcurrency }, async (_, workerIndex) => {
+      for (
+        let index = workerIndex;
+        index < cards.length;
+        index += repairConcurrency
+      ) {
+        await repairCard(index);
+      }
+    }),
+  );
 
   const { data: copiedDecks, error: copiedDeckError } = await supabase
     .from("decks")
@@ -716,11 +917,33 @@ async function main() {
     copiedDeckIds,
   );
 
-  writeFileSync(OUTPUT_PATH, buildMigration(repairedCards), "utf8");
+  const migrationPaths =
+    "migrationParts" in templateConfig
+      ? templateConfig.migrationParts.map((path) => resolve(process.cwd(), path))
+      : [OUTPUT_PATH];
+  const migrationChunkSize =
+    "migrationChunkSize" in templateConfig
+      ? templateConfig.migrationChunkSize
+      : repairedCards.length;
+
+  if (migrationPaths.length > 1 && existsSync(OUTPUT_PATH)) {
+    unlinkSync(OUTPUT_PATH);
+  }
+
+  migrationPaths.forEach((path, index) => {
+    const chunk = repairedCards.slice(
+      index * migrationChunkSize,
+      (index + 1) * migrationChunkSize,
+    );
+
+    if (chunk.length > 0) {
+      writeFileSync(path, buildMigration(chunk), "utf8");
+    }
+  });
   console.log(
     `[done] Đã sửa ${repairedCards.length} thẻ mẫu, cập nhật ${updatedUserCards} thẻ người dùng.`,
   );
-  console.log(`[migration] ${OUTPUT_PATH}`);
+  migrationPaths.forEach((path) => console.log(`[migration] ${path}`));
 }
 
 main()

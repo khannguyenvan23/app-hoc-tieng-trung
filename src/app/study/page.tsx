@@ -29,7 +29,7 @@ import {
 import { sortDecksByRecentContent } from "@/lib/deck-activity";
 import {
   defaultStudySettings,
-  formatReviewIntervalLabel,
+  formatCountdownLabel,
   type StudySettings,
 } from "@/lib/study-settings";
 import {
@@ -38,7 +38,6 @@ import {
   getNextPendingStudyAt,
   getNextStudyQueueIndex,
   isDueForStudy,
-  LEARN_AHEAD_GRACE_MS,
   shouldRequeueInCurrentSession,
 } from "@/lib/study-queue";
 import {
@@ -138,20 +137,15 @@ function getRestoredCardStudyIndex(reviews: DueReview[], storageKey: string) {
     storageKey,
     (review) => review.cards?.id,
   );
-  const nextStudyIndex = getNextStudyQueueIndex(
-    reviews,
-    storedIndex,
-    undefined,
-    LEARN_AHEAD_GRACE_MS,
-  );
+  const nextStudyIndex = getNextStudyQueueIndex(reviews, storedIndex);
 
   return nextStudyIndex >= 0 ? nextStudyIndex : storedIndex;
 }
 
 function getPendingCardStudyAt(reviews: DueReview[]) {
-  return getNextStudyQueueIndex(reviews, 0, undefined, LEARN_AHEAD_GRACE_MS) >= 0
+  return getNextStudyQueueIndex(reviews) >= 0
     ? null
-    : getNextPendingStudyAt(reviews, undefined, LEARN_AHEAD_GRACE_MS);
+    : getNextPendingStudyAt(reviews);
 }
 
 function getCardAudioData(card: Card | null | undefined): CardAudioData | null {
@@ -256,6 +250,9 @@ export default function StudyPage() {
   const [scheduledReloadAt, setScheduledReloadAt] = useState<string | null>(
     null,
   );
+  // Ticks every second while waiting for the next card, so the countdown on the
+  // "chờ bước lặp lại" screen updates live.
+  const [nowTick, setNowTick] = useState(() => Date.now());
   const [audioNotice, setAudioNotice] = useState<{
     message: string;
     showPricing: boolean;
@@ -1058,12 +1055,6 @@ export default function StudyPage() {
       return;
     }
 
-    // A learning card due within the learn-ahead window is surfaced right away,
-    // so there is no "waiting for the next step" to arm for it.
-    if (isDueForStudy(nextReviewAt, new Date(), LEARN_AHEAD_GRACE_MS)) {
-      return;
-    }
-
     setScheduledReloadAt((currentReloadAt) => {
       if (!currentReloadAt) {
         return nextReviewAt;
@@ -1146,12 +1137,7 @@ export default function StudyPage() {
       // one left, so the "waiting for the next step" screen shows and the card
       // comes back after its learning step instead of ending the session.
       const requeuedReviews = [...remainingReviews, reviewedCurrent];
-      const nextStudyIndex = getNextStudyQueueIndex(
-        requeuedReviews,
-        index,
-        undefined,
-        LEARN_AHEAD_GRACE_MS,
-      );
+      const nextStudyIndex = getNextStudyQueueIndex(requeuedReviews, index);
       const nextIndex =
         nextStudyIndex >= 0
           ? nextStudyIndex
@@ -1195,12 +1181,7 @@ export default function StudyPage() {
         void loadReviews();
       });
     } else {
-      const nextStudyIndex = getNextStudyQueueIndex(
-        remainingReviews,
-        index,
-        undefined,
-        LEARN_AHEAD_GRACE_MS,
-      );
+      const nextStudyIndex = getNextStudyQueueIndex(remainingReviews, index);
       const nextIndex =
         nextStudyIndex >= 0
           ? nextStudyIndex
@@ -1229,12 +1210,7 @@ export default function StudyPage() {
     );
     const timer = window.setTimeout(() => {
       if (reviews.length > 0) {
-        const nextStudyIndex = getNextStudyQueueIndex(
-          reviews,
-          index,
-          undefined,
-          LEARN_AHEAD_GRACE_MS,
-        );
+        const nextStudyIndex = getNextStudyQueueIndex(reviews, index);
 
         if (nextStudyIndex >= 0) {
           setScheduledReloadAt(null);
@@ -1259,6 +1235,20 @@ export default function StudyPage() {
   }, [index, loading, repairingReviews, reviews, scheduledReloadAt]);
 
   useEffect(() => {
+    if (!scheduledReloadAt) {
+      return;
+    }
+
+    const tick = () => setNowTick(Date.now());
+    const immediate = window.setTimeout(tick, 0);
+    const interval = window.setInterval(tick, 1000);
+    return () => {
+      window.clearTimeout(immediate);
+      window.clearInterval(interval);
+    };
+  }, [scheduledReloadAt]);
+
+  useEffect(() => {
     keyboardActionsRef.current = {
       replayAudio: () => {
         if (showAnswer) {
@@ -1278,8 +1268,7 @@ export default function StudyPage() {
 
   const queuedCurrent = reviews[index];
   const current =
-    queuedCurrent &&
-    isDueForStudy(queuedCurrent.next_review_at, undefined, LEARN_AHEAD_GRACE_MS)
+    queuedCurrent && isDueForStudy(queuedCurrent.next_review_at)
       ? queuedCurrent
       : undefined;
   const card = current?.cards;
@@ -1301,12 +1290,12 @@ export default function StudyPage() {
     };
   }, [currentCardId, showAnswer, writingMode]);
 
-  const scheduledLearningStepLabel = scheduledReloadAt
-    ? formatReviewIntervalLabel(scheduledReloadAt, 0)
-    : "";
   const waitingForLearningStep =
     Boolean(scheduledReloadAt) &&
-    new Date(scheduledReloadAt || 0).getTime() > Date.now();
+    new Date(scheduledReloadAt || 0).getTime() > nowTick;
+  const scheduledLearningStepLabel = scheduledReloadAt
+    ? formatCountdownLabel(new Date(scheduledReloadAt).getTime() - nowTick)
+    : "";
   const queueStats = getReviewQueueStats(reviews);
   const activeQueueKey = current ? getReviewQueueKey(current) : null;
   // Total work = what you have already answered plus what the three queues
@@ -1361,7 +1350,7 @@ export default function StudyPage() {
               }
               body={
                 waitingForLearningStep
-                  ? `Thẻ vừa bấm Quên/Khó sẽ quay lại sau ${scheduledLearningStepLabel} theo cài đặt Learning steps/Again interval.`
+                  ? `Thẻ tiếp theo sẽ tự mở sau ${scheduledLearningStepLabel}. Bạn nghỉ một chút nhé.`
                   : dailyLimitReached
                   ? `Bạn đã học đủ ${studySettings.daily_new_card_limit} thẻ mới hôm nay. Còn ít nhất ${newCardsWaiting} thẻ mới đang chờ trong bộ đã chọn.`
                   : "Hiện chưa có thẻ nào cần ôn trong bộ đã chọn."
@@ -1404,9 +1393,11 @@ export default function StudyPage() {
                           className="mt-2 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-3 py-3 text-center text-2xl outline-none focus:border-teal-700 sm:text-3xl"
                           ref={writingAnswerRef}
                           onChange={(event) => {
+                            // Keep the last check result on screen while the
+                            // learner types the correction, so they can see
+                            // which characters were wrong. It refreshes on the
+                            // next "Kiểm tra" and clears when moving on.
                             setWritingAnswer(event.target.value);
-                            setWritingResult("");
-                            setCardDiff(null);
                           }}
                           onKeyDown={(event) => {
                             if (

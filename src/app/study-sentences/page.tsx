@@ -30,7 +30,7 @@ import {
 } from "@/lib/sentence-diff";
 import {
   defaultStudySettings,
-  formatReviewIntervalLabel,
+  formatCountdownLabel,
   type StudySettings,
 } from "@/lib/study-settings";
 import {
@@ -39,7 +39,6 @@ import {
   getNextPendingStudyAt,
   getNextStudyQueueIndex,
   isDueForStudy,
-  LEARN_AHEAD_GRACE_MS,
   shouldRequeueInCurrentSession,
 } from "@/lib/study-queue";
 import {
@@ -144,20 +143,15 @@ function getRestoredSentenceStudyIndex(
     storageKey,
     (review) => review.sentence_cards?.id,
   );
-  const nextStudyIndex = getNextStudyQueueIndex(
-    reviews,
-    storedIndex,
-    undefined,
-    LEARN_AHEAD_GRACE_MS,
-  );
+  const nextStudyIndex = getNextStudyQueueIndex(reviews, storedIndex);
 
   return nextStudyIndex >= 0 ? nextStudyIndex : storedIndex;
 }
 
 function getPendingSentenceStudyAt(reviews: DueSentenceReview[]) {
-  return getNextStudyQueueIndex(reviews, 0, undefined, LEARN_AHEAD_GRACE_MS) >= 0
+  return getNextStudyQueueIndex(reviews) >= 0
     ? null
-    : getNextPendingStudyAt(reviews, undefined, LEARN_AHEAD_GRACE_MS);
+    : getNextPendingStudyAt(reviews);
 }
 
 function getSentenceAudioUrl(card: SentenceCard | null | undefined) {
@@ -278,6 +272,9 @@ export default function StudySentencesPage() {
   const [scheduledReloadAt, setScheduledReloadAt] = useState<string | null>(
     null,
   );
+  // Ticks every second while waiting for the next card, so the countdown on the
+  // "chờ bước lặp lại" screen updates live.
+  const [nowTick, setNowTick] = useState(() => Date.now());
   const [updatingDailyLimit, setUpdatingDailyLimit] = useState(false);
   const [dailyLimitError, setDailyLimitError] = useState("");
   const [audioNotice, setAudioNotice] = useState<{
@@ -1167,12 +1164,6 @@ export default function StudySentencesPage() {
       return;
     }
 
-    // A learning card due within the learn-ahead window is surfaced right away,
-    // so there is no "waiting for the next step" to arm for it.
-    if (isDueForStudy(nextReviewAt, new Date(), LEARN_AHEAD_GRACE_MS)) {
-      return;
-    }
-
     setScheduledReloadAt((currentReloadAt) => {
       if (!currentReloadAt) {
         return nextReviewAt;
@@ -1261,12 +1252,7 @@ export default function StudySentencesPage() {
       // one left, so the "waiting for the next step" screen shows and the card
       // comes back after its learning step instead of ending the session.
       const requeuedReviews = [...remainingReviews, reviewedCurrent];
-      const nextStudyIndex = getNextStudyQueueIndex(
-        requeuedReviews,
-        index,
-        undefined,
-        LEARN_AHEAD_GRACE_MS,
-      );
+      const nextStudyIndex = getNextStudyQueueIndex(requeuedReviews, index);
       const nextIndex =
         nextStudyIndex >= 0
           ? nextStudyIndex
@@ -1318,12 +1304,7 @@ export default function StudySentencesPage() {
         void loadReviews();
       });
     } else {
-      const nextStudyIndex = getNextStudyQueueIndex(
-        remainingReviews,
-        index,
-        undefined,
-        LEARN_AHEAD_GRACE_MS,
-      );
+      const nextStudyIndex = getNextStudyQueueIndex(remainingReviews, index);
       const nextIndex =
         nextStudyIndex >= 0
           ? nextStudyIndex
@@ -1356,12 +1337,7 @@ export default function StudySentencesPage() {
     );
     const timer = window.setTimeout(() => {
       if (reviews.length > 0) {
-        const nextStudyIndex = getNextStudyQueueIndex(
-          reviews,
-          index,
-          undefined,
-          LEARN_AHEAD_GRACE_MS,
-        );
+        const nextStudyIndex = getNextStudyQueueIndex(reviews, index);
 
         if (nextStudyIndex >= 0) {
           setScheduledReloadAt(null);
@@ -1386,6 +1362,20 @@ export default function StudySentencesPage() {
   }, [index, loading, repairingReviews, reviews, scheduledReloadAt]);
 
   useEffect(() => {
+    if (!scheduledReloadAt) {
+      return;
+    }
+
+    const tick = () => setNowTick(Date.now());
+    const immediate = window.setTimeout(tick, 0);
+    const interval = window.setInterval(tick, 1000);
+    return () => {
+      window.clearTimeout(immediate);
+      window.clearInterval(interval);
+    };
+  }, [scheduledReloadAt]);
+
+  useEffect(() => {
     keyboardActionsRef.current = {
       replayAudio: () => {
         if (showAnswer || dictationMode) {
@@ -1406,8 +1396,7 @@ export default function StudySentencesPage() {
 
   const queuedCurrent = reviews[index];
   const current =
-    queuedCurrent &&
-    isDueForStudy(queuedCurrent.next_review_at, undefined, LEARN_AHEAD_GRACE_MS)
+    queuedCurrent && isDueForStudy(queuedCurrent.next_review_at)
       ? queuedCurrent
       : undefined;
   const card = current?.sentence_cards;
@@ -1442,12 +1431,12 @@ export default function StudySentencesPage() {
   }, [currentCardId, dictationMode, showAnswer]);
 
   const vocabItems = Array.isArray(card?.vocab_json) ? card.vocab_json : [];
-  const scheduledLearningStepLabel = scheduledReloadAt
-    ? formatReviewIntervalLabel(scheduledReloadAt, 0)
-    : "";
   const waitingForLearningStep =
     Boolean(scheduledReloadAt) &&
-    new Date(scheduledReloadAt || 0).getTime() > Date.now();
+    new Date(scheduledReloadAt || 0).getTime() > nowTick;
+  const scheduledLearningStepLabel = scheduledReloadAt
+    ? formatCountdownLabel(new Date(scheduledReloadAt).getTime() - nowTick)
+    : "";
   const queueStats = getReviewQueueStats(reviews);
   const activeQueueKey = current ? getReviewQueueKey(current) : null;
   // Total work = what you have already answered plus what the three queues
@@ -1505,7 +1494,7 @@ export default function StudySentencesPage() {
               }
               body={
                 waitingForLearningStep
-                  ? `Câu vừa bấm Quên/Khó sẽ quay lại sau ${scheduledLearningStepLabel} theo cài đặt Learning steps/Again interval.`
+                  ? `Câu tiếp theo sẽ tự mở sau ${scheduledLearningStepLabel}. Bạn nghỉ một chút nhé.`
                   : dailyLimitReached
                   ? `Bạn đã học đủ ${studySettings.daily_new_sentence_limit} câu mới hôm nay. Còn ít nhất ${newSentencesWaiting} câu mới đang chờ trong bộ đã chọn.`
                   : "Hiện chưa có câu nào cần ôn trong bộ đã chọn."
@@ -1595,9 +1584,11 @@ export default function StudySentencesPage() {
                           className="mt-2 h-20 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-3 py-2 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-24 sm:text-2xl"
                           ref={sentenceAnswerRef}
                           onChange={(event) => {
+                            // Keep the last check result on screen while the
+                            // learner types the correction, so they can see
+                            // which words were wrong. It refreshes on the next
+                            // "Kiểm tra" and clears when moving to another card.
                             setSentenceAnswer(event.target.value);
-                            setWritingResult("");
-                            setSentenceDiff(null);
                           }}
                           onKeyDown={(event) => {
                             if (
