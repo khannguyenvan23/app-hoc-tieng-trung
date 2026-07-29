@@ -19,6 +19,7 @@ type ReviewRow = {
   review_count: number | null;
   interval_days: number | null;
   ease_factor: number | null;
+  next_review_at: string | null;
   learning_step?: number | null;
   first_reviewed_at?: string | null;
   weak_score?: number | null;
@@ -58,7 +59,13 @@ function buildReviewSelect(options: {
   firstReviewed: boolean;
   learningStep: boolean;
 }) {
-  const columns = ["id", "review_count", "interval_days", "ease_factor"];
+  const columns = [
+    "id",
+    "review_count",
+    "interval_days",
+    "ease_factor",
+    "next_review_at",
+  ];
 
   if (options.learningStep) {
     columns.push("learning_step");

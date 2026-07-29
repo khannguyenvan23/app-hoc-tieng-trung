@@ -18,6 +18,7 @@ type ReviewState = {
   interval_days: number | null;
   ease_factor: number | null;
   learning_step?: number | null;
+  next_review_at?: string | null;
 };
 
 export type NextReview = {
@@ -127,13 +128,15 @@ function scheduleLearning(
   }
 
   if (rating === "hard") {
-    // Hard stays on the current step but nudges the delay so it sits between
-    // Again and Good, the way Anki does: the average of the current and next
-    // step, or 1.5x the step when there is no next step.
+    // Anki averages Again and Good only on the first step. On every later
+    // step, Hard repeats that exact step. With a single step it uses 1.5x,
+    // capped at no more than one day beyond the configured step.
     const hardMinutes =
-      currentStep < lastIndex
-        ? Math.round((steps[currentStep] + steps[currentStep + 1]) / 2)
-        : Math.round(steps[currentStep] * 1.5);
+      currentStep > 0
+        ? steps[currentStep]
+        : lastIndex > 0
+          ? Math.round((steps[0] + steps[1]) / 2)
+          : Math.min(Math.round(steps[0] * 1.5), steps[0] + 1440);
     return stepResult(currentStep, hardMinutes);
   }
 
@@ -152,11 +155,19 @@ function scheduleLearning(
 
 function scheduleReview(
   rating: ReviewRating,
-  ctx: { currentInterval: number; currentEase: number },
+  ctx: {
+    currentInterval: number;
+    currentEase: number;
+    nextReviewAt?: string | null;
+  },
   now: Date,
   settings: StudySettings,
 ): NextReview {
-  const { currentInterval, currentEase } = ctx;
+  const { currentInterval, currentEase, nextReviewAt } = ctx;
+  const dueTime = nextReviewAt ? new Date(nextReviewAt).getTime() : Number.NaN;
+  const overdueDays = Number.isFinite(dueTime)
+    ? Math.max(0, Math.floor((now.getTime() - dueTime) / 86_400_000))
+    : 0;
 
   if (rating === "again") {
     // Lapse: drop ease, compute the interval to restore after relearning, and
@@ -204,7 +215,10 @@ function scheduleReview(
   const goodInterval = clampInterval(
     Math.max(
       hardInterval + 1,
-      applyIntervalModifier(currentInterval * currentEase, settings),
+      applyIntervalModifier(
+        (currentInterval + overdueDays / 2) * currentEase,
+        settings,
+      ),
     ),
     settings,
   );
@@ -216,7 +230,12 @@ function scheduleReview(
   const easyInterval = clampInterval(
     Math.max(
       goodInterval + 1,
-      applyIntervalModifier(currentInterval * currentEase * settings.easy_bonus, settings),
+      applyIntervalModifier(
+        (currentInterval + overdueDays) *
+          currentEase *
+          settings.easy_bonus,
+        settings,
+      ),
     ),
     settings,
   );
@@ -244,7 +263,16 @@ export function getNextReview(
     : currentInterval <= 0;
 
   if (!inLearningPhase) {
-    return scheduleReview(rating, { currentInterval, currentEase }, now, settings);
+    return scheduleReview(
+      rating,
+      {
+        currentInterval,
+        currentEase,
+        nextReviewAt: state.next_review_at,
+      },
+      now,
+      settings,
+    );
   }
 
   const isRelearning = currentInterval > 0;

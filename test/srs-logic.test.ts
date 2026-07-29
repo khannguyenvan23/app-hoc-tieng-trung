@@ -262,10 +262,113 @@ test("again from a later learning step resets to the first step", () => {
   assert.equal(minutesUntil(again.next_review_at), 3);
   assert.equal(again.interval_days, 0);
 
-  // Hard on the final step has no next step to average with, so it uses 1.5x.
+  // After the first step, Anki's Hard repeats the current step unchanged.
   const hard = getNextReview("hard", atSecondStep, baseNow, settings);
   assert.equal(hard.learning_step, 1);
-  assert.equal(minutesUntil(hard.next_review_at), 15);
+  assert.equal(minutesUntil(hard.next_review_at), 10);
+});
+
+test("hard repeats every later learning step instead of averaging forward", () => {
+  const threeSteps = { ...settings, learning_steps: "1m 10m 1d" };
+  const hard = getNextReview(
+    "hard",
+    {
+      review_count: 2,
+      interval_days: 0,
+      ease_factor: 2.5,
+      learning_step: 1,
+    },
+    baseNow,
+    threeSteps,
+  );
+
+  assert.equal(hard.learning_step, 1);
+  assert.equal(minutesUntil(hard.next_review_at), 10);
+});
+
+test("overdue review bonus matches Anki SM-2 for good and easy", () => {
+  const overdueState = {
+    review_count: 8,
+    interval_days: 5,
+    ease_factor: 2.5,
+    learning_step: -1,
+    next_review_at: new Date(
+      baseNow.getTime() - 20 * 24 * 60 * 60_000,
+    ).toISOString(),
+  };
+
+  const hard = getNextReview("hard", overdueState, baseNow, settings);
+  const good = getNextReview("good", overdueState, baseNow, settings);
+  const easy = getNextReview("easy", overdueState, baseNow, settings);
+
+  assert.equal(hard.interval_days, 6);
+  assert.equal(good.interval_days, 38);
+  assert.equal(easy.interval_days, 81);
+});
+
+test("interval modifier scales every review interval", () => {
+  const doubled = { ...settings, interval_modifier: 2 };
+  const state = {
+    review_count: 5,
+    interval_days: 10,
+    ease_factor: 2.5,
+    learning_step: -1,
+  };
+
+  // hard: max(11, round(10*1.2*2)=24)=24
+  // good: max(25, round(10*2.5*2)=50)=50
+  // easy: max(51, round(10*2.5*1.3*2)=65)=65
+  assert.equal(getNextReview("hard", state, baseNow, doubled).interval_days, 24);
+  assert.equal(getNextReview("good", state, baseNow, doubled).interval_days, 50);
+  assert.equal(getNextReview("easy", state, baseNow, doubled).interval_days, 65);
+});
+
+test("hard multiplier and easy bonus honor custom settings", () => {
+  const custom = { ...settings, hard_interval_multiplier: 1.5, easy_bonus: 2 };
+  const state = {
+    review_count: 5,
+    interval_days: 10,
+    ease_factor: 2.5,
+    learning_step: -1,
+  };
+
+  assert.equal(getNextReview("hard", state, baseNow, custom).interval_days, 15);
+  assert.equal(getNextReview("good", state, baseNow, custom).interval_days, 25);
+  assert.equal(getNextReview("easy", state, baseNow, custom).interval_days, 50);
+});
+
+test("new interval percentage sets the interval restored after a lapse", () => {
+  const halfBack = { ...settings, new_interval_percentage: 50 };
+  const state = {
+    review_count: 9,
+    interval_days: 20,
+    ease_factor: 2.5,
+    learning_step: -1,
+  };
+
+  const lapsed = getNextReview("again", state, baseNow, halfBack);
+  // 20 * 50% = 10, comfortably above the 1-day minimum.
+  assert.equal(lapsed.interval_days, 10);
+  assert.equal(lapsed.learning_step, 0);
+});
+
+test("easy while relearning restores the interval with the easy bonus", () => {
+  // Mid-relearning: interval_days holds the pending restore value.
+  const relearning = {
+    review_count: 6,
+    interval_days: 8,
+    ease_factor: 2.3,
+    learning_step: 0,
+  };
+
+  const easy = getNextReview("easy", relearning, baseNow, settings);
+  // max(8+1, round(8*1.3)=10) = 10
+  assert.equal(easy.learning_step, -1);
+  assert.equal(easy.interval_days, 10);
+
+  // Good restores exactly the pending interval, no bonus.
+  const good = getNextReview("good", relearning, baseNow, settings);
+  assert.equal(good.interval_days, 8);
 });
 
 test("easy stays ahead of good even when the intervals are misconfigured", () => {
