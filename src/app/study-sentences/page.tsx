@@ -1331,49 +1331,38 @@ export default function StudySentencesPage() {
       return;
     }
 
-    const delayMs = Math.max(
-      0,
-      new Date(scheduledReloadAt).getTime() - Date.now() + 500,
-    );
-    const timer = window.setTimeout(() => {
+    // Poll every second while waiting: keep the countdown live AND reveal the
+    // next card the moment it becomes due. A one-shot timer could fire once
+    // before anything was due and then never retry, leaving the card stuck.
+    const check = () => {
+      setNowTick(Date.now());
+
+      if (loading || repairingReviews) {
+        return;
+      }
+
       if (reviews.length > 0) {
         const nextStudyIndex = getNextStudyQueueIndex(reviews, index);
-
         if (nextStudyIndex >= 0) {
           setScheduledReloadAt(null);
           setIndex(nextStudyIndex);
         }
-
         return;
       }
 
-      if (reviews.length > 0 || loading || repairingReviews) {
-        return;
-      }
-
+      // Queue emptied while waiting — reload from the server.
       setScheduledReloadAt(null);
       setLoading(true);
       reloadReviewsRef.current();
-    }, delayMs);
-
-    return () => {
-      window.clearTimeout(timer);
     };
-  }, [index, loading, repairingReviews, reviews, scheduledReloadAt]);
 
-  useEffect(() => {
-    if (!scheduledReloadAt) {
-      return;
-    }
-
-    const tick = () => setNowTick(Date.now());
-    const immediate = window.setTimeout(tick, 0);
-    const interval = window.setInterval(tick, 1000);
+    const immediate = window.setTimeout(check, 0);
+    const interval = window.setInterval(check, 1000);
     return () => {
       window.clearTimeout(immediate);
       window.clearInterval(interval);
     };
-  }, [scheduledReloadAt]);
+  }, [scheduledReloadAt, reviews, index, loading, repairingReviews]);
 
   useEffect(() => {
     keyboardActionsRef.current = {
