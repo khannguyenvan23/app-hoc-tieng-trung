@@ -608,6 +608,36 @@ test("a short learning step waits its interval instead of surfacing early", () =
   assert.equal(getNextStudyQueueIndex([soonLearning, dueNow], 0, baseNow), 1);
 });
 
+test("a one-minute learning step is not immediately due", () => {
+  const oneMinuteLearning = {
+    ...makeReview(1, 1),
+    interval_days: 0,
+    learning_step: 0,
+    next_review_at: addMinutesIso(baseNow, 1),
+  };
+
+  assert.equal(
+    getNextStudyQueueIndex([oneMinuteLearning], 0, baseNow),
+    -1,
+  );
+  assert.equal(
+    getNextStudyQueueIndex(
+      [oneMinuteLearning],
+      0,
+      new Date(baseNow.getTime() + 57_000),
+    ),
+    -1,
+  );
+  assert.equal(
+    getNextStudyQueueIndex(
+      [oneMinuteLearning],
+      0,
+      new Date(baseNow.getTime() + 58_000),
+    ),
+    0,
+  );
+});
+
 test("learn ahead only surfaces learning cards after every due card", () => {
   const learningA = {
     ...makeReview(1, 1),

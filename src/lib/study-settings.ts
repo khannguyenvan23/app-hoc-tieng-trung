@@ -25,7 +25,7 @@ export type StudySettings = {
 export const defaultStudySettings: StudySettings = {
   daily_new_card_limit: 10,
   daily_new_sentence_limit: 5,
-  learn_ahead_limit_minutes: 20,
+  learn_ahead_limit_minutes: 0,
   learning_steps: "10m",
   graduating_interval_days: 1,
   easy_interval_days: 4,

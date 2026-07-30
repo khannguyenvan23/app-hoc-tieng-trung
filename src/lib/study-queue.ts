@@ -69,10 +69,9 @@ export function shouldRequeueInCurrentSession(
   return minutesUntilDue < 23 * 60;
 }
 
-// A small grace that only absorbs client/server clock skew — a card is due
-// when its time has (almost) arrived. Short steps therefore wait their full
-// interval; the study pages show a live countdown while waiting.
-const DEFAULT_DUE_GRACE_MS = 60_000;
+// Keep the grace well below the shortest supported learning step. A one-minute
+// grace made a "1m" card immediately due, silently defeating the setting.
+const DEFAULT_DUE_GRACE_MS = 2_000;
 
 export function isDueForStudy(
   nextReviewAt: string,

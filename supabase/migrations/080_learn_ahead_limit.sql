@@ -1,8 +1,8 @@
 alter table public.user_study_settings
-  add column if not exists learn_ahead_limit_minutes integer not null default 20;
+  add column if not exists learn_ahead_limit_minutes integer not null default 0;
 
 update public.user_study_settings
-set learn_ahead_limit_minutes = coalesce(learn_ahead_limit_minutes, 20);
+set learn_ahead_limit_minutes = coalesce(learn_ahead_limit_minutes, 0);
 
 do $$
 begin

@@ -420,8 +420,8 @@ export default function OptionsPage() {
                   </span>
                 </div>
                 <span className="mt-1 block text-xs font-normal text-zinc-500 dark:text-zinc-400">
-                  Khi hết thẻ đang đến hạn, cho phép học sớm thẻ đang học trong
-                  khoảng này. Đặt 0 để chờ đúng giờ.
+                  Đặt 0 để chờ đúng thời gian hiển thị trên nút. Giá trị lớn hơn
+                  0 sẽ cho phép học sớm thẻ đang học khi hàng chờ đã hết.
                 </span>
               </label>
 
