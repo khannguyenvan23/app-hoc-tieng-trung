@@ -65,6 +65,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
   return (
     <html
       lang="vi"
@@ -72,6 +74,12 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {supabaseOrigin ? (
+          <>
+            <link rel="dns-prefetch" href={supabaseOrigin} />
+            <link rel="preconnect" href={supabaseOrigin} crossOrigin="" />
+          </>
+        ) : null}
         {/* Resolve the theme before first paint so a dark-mode user never sees
             a white flash while React hydrates. */}
         <script

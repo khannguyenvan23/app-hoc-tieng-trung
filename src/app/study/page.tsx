@@ -30,6 +30,7 @@ import { sortDecksByRecentContent } from "@/lib/deck-activity";
 import {
   defaultStudySettings,
   formatCountdownLabel,
+  normalizeStudySettings,
   type StudySettings,
 } from "@/lib/study-settings";
 import {
@@ -488,15 +489,6 @@ export default function StudyPage() {
       studySettings.daily_new_card_limit - studiedToday,
     );
 
-    if (!weakOnly && deckId !== allDecksValue) {
-      await fetchWithAuth("/api/repair-deck-reviews", {
-        method: "POST",
-        body: JSON.stringify({ deckId }),
-      }).catch((error) => {
-        console.warn("Could not repair deck reviews", error);
-      });
-    }
-
     const reviewRows = await fetchDueReviewRows<DueReview>(
       supabase,
       { table: "reviews", cardsRelation: "cards" },
@@ -584,15 +576,22 @@ export default function StudyPage() {
 
     supabase
       .from("decks")
-      .select("*, cards!inner(id)")
+      .select(
+        "id, user_id, name, source_template_slug, source_share_id, last_card_added_at, last_sentence_added_at, created_at, cards(count)",
+      )
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         if (!active) {
           return;
         }
 
+        const deckRows = (data || []) as unknown as Array<
+          Deck & { cards?: { count: number | null }[] | null }
+        >;
         const vocabularyDecks = sortDecksByRecentContent(
-          (data || []) as Deck[],
+          deckRows.filter(
+            (deck) => Number(deck.cards?.[0]?.count || 0) > 0,
+          ),
           "last_card_added_at",
         );
 
@@ -627,33 +626,28 @@ export default function StudyPage() {
     }
 
     let active = true;
+    const supabase = createSupabaseBrowserClient();
 
-    fetchWithAuth("/api/study-settings")
-      .then(async (response) => {
+    void (async () => {
+      try {
+        const { data } = await supabase
+          .from("user_study_settings")
+          .select("*")
+          .maybeSingle();
+
         if (!active) {
           return;
         }
 
-        if (!response.ok) {
-          setSettingsLoaded(true);
-          return;
-        }
-
-        const data = await response.json();
-        if (!active) {
-          return;
-        }
-
-        setStudySettings(
-          (data.settings || defaultStudySettings) as StudySettings,
-        );
-        setSettingsLoaded(true);
-      })
-      .catch(() => {
+        setStudySettings(normalizeStudySettings(data || defaultStudySettings));
+      } catch (error) {
+        console.warn("Could not load study settings", error);
+      } finally {
         if (active) {
           setSettingsLoaded(true);
         }
-      });
+      }
+    })();
 
     return () => {
       active = false;
@@ -679,18 +673,7 @@ export default function StudyPage() {
         },
       );
 
-    const repairSelectedDeck =
-      !weakOnly && selectedDeckId !== allDecksValue
-        ? fetchWithAuth("/api/repair-deck-reviews", {
-            method: "POST",
-            body: JSON.stringify({ deckId: selectedDeckId }),
-          }).catch((error) => {
-            console.warn("Could not repair deck reviews", error);
-          })
-        : Promise.resolve();
-
-    repairSelectedDeck.then(() =>
-      Promise.all([loadDueRows(), getNewCardsStudiedToday(selectedDeckId)]).then(async ([data, studiedToday]) => {
+    Promise.all([loadDueRows(), getNewCardsStudiedToday(selectedDeckId)]).then(async ([data, studiedToday]) => {
       if (!active) {
         return;
       }
@@ -833,8 +816,7 @@ export default function StudyPage() {
       setWritingResult("");
       setCardDiff(null);
       setLoading(false);
-      }),
-    );
+    });
 
     return () => {
       active = false;

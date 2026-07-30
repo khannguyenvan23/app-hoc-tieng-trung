@@ -27,7 +27,16 @@ export async function fetchDueReviewRows<TRow>(
   source: DueReviewSource,
   options: DueReviewOptions,
 ): Promise<TRow[]> {
-  const columns = `*, ${source.cardsRelation}!inner(*)`;
+  // These queues can contain hundreds of rows. Avoid returning ownership and
+  // other unused columns for every review/card, especially for large HSK
+  // decks where the difference is several hundred kilobytes per page load.
+  const reviewColumns =
+    "id, next_review_at, interval_days, ease_factor, review_count, learning_step, first_reviewed_at, last_rating, weak_score, lapse_count, weak_since, updated_at";
+  const cardColumns =
+    source.cardsRelation === "cards"
+      ? "id, deck_id, chinese, pinyin, meaning_vi, example_cn, example_pinyin, example_vi, word_audio_url, sentence_audio_url, created_at"
+      : "id, deck_id, sentence_cn, sentence_pinyin, sentence_vi, vocab_json, sentence_audio_url, created_at";
+  const columns = `${reviewColumns}, ${source.cardsRelation}!inner(${cardColumns})`;
   const deckColumn = `${source.cardsRelation}.deck_id`;
 
   const withDeck = <TQuery extends { eq: (column: string, value: string) => TQuery }>(

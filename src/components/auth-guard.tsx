@@ -17,8 +17,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     const supabase = createSupabaseBrowserClient();
 
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
+    // The browser client already keeps the signed-in session in storage.
+    // Reading it avoids a network round trip before every protected page can
+    // paint; RLS and authenticated API routes remain the security boundary.
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
         router.replace("/login");
         return;
       }

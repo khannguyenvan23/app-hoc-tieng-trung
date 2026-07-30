@@ -31,6 +31,7 @@ import {
 import {
   defaultStudySettings,
   formatCountdownLabel,
+  normalizeStudySettings,
   type StudySettings,
 } from "@/lib/study-settings";
 import {
@@ -293,6 +294,10 @@ export default function StudySentencesPage() {
   const [sentenceDiff, setSentenceDiff] = useState<SentenceDiffResult | null>(
     null,
   );
+  // Optional "chép lại để nhớ" panel on the back of a dictation card: copy the
+  // revealed sentence once more to reinforce the characters.
+  const [copyPracticeOpen, setCopyPracticeOpen] = useState(false);
+  const [copyText, setCopyText] = useState("");
   const [repairingReviews, setRepairingReviews] = useState(false);
   const [savingRating, setSavingRating] = useState(false);
   const [studySettings, setStudySettings] =
@@ -485,15 +490,6 @@ export default function StudySentencesPage() {
       studySettings.daily_new_sentence_limit - studiedToday,
     );
 
-    if (!weakOnly && deckId !== allDecksValue) {
-      await fetchWithAuth("/api/repair-sentence-deck-reviews", {
-        method: "POST",
-        body: JSON.stringify({ deckId }),
-      }).catch((error) => {
-        console.warn("Could not repair sentence deck reviews", error);
-      });
-    }
-
     const reviewRows = await fetchDueReviewRows<DueSentenceReview>(
       supabase,
       { table: "sentence_reviews", cardsRelation: "sentence_cards" },
@@ -612,15 +608,22 @@ export default function StudySentencesPage() {
 
     supabase
       .from("decks")
-      .select("*, sentence_cards!inner(id)")
+      .select(
+        "id, user_id, name, source_template_slug, source_share_id, last_card_added_at, last_sentence_added_at, created_at, sentence_cards(count)",
+      )
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         if (!active) {
           return;
         }
 
+        const deckRows = (data || []) as unknown as Array<
+          Deck & { sentence_cards?: { count: number | null }[] | null }
+        >;
         const sentenceDecks = sortDecksByRecentContent(
-          (data || []) as Deck[],
+          deckRows.filter(
+            (deck) => Number(deck.sentence_cards?.[0]?.count || 0) > 0,
+          ),
           "last_sentence_added_at",
         );
 
@@ -658,33 +661,28 @@ export default function StudySentencesPage() {
     }
 
     let active = true;
+    const supabase = createSupabaseBrowserClient();
 
-    fetchWithAuth("/api/study-settings")
-      .then(async (response) => {
+    void (async () => {
+      try {
+        const { data } = await supabase
+          .from("user_study_settings")
+          .select("*")
+          .maybeSingle();
+
         if (!active) {
           return;
         }
 
-        if (!response.ok) {
-          setSettingsLoaded(true);
-          return;
-        }
-
-        const data = await response.json();
-        if (!active) {
-          return;
-        }
-
-        setStudySettings(
-          (data.settings || defaultStudySettings) as StudySettings,
-        );
-        setSettingsLoaded(true);
-      })
-      .catch(() => {
+        setStudySettings(normalizeStudySettings(data || defaultStudySettings));
+      } catch (error) {
+        console.warn("Could not load sentence study settings", error);
+      } finally {
         if (active) {
           setSettingsLoaded(true);
         }
-      });
+      }
+    })();
 
     return () => {
       active = false;
@@ -710,19 +708,8 @@ export default function StudySentencesPage() {
         },
       );
 
-    const repairSelectedDeck =
-      !weakOnly && selectedDeckId !== allDecksValue
-        ? fetchWithAuth("/api/repair-sentence-deck-reviews", {
-            method: "POST",
-            body: JSON.stringify({ deckId: selectedDeckId }),
-          }).catch((error) => {
-            console.warn("Could not repair sentence deck reviews", error);
-          })
-        : Promise.resolve();
-
-    repairSelectedDeck.then(() =>
-      Promise.all([loadDueRows(), getNewSentencesStudiedToday(selectedDeckId)]).then(
-        async ([data, studiedToday]) => {
+    Promise.all([loadDueRows(), getNewSentencesStudiedToday(selectedDeckId)]).then(
+      async ([data, studiedToday]) => {
       if (!active) {
         return;
       }
@@ -870,8 +857,7 @@ export default function StudySentencesPage() {
       setWritingResult("");
       setSentenceDiff(null);
       setLoading(false);
-        },
-      ),
+      },
     );
 
     return () => {
@@ -1170,6 +1156,9 @@ export default function StudySentencesPage() {
 
   function showAnswerAndPlayAudio() {
     setShowAnswer(true);
+    // Each freshly revealed card starts with the copy-practice panel closed.
+    setCopyPracticeOpen(false);
+    setCopyText("");
     void playSentenceAudio();
   }
 
@@ -1853,6 +1842,57 @@ export default function StudySentencesPage() {
                       </p>
                     ) : null}
                   </div>
+
+                  {dictationMode ? (
+                    <div className="app-surface mt-3 rounded-xl p-4">
+                      {!copyPracticeOpen ? (
+                        <button
+                          className="btn-secondary w-full px-4 py-2 text-sm"
+                          onClick={() => setCopyPracticeOpen(true)}
+                          type="button"
+                        >
+                          ✍️ Chép lại để nhớ
+                        </button>
+                      ) : (
+                        <div>
+                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            Chép lại câu bên trên để khắc sâu chữ Hán:
+                            <textarea
+                              className="mt-2 h-20 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-3 py-2 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-24 sm:text-2xl"
+                              onChange={(event) => setCopyText(event.target.value)}
+                              placeholder="输入完整句子"
+                              value={copyText}
+                            />
+                          </label>
+                          {copyText.trim()
+                            ? (() => {
+                                const copyDiff = compareChineseSentences(
+                                  card.sentence_cn,
+                                  copyText,
+                                );
+                                const copyDone =
+                                  copyDiff.counts.correct > 0 &&
+                                  copyDiff.counts.wrong === 0 &&
+                                  copyDiff.counts.missing === 0 &&
+                                  copyDiff.counts.extra === 0;
+
+                                return copyDone ? (
+                                  <p className="mt-3 text-sm font-medium text-teal-700 dark:text-teal-300">
+                                    ✓ Đã chép xong, giỏi lắm!
+                                  </p>
+                                ) : (
+                                  <SentenceDiffBreakdown
+                                    chinese={card.sentence_cn}
+                                    diff={copyDiff}
+                                    pinyin={card.sentence_pinyin}
+                                  />
+                                );
+                              })()
+                            : null}
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
 
                   {vocabItems.length > 0 ? (
                     <div className="app-surface mt-3 rounded-xl">

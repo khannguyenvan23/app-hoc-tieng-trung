@@ -211,12 +211,19 @@ export async function GET(request: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
-  const { data: templates, error } = await supabase
-    .from("template_decks")
-    .select(
-      "id, slug, name, description, level, created_at, template_cards(count), template_sentence_cards(count)",
-    )
-    .order("created_at", { ascending: true });
+  const [templatesResult, userDecksResult] = await Promise.all([
+    supabase
+      .from("template_decks")
+      .select(
+        "id, slug, name, description, level, created_at, template_cards(count), template_sentence_cards(count)",
+      )
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("decks")
+      .select("id, name, source_template_slug")
+      .eq("user_id", user.id),
+  ]);
+  const { data: templates, error } = templatesResult;
 
   if (error) {
     console.error(error);
@@ -226,10 +233,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const { data: userDecks, error: userDecksError } = await supabase
-    .from("decks")
-    .select("id, name, source_template_slug")
-    .eq("user_id", user.id);
+  const { data: userDecks, error: userDecksError } = userDecksResult;
 
   if (userDecksError) {
     console.error(userDecksError);
@@ -267,9 +271,14 @@ export async function GET(request: Request) {
     };
   });
 
-  return NextResponse.json({
-    templates: templatesWithCounts,
-  });
+  return NextResponse.json(
+    { templates: templatesWithCounts },
+    {
+      headers: {
+        "Cache-Control": "private, max-age=30, stale-while-revalidate=300",
+      },
+    },
+  );
 }
 
 export async function POST(request: Request) {

@@ -267,16 +267,18 @@ export default function DashboardPage() {
     let active = true;
     const supabase = createSupabaseBrowserClient();
 
-    supabase.auth.getUser().then(({ data }) => {
-      if (!active || !data.user) {
+    supabase.auth.getSession().then(({ data }) => {
+      const user = data.session?.user;
+
+      if (!active || !user) {
         return;
       }
 
-      const metadata = data.user.user_metadata as Record<string, unknown>;
+      const metadata = user.user_metadata as Record<string, unknown>;
       const profileName = String(
         metadata.full_name || metadata.display_name || metadata.name || "",
       ).trim();
-      const emailName = data.user.email?.split("@")[0] || "bạn";
+      const emailName = user.email?.split("@")[0] || "bạn";
       setAccountName(profileName || emailName);
     });
 

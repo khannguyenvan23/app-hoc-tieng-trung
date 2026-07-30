@@ -33,6 +33,51 @@ async function listActiveShares(request: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
+  const { data: aggregatedShares, error: aggregateError } = await supabase
+    .from("deck_shares")
+    .select(
+      "token, owner_id, updated_at, decks!inner(name, cards(count), sentence_cards(count))",
+    )
+    .eq("is_active", true)
+    .order("updated_at", { ascending: false })
+    .limit(9);
+
+  if (!aggregateError) {
+    const summaries = (aggregatedShares || []).flatMap((share) => {
+      const deckRelation = share.decks;
+      const deck = Array.isArray(deckRelation)
+        ? deckRelation[0]
+        : deckRelation;
+
+      if (!deck) {
+        return [];
+      }
+
+      return [
+        {
+          token: share.token,
+          name: deck.name,
+          cardCount: Number(deck.cards?.[0]?.count || 0),
+          sentenceCount: Number(deck.sentence_cards?.[0]?.count || 0),
+          isOwner: share.owner_id === user.id,
+          updatedAt: share.updated_at,
+        },
+      ];
+    });
+
+    return NextResponse.json(
+      { shares: summaries },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=30, stale-while-revalidate=120",
+        },
+      },
+    );
+  }
+
+  // Older PostgREST schemas may not expose the nested aggregate relationship.
+  // Keep the compatible fallback so the community list never becomes a
+  // release blocker while newer projects use the single fast query above.
   const { data: shares, error } = await supabase
     .from("deck_shares")
     .select("id, token, deck_id, owner_id, updated_at")
@@ -79,7 +124,11 @@ async function listActiveShares(request: Request) {
 
   return NextResponse.json(
     { shares: summaries.filter(Boolean) },
-    { headers: { "Cache-Control": "no-store" } },
+    {
+      headers: {
+        "Cache-Control": "private, max-age=30, stale-while-revalidate=120",
+      },
+    },
   );
 }
 
