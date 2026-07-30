@@ -21,7 +21,6 @@ type NumberSetting = {
     | "learn_ahead_limit_minutes"
     | "graduating_interval_days"
     | "easy_interval_days"
-    | "hard_interval_multiplier"
     | "easy_bonus"
     | "interval_modifier"
     | "new_interval_percentage"
@@ -85,14 +84,6 @@ const newCardSettings: NumberSetting[] = [
 ];
 
 const reviewSettings: NumberSetting[] = [
-  {
-    key: "hard_interval_multiplier",
-    label: "Hard multiplier",
-    min: 1,
-    max: 5,
-    step: 0.05,
-    suffix: "x",
-  },
   {
     key: "easy_bonus",
     label: "Easy bonus",

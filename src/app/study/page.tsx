@@ -993,9 +993,8 @@ export default function StudyPage() {
       const key = event.key.toLowerCase();
       const ratingByKey: Partial<Record<string, ReviewRating>> = {
         "1": "again",
-        "2": "hard",
-        "3": "good",
-        "4": "easy",
+        "2": "good",
+        "3": "easy",
       };
       const rating = ratingByKey[key];
 
@@ -1772,7 +1771,7 @@ export default function StudyPage() {
           </div>
 
           <div className="study-shortcuts-hint">
-            <span>Space đáp án · R audio · 1-4 đánh giá · P/W chế độ</span>
+            <span>Space đáp án · R audio · 1-3 đánh giá · P/W chế độ</span>
             <Link
               className="font-medium text-teal-800 dark:text-teal-300 hover:underline"
               href="/shortcuts"

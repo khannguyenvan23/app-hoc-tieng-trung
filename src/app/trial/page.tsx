@@ -10,9 +10,8 @@ import type { ReviewRating } from "@/lib/types";
 
 const keyToRating: Record<string, ReviewRating> = {
   "1": "again",
-  "2": "hard",
-  "3": "good",
-  "4": "easy",
+  "2": "good",
+  "3": "easy",
 };
 
 // A fresh-card state so RatingButtons shows the same real SRS interval previews
@@ -294,7 +293,7 @@ export default function TrialPage() {
 
           {!finished ? (
             <p className="mt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
-              Phím tắt: Space hiện đáp án · 1–4 đánh giá · P bật/tắt pinyin
+              Phím tắt: Space hiện đáp án · 1–3 đánh giá · P bật/tắt pinyin
             </p>
           ) : null}
         </div>

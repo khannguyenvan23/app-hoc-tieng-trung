@@ -29,25 +29,18 @@ const ratingOptions: RatingOption[] = [
     shortcut: "1",
   },
   {
-    rating: "hard",
-    label: "Khó",
-    tone: "rating-hard",
-    accent: "text-orange-600 dark:text-orange-300",
-    shortcut: "2",
-  },
-  {
     rating: "good",
     label: "Nhớ",
     tone: "rating-good",
     accent: "text-blue-600 dark:text-blue-300",
-    shortcut: "3",
+    shortcut: "2",
   },
   {
     rating: "easy",
     label: "Dễ",
     tone: "rating-easy",
     accent: "text-emerald-600 dark:text-emerald-300",
-    shortcut: "4",
+    shortcut: "3",
   },
 ];
 
@@ -80,7 +73,7 @@ export function RatingButtons({
   disabled,
 }: RatingButtonsProps) {
   return (
-    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div className="mt-4 grid grid-cols-3 gap-2">
       {ratingOptions.map((option) => (
         <button
           className={`rating-button ${option.tone} px-3 py-2.5 disabled:opacity-60`}

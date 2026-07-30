@@ -64,9 +64,8 @@ const audioCacheLimit = 16;
 
 const copyKeyToRating: Record<string, ReviewRating> = {
   "1": "again",
-  "2": "hard",
-  "3": "good",
-  "4": "easy",
+  "2": "good",
+  "3": "easy",
 };
 
 const audioSpeeds = {
@@ -1088,9 +1087,8 @@ export default function StudySentencesPage() {
       const key = event.key.toLowerCase();
       const ratingByKey: Partial<Record<string, ReviewRating>> = {
         "1": "again",
-        "2": "hard",
-        "3": "good",
-        "4": "easy",
+        "2": "good",
+        "3": "easy",
       };
       const rating = ratingByKey[key];
 
@@ -1912,7 +1910,7 @@ export default function StudySentencesPage() {
                             <p className="mt-3 text-sm font-medium text-teal-700 dark:text-teal-300">
                               ✓ Đã chép xong, giỏi lắm!{" "}
                               <span className="font-normal text-zinc-500 dark:text-zinc-400">
-                                — nhấn 1–4 để đánh giá · Enter = Nhớ, qua câu
+                                — nhấn 1–3 để đánh giá · Enter = Nhớ, qua câu
                               </span>
                             </p>
                           ) : copyDiff ? (
@@ -2053,7 +2051,7 @@ export default function StudySentencesPage() {
           </div>
 
           <div className="study-shortcuts-hint">
-            <span>Space đáp án · R audio · 1-4 đánh giá · P/W/D chế độ</span>
+            <span>Space đáp án · R audio · 1-3 đánh giá · P/W/D chế độ</span>
             <Link
               className="font-medium text-teal-800 dark:text-teal-300 hover:underline"
               href="/shortcuts"
