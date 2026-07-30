@@ -62,6 +62,13 @@ import type {
 const allDecksValue = "all";
 const audioCacheLimit = 16;
 
+const copyKeyToRating: Record<string, ReviewRating> = {
+  "1": "again",
+  "2": "hard",
+  "3": "good",
+  "4": "easy",
+};
+
 const audioSpeeds = {
   normal: 1,
   slow: 0.75,
@@ -1570,6 +1577,17 @@ export default function StudySentencesPage() {
   }, [currentCardId, dictationMode, showAnswer]);
 
   const vocabItems = Array.isArray(card?.vocab_json) ? card.vocab_json : [];
+  // Live check of the optional "chép lại" copy against the revealed sentence.
+  const copyDiff =
+    copyPracticeOpen && copyText.trim() && card
+      ? compareChineseSentences(card.sentence_cn, copyText)
+      : null;
+  const copyDone = copyDiff
+    ? copyDiff.counts.correct > 0 &&
+      copyDiff.counts.wrong === 0 &&
+      copyDiff.counts.missing === 0 &&
+      copyDiff.counts.extra === 0
+    : false;
   const waitingForLearningStep =
     Boolean(scheduledReloadAt) &&
     new Date(scheduledReloadAt || 0).getTime() > nowTick;
@@ -1860,35 +1878,46 @@ export default function StudySentencesPage() {
                             <textarea
                               className="mt-2 h-20 w-full rounded-xl border border-zinc-300 dark:border-white/15 bg-white dark:bg-[#171a19] px-3 py-2 text-center text-xl leading-relaxed outline-none focus:border-teal-700 sm:h-24 sm:text-2xl"
                               onChange={(event) => setCopyText(event.target.value)}
+                              onKeyDown={(event) => {
+                                // Once the copy matches, let the keyboard rate and
+                                // move on without reaching for the mouse.
+                                if (
+                                  !copyDone ||
+                                  event.nativeEvent.isComposing
+                                ) {
+                                  return;
+                                }
+
+                                if (event.key === "Enter") {
+                                  event.preventDefault();
+                                  rate("good");
+                                  return;
+                                }
+
+                                const rating = copyKeyToRating[event.key];
+                                if (rating) {
+                                  event.preventDefault();
+                                  rate(rating);
+                                }
+                              }}
                               placeholder="输入完整句子"
                               value={copyText}
                             />
                           </label>
-                          {copyText.trim()
-                            ? (() => {
-                                const copyDiff = compareChineseSentences(
-                                  card.sentence_cn,
-                                  copyText,
-                                );
-                                const copyDone =
-                                  copyDiff.counts.correct > 0 &&
-                                  copyDiff.counts.wrong === 0 &&
-                                  copyDiff.counts.missing === 0 &&
-                                  copyDiff.counts.extra === 0;
-
-                                return copyDone ? (
-                                  <p className="mt-3 text-sm font-medium text-teal-700 dark:text-teal-300">
-                                    ✓ Đã chép xong, giỏi lắm!
-                                  </p>
-                                ) : (
-                                  <SentenceDiffBreakdown
-                                    chinese={card.sentence_cn}
-                                    diff={copyDiff}
-                                    pinyin={card.sentence_pinyin}
-                                  />
-                                );
-                              })()
-                            : null}
+                          {copyDone ? (
+                            <p className="mt-3 text-sm font-medium text-teal-700 dark:text-teal-300">
+                              ✓ Đã chép xong, giỏi lắm!{" "}
+                              <span className="font-normal text-zinc-500 dark:text-zinc-400">
+                                — nhấn 1–4 để đánh giá · Enter = Nhớ, qua câu
+                              </span>
+                            </p>
+                          ) : copyDiff ? (
+                            <SentenceDiffBreakdown
+                              chinese={card.sentence_cn}
+                              diff={copyDiff}
+                              pinyin={card.sentence_pinyin}
+                            />
+                          ) : null}
                         </div>
                       )}
                     </div>
