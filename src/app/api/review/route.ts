@@ -125,8 +125,10 @@ export async function POST(request: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
+  let supportsWeakQueue = true;
   let supportsFirstReviewedAt = true;
-  let { data: review, error: reviewError } = await supabase
+  let supportsLearningStep = true;
+  let reviewResult = await supabase
     .from("reviews")
     .select(
       buildReviewSelect({ weak: true, firstReviewed: true, learningStep: true }),
@@ -135,32 +137,49 @@ export async function POST(request: Request) {
     .eq("user_id", user.id)
     .single<ReviewRow>();
 
-  const supportsWeakQueue = !missingWeakColumns(reviewError);
-  const supportsLearningStep = !missingLearningStepColumn(reviewError);
+  for (let attempt = 0; reviewResult.error && attempt < 3; attempt += 1) {
+    const previousSupport = [
+      supportsWeakQueue,
+      supportsFirstReviewedAt,
+      supportsLearningStep,
+    ].join(":");
 
-  if (
-    reviewError &&
-    (missingFirstReviewedColumn(reviewError) ||
-      !supportsWeakQueue ||
-      !supportsLearningStep)
-  ) {
-    supportsFirstReviewedAt = !missingFirstReviewedColumn(reviewError);
-    const retryResult = await supabase
+    if (missingWeakColumns(reviewResult.error)) {
+      supportsWeakQueue = false;
+    }
+    if (missingFirstReviewedColumn(reviewResult.error)) {
+      supportsFirstReviewedAt = false;
+    }
+    if (missingLearningStepColumn(reviewResult.error)) {
+      supportsLearningStep = false;
+    }
+
+    if (
+      previousSupport ===
+      [
+        supportsWeakQueue,
+        supportsFirstReviewedAt,
+        supportsLearningStep,
+      ].join(":")
+    ) {
+      break;
+    }
+
+    reviewResult = await supabase
       .from("reviews")
       .select(
         buildReviewSelect({
           weak: supportsWeakQueue,
-          firstReviewed: false,
+          firstReviewed: supportsFirstReviewedAt,
           learningStep: supportsLearningStep,
         }),
       )
       .eq("card_id", body.data.cardId)
       .eq("user_id", user.id)
       .single<ReviewRow>();
-
-    review = retryResult.data;
-    reviewError = retryResult.error;
   }
+
+  const { data: review, error: reviewError } = reviewResult;
 
   if (reviewError || !review) {
     return NextResponse.json({ error: "Review not found" }, { status: 404 });
@@ -196,22 +215,52 @@ export async function POST(request: Request) {
     !review.first_reviewed_at
       ? { first_reviewed_at: new Date().toISOString() }
       : {};
-  const { error } = await supabase
+  const updatePayload: Record<string, unknown> = {
+    ...schedulePatch,
+    ...weakPatch,
+    ...firstReviewPatch,
+    review_count: Number(review.review_count || 0) + 1,
+    last_rating: body.data.rating,
+    updated_at: new Date().toISOString(),
+  };
+  let updateResult = await supabase
     .from("reviews")
-    .update({
-      ...schedulePatch,
-      ...weakPatch,
-      ...firstReviewPatch,
-      review_count: Number(review.review_count || 0) + 1,
-      last_rating: body.data.rating,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq("id", review.id)
     .eq("user_id", user.id);
 
-  if (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Review update failed" }, { status: 500 });
+  for (let attempt = 0; updateResult.error && attempt < 3; attempt += 1) {
+    let changed = false;
+
+    if (missingWeakColumns(updateResult.error)) {
+      changed = delete updatePayload.weak_score || changed;
+      changed = delete updatePayload.lapse_count || changed;
+      changed = delete updatePayload.weak_since || changed;
+    }
+    if (missingFirstReviewedColumn(updateResult.error)) {
+      changed = delete updatePayload.first_reviewed_at || changed;
+    }
+    if (missingLearningStepColumn(updateResult.error)) {
+      changed = delete updatePayload.learning_step || changed;
+    }
+
+    if (!changed) {
+      break;
+    }
+
+    updateResult = await supabase
+      .from("reviews")
+      .update(updatePayload)
+      .eq("id", review.id)
+      .eq("user_id", user.id);
+  }
+
+  if (updateResult.error) {
+    console.error(updateResult.error);
+    return NextResponse.json(
+      { error: "Không thể lưu kết quả ôn tập. Hãy tải lại trang và thử lại." },
+      { status: 500 },
+    );
   }
 
   if (Number(review.review_count || 0) === 0) {

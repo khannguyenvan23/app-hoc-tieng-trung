@@ -1248,11 +1248,15 @@ export default function StudySentencesPage() {
     const trackedPromise = promise
       .then(async (response) => {
         const data = (await response.json().catch(() => null)) as
-          | SavedReviewSchedule
+          | (SavedReviewSchedule & { error?: string })
           | null;
 
         if (!response.ok) {
-          throw new Error(errorMessage);
+          const message =
+            response.status === 401
+              ? "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại rồi tiếp tục luyện."
+              : data?.error || errorMessage;
+          throw new Error(message);
         }
 
         if (data) {
@@ -1261,7 +1265,7 @@ export default function StudySentencesPage() {
       })
       .catch((error) => {
         console.error(error);
-        alert(errorMessage);
+        alert(error instanceof Error ? error.message : errorMessage);
         reloadReviewsRef.current();
       })
       .finally(() => {

@@ -58,14 +58,35 @@ export async function fetchWithAuth(
     data: { session },
   } = await supabase.auth.getSession();
 
-  return fetch(input, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init.headers || {}),
-      ...(session?.access_token
-        ? { Authorization: `Bearer ${session.access_token}` }
-        : {}),
-    },
-  });
+  const send = (accessToken?: string) =>
+    fetch(input, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...(init.headers || {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+    });
+
+  const response = await send(session?.access_token);
+
+  if (response.status !== 401) {
+    return response;
+  }
+
+  // A page can stay open longer than the access-token lifetime. Refresh once
+  // before reporting a save failure so an expired token does not discard the
+  // learner's SRS result.
+  const {
+    data: { session: refreshedSession },
+  } = await supabase.auth.refreshSession();
+
+  if (
+    !refreshedSession?.access_token ||
+    refreshedSession.access_token === session?.access_token
+  ) {
+    return response;
+  }
+
+  return send(refreshedSession.access_token);
 }
