@@ -1863,7 +1863,7 @@ export default function StudySentencesPage() {
                     ) : null}
                   </div>
 
-                  {dictationMode ? (
+                  {!writingMode ? (
                     <div className="app-surface mt-3 rounded-xl p-4">
                       {!copyPracticeOpen ? (
                         <button
