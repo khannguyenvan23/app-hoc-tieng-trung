@@ -12,6 +12,8 @@ import { mergeStoredReviewQueue } from "../src/lib/study-session.ts";
 import {
   buildStudyQueue,
   countWaitingNewItems,
+  getNextDueLearningQueueIndex,
+  getNextPendingLearningAt,
   getNextPendingStudyAt,
   getNextStudyQueueIndex,
   isAvailableForStudy,
@@ -653,6 +655,43 @@ test("a one-minute learning step is not immediately due", () => {
     getNextStudyQueueIndex(
       [oneMinuteLearning],
       0,
+      new Date(baseNow.getTime() + 58_000),
+    ),
+    0,
+  );
+});
+
+test("a pending one-minute step keeps its wake-up while other cards are due", () => {
+  const learningA = {
+    ...makeReview(1, 1),
+    interval_days: 0,
+    learning_step: 0,
+    next_review_at: addMinutesIso(baseNow, 1),
+  };
+  const dueB = {
+    ...makeReview(2, 0),
+    next_review_at: addMinutesIso(baseNow, -1),
+  };
+  const dueC = {
+    ...makeReview(3, 0),
+    next_review_at: addMinutesIso(baseNow, -1),
+  };
+  const queue = [learningA, dueB, dueC];
+
+  assert.equal(getNextPendingLearningAt(queue, baseNow), learningA.next_review_at);
+  assert.equal(getNextDueLearningQueueIndex(queue, 0, baseNow), -1);
+  assert.equal(
+    getNextDueLearningQueueIndex(
+      queue,
+      0,
+      new Date(baseNow.getTime() + 58_000),
+    ),
+    0,
+  );
+  assert.equal(
+    getNextStudyQueueIndex(
+      queue,
+      1,
       new Date(baseNow.getTime() + 58_000),
     ),
     0,

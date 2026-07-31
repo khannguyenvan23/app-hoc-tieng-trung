@@ -36,7 +36,8 @@ import {
 import {
   buildStudyQueue as buildLimitedStudyQueue,
   countWaitingNewItems,
-  getNextPendingStudyAt,
+  getNextDueLearningQueueIndex,
+  getNextPendingLearningAt,
   getNextStudyQueueIndex,
   isAvailableForStudy,
   shouldRequeueInCurrentSession,
@@ -166,19 +167,8 @@ function getRestoredCardStudyIndex(
   return nextStudyIndex >= 0 ? nextStudyIndex : storedIndex;
 }
 
-function getPendingCardStudyAt(
-  reviews: DueReview[],
-  learnAheadLimitMinutes: number,
-) {
-  return getNextStudyQueueIndex(
-    reviews,
-    0,
-    new Date(),
-    undefined,
-    learnAheadLimitMinutes,
-  ) >= 0
-    ? null
-    : getNextPendingStudyAt(reviews);
+function getPendingCardStudyAt(reviews: DueReview[]) {
+  return getNextPendingLearningAt(reviews);
 }
 
 function getCardAudioData(card: Card | null | undefined): CardAudioData | null {
@@ -524,10 +514,7 @@ export default function StudyPage() {
     );
     setReviews(reviewQueue);
     setScheduledReloadAt(
-      getPendingCardStudyAt(
-        reviewQueue,
-        studySettings.learn_ahead_limit_minutes,
-      ),
+      getPendingCardStudyAt(reviewQueue),
     );
     setSessionTotal(sessionProgress.total);
     setSessionAnswered(sessionProgress.answered);
@@ -744,10 +731,7 @@ export default function StudyPage() {
             setSessionAnswered(retryQueueProgress.answered);
             setReviews(retryQueue);
             setScheduledReloadAt(
-              getPendingCardStudyAt(
-                retryQueue,
-                studySettings.learn_ahead_limit_minutes,
-              ),
+              getPendingCardStudyAt(retryQueue),
             );
             setIndex(
               getRestoredCardStudyIndex(
@@ -799,10 +783,7 @@ export default function StudyPage() {
       setSessionAnswered(sessionProgress.answered);
       setReviews(reviewQueue);
       setScheduledReloadAt(
-        getPendingCardStudyAt(
-          reviewQueue,
-          studySettings.learn_ahead_limit_minutes,
-        ),
+        getPendingCardStudyAt(reviewQueue),
       );
       setIndex(
         getRestoredCardStudyIndex(
@@ -1349,17 +1330,33 @@ export default function StudyPage() {
       }
 
       if (reviews.length > 0) {
-        const nextStudyIndex = getNextStudyQueueIndex(
+        const now = new Date();
+        const nextLearningIndex = getNextDueLearningQueueIndex(
           reviews,
           index,
-          new Date(),
-          undefined,
-          studySettings.learn_ahead_limit_minutes,
+          now,
         );
-        if (nextStudyIndex >= 0) {
-          setScheduledReloadAt(null);
-          setIndex(nextStudyIndex);
+        if (nextLearningIndex >= 0) {
+          const currentReview = reviews[index];
+          const currentIsAvailable =
+            currentReview &&
+            isAvailableForStudy(
+              currentReview,
+              now,
+              studySettings.learn_ahead_limit_minutes,
+            );
+
+          setScheduledReloadAt(getNextPendingLearningAt(reviews, now));
+
+          // Do not replace a card while the learner is answering it. The normal
+          // queue selection after that answer prioritizes this due learning card.
+          if (!currentIsAvailable) {
+            setIndex(nextLearningIndex);
+          }
+          return;
         }
+
+        setScheduledReloadAt(getNextPendingLearningAt(reviews, now));
         return;
       }
 

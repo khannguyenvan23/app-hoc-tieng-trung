@@ -118,6 +118,65 @@ export function isAvailableForStudy<TReview extends StudyQueueReview>(
   );
 }
 
+export function getNextDueLearningQueueIndex<
+  TReview extends StudyQueueReview,
+>(
+  reviews: TReview[],
+  preferredIndex = 0,
+  now = new Date(),
+  graceMs = DEFAULT_DUE_GRACE_MS,
+) {
+  if (reviews.length === 0) {
+    return -1;
+  }
+
+  const startIndex = Math.min(Math.max(preferredIndex, 0), reviews.length - 1);
+  let bestLearningIndex = -1;
+  let bestLearningTime = Number.POSITIVE_INFINITY;
+
+  for (let offset = 0; offset < reviews.length; offset += 1) {
+    const index = (startIndex + offset) % reviews.length;
+    const review = reviews[index];
+
+    if (
+      !isLearningOrRelearning(review) ||
+      !isDueForStudy(review.next_review_at, now, graceMs)
+    ) {
+      continue;
+    }
+
+    const dueTime = new Date(review.next_review_at).getTime();
+    if (dueTime < bestLearningTime) {
+      bestLearningTime = dueTime;
+      bestLearningIndex = index;
+    }
+  }
+
+  return bestLearningIndex;
+}
+
+export function getNextPendingLearningAt<TReview extends StudyQueueReview>(
+  reviews: TReview[],
+  now = new Date(),
+  graceMs = DEFAULT_DUE_GRACE_MS,
+) {
+  const nowWithGrace = now.getTime() + graceMs;
+  const nextTime = reviews.reduce<number | null>((earliest, review) => {
+    if (!isLearningOrRelearning(review)) {
+      return earliest;
+    }
+
+    const reviewTime = new Date(review.next_review_at).getTime();
+    if (!Number.isFinite(reviewTime) || reviewTime <= nowWithGrace) {
+      return earliest;
+    }
+
+    return earliest === null ? reviewTime : Math.min(earliest, reviewTime);
+  }, null);
+
+  return nextTime === null ? null : new Date(nextTime).toISOString();
+}
+
 export function getNextStudyQueueIndex<TReview extends StudyQueueReview>(
   reviews: TReview[],
   preferredIndex = 0,

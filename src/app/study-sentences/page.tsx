@@ -37,7 +37,8 @@ import {
 import {
   buildStudyQueue as buildLimitedStudyQueue,
   countWaitingNewItems,
-  getNextPendingStudyAt,
+  getNextDueLearningQueueIndex,
+  getNextPendingLearningAt,
   getNextStudyQueueIndex,
   isAvailableForStudy,
   shouldRequeueInCurrentSession,
@@ -168,19 +169,8 @@ function getRestoredSentenceStudyIndex(
   return nextStudyIndex >= 0 ? nextStudyIndex : storedIndex;
 }
 
-function getPendingSentenceStudyAt(
-  reviews: DueSentenceReview[],
-  learnAheadLimitMinutes: number,
-) {
-  return getNextStudyQueueIndex(
-    reviews,
-    0,
-    new Date(),
-    undefined,
-    learnAheadLimitMinutes,
-  ) >= 0
-    ? null
-    : getNextPendingStudyAt(reviews);
+function getPendingSentenceStudyAt(reviews: DueSentenceReview[]) {
+  return getNextPendingLearningAt(reviews);
 }
 
 function getSentenceAudioUrl(card: SentenceCard | null | undefined) {
@@ -532,10 +522,7 @@ export default function StudySentencesPage() {
     );
     setReviews(reviewQueue);
     setScheduledReloadAt(
-      getPendingSentenceStudyAt(
-        reviewQueue,
-        studySettings.learn_ahead_limit_minutes,
-      ),
+      getPendingSentenceStudyAt(reviewQueue),
     );
     setSessionTotal(sessionProgress.total);
     setSessionAnswered(sessionProgress.answered);
@@ -789,10 +776,7 @@ export default function StudySentencesPage() {
             setSessionAnswered(retryQueueProgress.answered);
             setReviews(retryQueue);
             setScheduledReloadAt(
-              getPendingSentenceStudyAt(
-                retryQueue,
-                studySettings.learn_ahead_limit_minutes,
-              ),
+              getPendingSentenceStudyAt(retryQueue),
             );
             setIndex(
               getRestoredSentenceStudyIndex(
@@ -846,10 +830,7 @@ export default function StudySentencesPage() {
       setSessionAnswered(sessionProgress.answered);
       setReviews(reviewQueue);
       setScheduledReloadAt(
-        getPendingSentenceStudyAt(
-          reviewQueue,
-          studySettings.learn_ahead_limit_minutes,
-        ),
+        getPendingSentenceStudyAt(reviewQueue),
       );
       setIndex(
         getRestoredSentenceStudyIndex(
@@ -1483,17 +1464,33 @@ export default function StudySentencesPage() {
       }
 
       if (reviews.length > 0) {
-        const nextStudyIndex = getNextStudyQueueIndex(
+        const now = new Date();
+        const nextLearningIndex = getNextDueLearningQueueIndex(
           reviews,
           index,
-          new Date(),
-          undefined,
-          studySettings.learn_ahead_limit_minutes,
+          now,
         );
-        if (nextStudyIndex >= 0) {
-          setScheduledReloadAt(null);
-          setIndex(nextStudyIndex);
+        if (nextLearningIndex >= 0) {
+          const currentReview = reviews[index];
+          const currentIsAvailable =
+            currentReview &&
+            isAvailableForStudy(
+              currentReview,
+              now,
+              studySettings.learn_ahead_limit_minutes,
+            );
+
+          setScheduledReloadAt(getNextPendingLearningAt(reviews, now));
+
+          // Do not replace a card while the learner is answering it. The normal
+          // queue selection after that answer prioritizes this due learning card.
+          if (!currentIsAvailable) {
+            setIndex(nextLearningIndex);
+          }
+          return;
         }
+
+        setScheduledReloadAt(getNextPendingLearningAt(reviews, now));
         return;
       }
 
