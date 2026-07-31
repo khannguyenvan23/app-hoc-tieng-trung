@@ -131,12 +131,40 @@ export function getNextStudyQueueIndex<TReview extends StudyQueueReview>(
 
   const startIndex = Math.min(Math.max(preferredIndex, 0), reviews.length - 1);
 
+  // Among the cards that are actually due, surface a learning/relearning card
+  // first — and the one whose short step elapsed longest ago — so a just-lapsed
+  // "Quên 1 phút" card comes back promptly instead of waiting at the very back
+  // behind every new card. New/review cards fall back to plain scan order.
+  let firstDueIndex = -1;
+  let bestLearningIndex = -1;
+  let bestLearningTime = Number.POSITIVE_INFINITY;
   for (let offset = 0; offset < reviews.length; offset += 1) {
     const index = (startIndex + offset) % reviews.length;
+    const review = reviews[index];
 
-    if (isDueForStudy(reviews[index].next_review_at, now, graceMs)) {
-      return index;
+    if (!isDueForStudy(review.next_review_at, now, graceMs)) {
+      continue;
     }
+
+    if (firstDueIndex < 0) {
+      firstDueIndex = index;
+    }
+
+    if (isLearningOrRelearning(review)) {
+      const dueTime = new Date(review.next_review_at).getTime();
+      if (dueTime < bestLearningTime) {
+        bestLearningTime = dueTime;
+        bestLearningIndex = index;
+      }
+    }
+  }
+
+  if (bestLearningIndex >= 0) {
+    return bestLearningIndex;
+  }
+
+  if (firstDueIndex >= 0) {
+    return firstDueIndex;
   }
 
   if (learnAheadLimitMinutes > 0) {
