@@ -1861,16 +1861,18 @@ export default function StudySentencesPage() {
                   </div>
 
                   {!writingMode ? (
-                    <div className="app-surface mt-3 rounded-xl p-4">
-                      {!copyPracticeOpen ? (
+                    !copyPracticeOpen ? (
+                      <div className="mt-3 text-center">
                         <button
-                          className="btn-secondary w-full px-4 py-2 text-sm"
+                          className="text-sm font-medium text-teal-700 hover:underline dark:text-teal-300"
                           onClick={() => setCopyPracticeOpen(true)}
                           type="button"
                         >
                           ✍️ Chép lại để nhớ
                         </button>
-                      ) : (
+                      </div>
+                    ) : (
+                      <div className="app-surface mt-3 rounded-xl p-4">
                         <div>
                           <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                             Chép lại câu bên trên để khắc sâu chữ Hán:
@@ -1918,8 +1920,8 @@ export default function StudySentencesPage() {
                             />
                           ) : null}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )
                   ) : null}
 
                   {vocabItems.length > 0 ? (
