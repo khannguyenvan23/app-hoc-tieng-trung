@@ -11,6 +11,7 @@ import { ReviewQueueStatus } from "@/components/review-queue-status";
 import { SentenceDiffBreakdown } from "@/components/sentence-diff-view";
 import { StudyModeMenu } from "@/components/study-mode-menu";
 import { StudyProgress } from "@/components/study-progress";
+import { AudioSpeedMenu } from "@/components/audio-speed-menu";
 import { fetchDueReviewRows } from "@/lib/due-reviews";
 import { hasPublicEnv } from "@/lib/env";
 import {
@@ -1989,24 +1990,13 @@ export default function StudySentencesPage() {
                   </option>
                 ))}
               </select>
-              <div className="audio-speed-toggle col-span-3 sm:w-44 sm:shrink-0">
-                <button
-                  className={`audio-speed-option ${ audioSpeed === "normal" ? "audio-speed-option-active" : "" }`}
-                  onClick={() => changeAudioSpeed("normal")}
-                  type="button"
-                >
-                  Bình thường
-                </button>
-                <button
-                  className={`audio-speed-option ${ audioSpeed === "slow" ? "audio-speed-option-active" : "" }`}
-                  onClick={() => changeAudioSpeed("slow")}
-                  type="button"
-                >
-                  Nghe chậm
-                </button>
-              </div>
+              <AudioSpeedMenu
+                className="justify-self-start sm:shrink-0"
+                onChange={changeAudioSpeed}
+                value={audioSpeed}
+              />
               <StudyModeMenu
-                className="col-span-3 sm:w-auto sm:shrink-0"
+                className="col-span-2 justify-self-stretch sm:w-auto sm:shrink-0"
                 options={[
                   {
                     description: "Gõ chữ Hán từ nghĩa tiếng Việt.",
