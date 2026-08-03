@@ -8,6 +8,7 @@ import { StudyCardSkeleton } from "@/components/loading-skeletons";
 import { RatingButtons } from "@/components/rating-buttons";
 import { ReviewQueueStatus } from "@/components/review-queue-status";
 import { SentenceDiffBreakdown } from "@/components/sentence-diff-view";
+import { StudyModeMenu } from "@/components/study-mode-menu";
 import { StudyProgress } from "@/components/study-progress";
 import { fetchDueReviewRows } from "@/lib/due-reviews";
 import { hasPublicEnv } from "@/lib/env";
@@ -1744,22 +1745,25 @@ export default function StudyPage() {
                   Nghe chậm
                 </button>
               </div>
-              <button
-                aria-pressed={writingMode}
-                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${ writingMode ? "btn-mode-active" : "" }`}
-                onClick={toggleWritingMode}
-                type="button"
-              >
-                Viết
-              </button>
-              <button
-                aria-pressed={showPinyinHint}
-                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${ showPinyinHint ? "btn-mode-active" : "" }`}
-                onClick={togglePinyinHint}
-                type="button"
-              >
-                Pinyin
-              </button>
+              <StudyModeMenu
+                className="col-span-2 sm:w-auto sm:shrink-0"
+                options={[
+                  {
+                    description: "Gõ chữ Hán từ nghĩa tiếng Việt.",
+                    enabled: writingMode,
+                    id: "writing",
+                    label: "Viết",
+                    onToggle: toggleWritingMode,
+                  },
+                  {
+                    description: "Hiện phiên âm khi xem đáp án.",
+                    enabled: showPinyinHint,
+                    id: "pinyin",
+                    label: "Pinyin",
+                    onToggle: togglePinyinHint,
+                  },
+                ]}
+              />
             </div>
             <span className="sr-only">
               Chọn Bình thường để nghe tự nhiên hoặc Chậm để nghe rõ từng âm.

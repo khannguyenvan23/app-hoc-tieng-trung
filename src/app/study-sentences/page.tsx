@@ -9,6 +9,7 @@ import { StudyCardSkeleton } from "@/components/loading-skeletons";
 import { RatingButtons } from "@/components/rating-buttons";
 import { ReviewQueueStatus } from "@/components/review-queue-status";
 import { SentenceDiffBreakdown } from "@/components/sentence-diff-view";
+import { StudyModeMenu } from "@/components/study-mode-menu";
 import { StudyProgress } from "@/components/study-progress";
 import { fetchDueReviewRows } from "@/lib/due-reviews";
 import { hasPublicEnv } from "@/lib/env";
@@ -2004,30 +2005,32 @@ export default function StudySentencesPage() {
                   Nghe chậm
                 </button>
               </div>
-              <button
-                aria-pressed={writingMode}
-                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${ writingMode ? "btn-mode-active" : "" }`}
-                onClick={toggleWritingMode}
-                type="button"
-              >
-                Viết
-              </button>
-              <button
-                aria-pressed={dictationMode}
-                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${ dictationMode ? "btn-mode-active" : "" }`}
-                onClick={toggleDictationMode}
-                type="button"
-              >
-                Chính tả
-              </button>
-              <button
-                aria-pressed={showPinyinHint}
-                className={`btn-mode h-10 w-full px-3 text-sm transition sm:w-auto sm:shrink-0 ${ showPinyinHint ? "btn-mode-active" : "" }`}
-                onClick={togglePinyinHint}
-                type="button"
-              >
-                Pinyin
-              </button>
+              <StudyModeMenu
+                className="col-span-3 sm:w-auto sm:shrink-0"
+                options={[
+                  {
+                    description: "Gõ chữ Hán từ nghĩa tiếng Việt.",
+                    enabled: writingMode,
+                    id: "writing",
+                    label: "Viết",
+                    onToggle: toggleWritingMode,
+                  },
+                  {
+                    description: "Nghe audio và chép lại cả câu.",
+                    enabled: dictationMode,
+                    id: "dictation",
+                    label: "Chính tả",
+                    onToggle: toggleDictationMode,
+                  },
+                  {
+                    description: "Hiện phiên âm khi xem đáp án.",
+                    enabled: showPinyinHint,
+                    id: "pinyin",
+                    label: "Pinyin",
+                    onToggle: togglePinyinHint,
+                  },
+                ]}
+              />
               {audioNotice ? (
                 audioNotice.showPricing ? (
                   <p className="col-span-3 text-left text-xs text-red-700 dark:text-red-300 sm:basis-full sm:text-right">
