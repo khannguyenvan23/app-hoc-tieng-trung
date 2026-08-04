@@ -614,17 +614,33 @@ export default function DashboardPage() {
     (template) => hskLevelOf(template) === 0 && isSentenceTemplate(template),
   );
 
+  function getTemplateSummary(description: string | null) {
+    if (!description) {
+      return "";
+    }
+
+    const firstSentence = description
+      .trim()
+      .split(/\.\s+/)[0]
+      ?.trim();
+
+    return firstSentence
+      ? `${firstSentence}${firstSentence.endsWith(".") ? "" : "."}`
+      : description.trim();
+  }
+
   function renderTemplateCard(template: TemplateDeck) {
     const alreadyAdded = Boolean(template.already_added);
     const countLabel = isSentenceTemplate(template)
       ? `${template.sentence_count} câu`
       : `${template.word_count ?? template.card_count} từ`;
+    const summary = getTemplateSummary(template.description);
 
     return (
-      <div className="app-surface rounded-xl p-5" key={template.id}>
+      <article className="app-surface flex h-full flex-col rounded-xl p-5" key={template.id}>
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="font-semibold">{template.name}</h3>
+          <div className="min-w-0">
+            <h3 className="font-semibold leading-snug">{template.name}</h3>
             {template.level ? (
               <p className="mt-1 text-xs font-medium uppercase text-teal-800 dark:text-teal-300">
                 {template.level}
@@ -635,41 +651,46 @@ export default function DashboardPage() {
             {countLabel}
           </span>
         </div>
-        {template.description ? (
-          <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-            {template.description}
+        {summary ? (
+          <p
+            className="mt-3 line-clamp-2 min-h-10 text-sm leading-5 text-zinc-600 dark:text-zinc-400"
+            title={template.description || undefined}
+          >
+            {summary}
           </p>
         ) : null}
-        <button
-          className={`mt-4 min-h-10 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-70 ${
-            alreadyAdded
-              ? "border border-zinc-300 bg-zinc-100 text-zinc-600 dark:border-white/15 dark:bg-white/10 dark:text-zinc-400"
-              : "bg-teal-700 text-white hover:bg-teal-800"
-          }`}
-          disabled={Boolean(copyingTemplateId) || alreadyAdded}
-          onClick={() => copyTemplate(template.id)}
-          type="button"
-        >
-          {alreadyAdded ? (
-            "Đã thêm"
-          ) : copyingTemplateId === template.id ? (
-            <span className="inline-flex items-center gap-2">
-              <Spinner size={15} />
-              Đang thêm...
-            </span>
-          ) : (
-            "Thêm bộ này"
-          )}
-        </button>
-        {alreadyAdded && template.user_deck_id ? (
-          <Link
-            className="mt-2 inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-white/15 dark:hover:bg-white/10"
-            href={`/decks/${template.user_deck_id}`}
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
+          <button
+            className={`min-h-10 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-70 ${
+              alreadyAdded
+                ? "border border-zinc-300 bg-zinc-100 text-zinc-600 dark:border-white/15 dark:bg-white/10 dark:text-zinc-400"
+                : "bg-teal-700 text-white hover:bg-teal-800"
+            }`}
+            disabled={Boolean(copyingTemplateId) || alreadyAdded}
+            onClick={() => copyTemplate(template.id)}
+            type="button"
           >
-            Mở bộ
-          </Link>
-        ) : null}
-      </div>
+            {alreadyAdded ? (
+              "Đã thêm"
+            ) : copyingTemplateId === template.id ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size={15} />
+                Đang thêm...
+              </span>
+            ) : (
+              "Thêm bộ này"
+            )}
+          </button>
+          {alreadyAdded && template.user_deck_id ? (
+            <Link
+              className="inline-flex min-h-10 items-center rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-white/15 dark:hover:bg-white/10"
+              href={`/decks/${template.user_deck_id}`}
+            >
+              Mở bộ
+            </Link>
+          ) : null}
+        </div>
+      </article>
     );
   }
 
@@ -1022,6 +1043,9 @@ export default function DashboardPage() {
 
           {templates.length > 0 ? (
             <div className="mt-4 space-y-6">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Tất cả bộ mẫu đều có pinyin, nghĩa tiếng Việt, ví dụ thực tế và audio tạo sẵn.
+              </p>
               {hskTemplates.length > 0 ? (
                 <div>
                   <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
